@@ -1,0 +1,9 @@
+# OrbitDesk — Modern Workplace Operations Lab
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://orbitdesk.vercel.app/sitemap.xml
+
+# Host
+Host: https://orbitdesk.vercel.app
