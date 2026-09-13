@@ -9,9 +9,12 @@ import DashboardMetrics from '@/components/DashboardMetrics';
 import CallCenter from '@/components/CallCenter';
 import RemoteDesktop from '@/components/RemoteDesktop';
 import PolicyCenter from '@/components/PolicyCenter';
+import VoiceCallDemo from '@/components/VoiceCallDemo';
+import InstallPrompt from '@/components/InstallPrompt';
+import DesktopDownload from '@/components/DesktopDownload';
 import { agents as initialAgents } from '@/data/agents';
 
-type Tab = 'ticket' | 'chat' | 'dashboard' | 'policies' | 'training';
+type Tab = 'ticket' | 'chat' | 'dashboard' | 'policies' | 'training' | 'voice' | 'desktop';
 
 export default function Home() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -115,8 +118,12 @@ export default function Home() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');`}</style>
       
       <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 text-[11px] text-amber-900 flex items-center justify-between">
-        <span>⚠️ Educational Simulator • Not affiliated with Microsoft, Influx, or any client • All data simulated • For training only • <a href="/disclaimer" className="underline font-bold">Disclaimer</a></span>
-        <span className="hidden md:flex items-center gap-3"><a href="/terms" className="underline">Terms</a><a href="/privacy" className="underline">Privacy</a><span>© 2026 OrbitDesk</span></span>
+        <span>⚠️ Educational Simulator • Not affiliated with Microsoft, Influx, or any client • All data simulated • For training only • <a href="/disclaimer" className="underline font-bold">Disclaimer</a> • 🎙️ Real Voice Calls with Audio • 🖥️ Desktop Installable PWA + Electron</span>
+        <span className="hidden md:flex items-center gap-3"><a href="/terms" className="underline">Terms</a><a href="/privacy" className="underline">Privacy</a><span>© 2026 OrbitDesk v2.0</span></span>
+      </div>
+
+      <div className="px-3 pt-2">
+        <InstallPrompt />
       </div>
 
       <header className="bg-[#0a0a0a] text-white px-5 py-3 flex items-center justify-between border-b border-[#1a1a1a] sticky top-0 z-30">
@@ -233,15 +240,17 @@ export default function Home() {
         </div>
 
         <div className="flex-1 flex flex-col p-3 gap-3 overflow-hidden">
-          <div className="bg-white rounded-2xl p-1.5 flex gap-1 shadow-sm border border-zinc-200/60">
+          <div className="bg-white rounded-2xl p-1.5 flex gap-1 shadow-sm border border-zinc-200/60 overflow-x-auto">
             {[
               { id: 'ticket', label: 'Ticket + Portals', icon: '◍', desc: 'Entra, Intune, Exchange' },
+              { id: 'voice', label: 'Voice Calls', icon: '🎙️', desc: 'Real Audio • Flowing Convos' },
               { id: 'chat', label: 'Comms', icon: '💬', desc: 'Slack-like • Client + Team' },
               { id: 'dashboard', label: 'Metrics', icon: '📊', desc: 'SLA, CSAT, Trends' },
               { id: 'policies', label: 'Policies', icon: '🏢', desc: 'Per-client CA & Compliance' },
+              { id: 'desktop', label: 'Desktop App', icon: '🖥️', desc: 'PWA + Electron • Install' },
               { id: 'training', label: 'Training', icon: '🎓', desc: 'Learn + Quiz + Coach' },
             ].map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-medium transition text-left ${activeTab === tab.id ? 'bg-[#0a0a0a] text-white shadow-sm' : 'hover:bg-zinc-50 text-zinc-600'}`}>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} className={`flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-medium transition text-left ${activeTab === tab.id ? 'bg-[#0a0a0a] text-white shadow-sm' : 'hover:bg-zinc-50 text-zinc-600'}`}>
                 <div className="font-semibold flex items-center gap-1.5"><span>{tab.icon}</span> {tab.label}</div>
                 <div className="text-[11px] opacity-70 hidden xl:block mt-0.5">{tab.desc}</div>
               </button>
@@ -339,6 +348,48 @@ export default function Home() {
 
                 <div className="flex-1 overflow-hidden">
                   <MockPortals ticket={selectedTicket} />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'voice' && (
+              <div className="h-full overflow-y-auto space-y-4">
+                <VoiceCallDemo />
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                  <h3 className="font-bold text-sm">🎧 How Voice Calls Work — Real Human Feel</h3>
+                  <div className="grid md:grid-cols-3 gap-3 mt-3 text-xs">
+                    <div className="bg-white border border-amber-200 rounded-xl p-3">
+                      <div className="font-semibold">1. Incoming P1 Call Rings</div>
+                      <div className="text-zinc-600 mt-1">P1 ticket triggers incoming call modal with ringtone (Web Audio beep). Client persona shows: NovaTech tech, Bloom casual, Apex regulated. Different voice per client.</div>
+                    </div>
+                    <div className="bg-white border border-amber-200 rounded-xl p-3">
+                      <div className="font-semibold">2. Accept → Live Voice Conversation</div>
+                      <div className="text-zinc-600 mt-1">Accept → Call bar appears. Client speaks with TTS voice (different per persona). You type or use mic 🎙️. Client responds intelligently, does actions on other side, asks questions back.</div>
+                    </div>
+                    <div className="bg-white border border-amber-200 rounded-xl p-3">
+                      <div className="font-semibold">3. Add Tech Expert → Conference</div>
+                      <div className="text-zinc-600 mt-1">Click 👨‍💻 → Add Alex (Entra), Priya (Intune), David (Exchange). Expert joins with different voice, provides guidance. Conference with client + expert + you. Real collaboration.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'desktop' && (
+              <div className="h-full overflow-y-auto space-y-4">
+                <DesktopDownload />
+                <div className="bg-[#0a0a0a] text-white rounded-2xl p-5">
+                  <h3 className="font-bold mb-3">Why Desktop App Gets You Hired — Team Lead Mindset</h3>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm text-zinc-400">
+                    <div>
+                      <div className="font-semibold text-white">PWA Install (1 click):</div>
+                      <div className="mt-1">• No build needed — Click Install in browser → App appears in dock/start menu<br/>• Works offline — tickets, audio, portals cached<br/>• Native P1 notifications even when browser closed<br/>• Feels like native app — standalone window, custom title bar</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">Electron Desktop (Production):</div>
+                      <div className="mt-1">• npm run desktop:dist → .exe, .dmg, .AppImage in dist/<br/>• Global shortcuts ⌘K anywhere, system tray, auto-launch<br/>• Encrypted local storage for audit logs<br/>• File handlers, share target, window controls overlay<br/>• Interview: "I built desktop app for MSP operations — want to see P1 notification?"</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
