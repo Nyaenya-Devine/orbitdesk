@@ -117,9 +117,23 @@ export default function Home() {
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-[Inter,system-ui]">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');`}</style>
       
-      <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 text-[11px] text-amber-900 flex items-center justify-between">
-        <span>⚠️ Educational Simulator • Not affiliated with Microsoft, Influx, or any client • All data simulated • For training only • <a href="/disclaimer" className="underline font-bold">Disclaimer</a> • 🎙️ Real Voice Calls with Audio • 🖥️ Desktop Installable PWA + Electron</span>
-        <span className="hidden md:flex items-center gap-3"><a href="/terms" className="underline">Terms</a><a href="/privacy" className="underline">Privacy</a><span>© 2026 OrbitDesk v2.0</span></span>
+      <div className="bg-[#0a0a0a] border-b border-zinc-800 px-5 py-2 text-[11px] text-zinc-400 flex items-center justify-between">
+        <span className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          <span>◍ OrbitDesk Lab • Real Voice Calls • Desktop Installable • Training Simulator • Modern Workplace Operations</span>
+          <span className="hidden md:inline-flex items-center gap-2 ml-3 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded-full">
+            <span>🎙️ 5 Voices</span>
+            <span className="w-px h-3 bg-zinc-700"></span>
+            <span>🖥️ PWA + Electron</span>
+            <span className="w-px h-3 bg-zinc-700"></span>
+            <span>🔒 Security Hardened</span>
+          </span>
+        </span>
+        <span className="hidden md:flex items-center gap-2">
+          <span className="text-zinc-500">v2.0 • Voice + Desktop</span>
+          <span className="w-px h-3 bg-zinc-700"></span>
+          <span>© 2026 OrbitDesk</span>
+        </span>
       </div>
 
       <div className="px-3 pt-2">
@@ -480,23 +494,53 @@ export default function Home() {
         </div>
       </div>
 
-      <footer className="bg-[#0a0a0a] border-t border-zinc-800 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-zinc-500">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center text-black font-bold text-xs">◍</div>
-            <span className="font-semibold text-zinc-300">OrbitDesk</span>
-            <span>•</span>
-            <span>Modern Workplace Lab</span>
+      <footer className="bg-[#0a0a0a] border-t border-zinc-800 px-6 py-5">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-violet-600/20">◍</div>
+              <div>
+                <div className="font-semibold text-zinc-200 text-sm flex items-center gap-2">OrbitDesk <span className="text-[10px] bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-full">v2.0</span></div>
+                <div className="text-[11px] text-zinc-500">Modern Workplace Operations Lab • Training Simulator</div>
+              </div>
+            </div>
+            <span className="hidden md:inline w-px h-8 bg-zinc-800"></span>
+            <div className="hidden md:block text-[11px] text-zinc-500 leading-relaxed">
+              Built for Team Lead — Modern Workplace Support<br/>
+              Real voice calls • Desktop app • Security hardened
+            </div>
           </div>
-          <span className="hidden md:inline w-px h-4 bg-zinc-800"></span>
-          <span className="hidden md:inline">Educational • Not affiliated • All data simulated</span>
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 text-[11px]">
+            <div className="flex items-center gap-3">
+              <a href="/terms" className="text-zinc-500 hover:text-zinc-300 transition">Terms</a>
+              <span className="text-zinc-700">•</span>
+              <a href="/privacy" className="text-zinc-500 hover:text-zinc-300 transition">Privacy</a>
+              <span className="text-zinc-700">•</span>
+              <a href="/disclaimer" className="text-zinc-500 hover:text-zinc-300 transition">Legal & Disclaimer</a>
+            </div>
+            <span className="hidden md:inline w-px h-4 bg-zinc-800"></span>
+            <div className="text-zinc-600 flex items-center gap-2">
+              <span>© 2026 • MIT • Built by Devine Nyaenya</span>
+              <span className="hidden md:inline-flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-full">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                Educational • Simulated data
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <a href="/terms" className="hover:text-zinc-300 underline">Terms</a>
-          <a href="/privacy" className="hover:text-zinc-300 underline">Privacy</a>
-          <a href="/disclaimer" className="hover:text-zinc-300 underline font-bold text-zinc-300">Disclaimer & Legal</a>
-          <span className="w-px h-4 bg-zinc-800 hidden md:inline"></span>
-          <span>© 2026 • MIT • Built by Devine Nyaenya</span>
+        
+        <div className="mt-4 pt-4 border-t border-zinc-800/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[10px] text-zinc-600">
+          <div>OrbitDesk is an independent training simulator for Modern Workplace Support. All clients, agents, tickets, voice calls, and remote sessions are simulated. No real Microsoft tenant data. All trademarks property of respective owners.</div>
+          <div className="flex items-center gap-2">
+            <span>🎙️ 5 Voices</span>
+            <span>•</span>
+            <span>🖥️ PWA + Electron</span>
+            <span>•</span>
+            <span>🔒 Security Hardened</span>
+            <span>•</span>
+            <a href="https://github.com/Nyaenya-Devine/orbitdesk" target="_blank" className="hover:text-zinc-400 underline">GitHub</a>
+          </div>
         </div>
       </footer>
     </div>
