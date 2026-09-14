@@ -8,7 +8,6 @@ import AgentRoster from '@/components/AgentRoster';
 import CommunicationChannel from '@/components/CommunicationChannel';
 import DashboardMetrics from '@/components/DashboardMetrics';
 import VoiceCallCenter from '@/components/VoiceCallCenter';
-import RemoteDesktop from '@/components/RemoteDesktop';
 import PolicyCenter from '@/components/PolicyCenter';
 import VoiceCallDemo from '@/components/VoiceCallDemo';
 import InstallPromptV2 from '@/components/InstallPromptV2';
