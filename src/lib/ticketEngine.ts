@@ -1,5 +1,6 @@
 import { ticketTemplates, TicketTemplate } from '@/data/ticketTemplates';
 import { clients } from '@/data/clients';
+import { calculateRealisticSLA } from './progressEngine';
 
 export interface Ticket {
   id: string;
@@ -50,12 +51,15 @@ export function generateTicket(): Ticket {
   const client = randomFrom(clients.filter(c => template.clientTypes.includes(c.type as any))) || randomFrom(clients);
   
   const now = new Date();
-  const slaMinutes = client.sla[template.priority.toLowerCase() as keyof typeof client.sla];
-  const slaDeadline = new Date(now.getTime() + slaMinutes * 60 * 1000);
   
   // Randomly make some P1 more likely if common
-  let priority = template.priority;
+  let priority = template.priority as 'P1' | 'P2' | 'P3' | 'P4';
   if (Math.random() < 0.15) priority = 'P1';
+  
+  // Realistic SLA based on client business hours
+  const realistic = calculateRealisticSLA(priority, client.id as any, now.getTime());
+  
+  const slaDeadline = new Date(now.getTime() + realistic.timeLeftMs);
   
   const id = `${template.code}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`;
   
@@ -75,13 +79,13 @@ export function generateTicket(): Ticket {
     createdAt: now,
     slaDeadline,
     slaBreach: false,
-    timeLeftMs: slaMinutes * 60 * 1000,
+    timeLeftMs: realistic.timeLeftMs,
     requiredTools: template.requiredTools,
     rootCause: template.rootCause,
     correctFix: template.correctFix,
     errorCodes: template.errorCodes,
     isRecurring: Math.random() < 0.3,
-    tags: [template.code, template.category, client.id, priority]
+    tags: [template.code, template.category, client.id, priority, realistic.businessHoursOnly ? 'business-hours' : '24-7']
   };
 }
 
