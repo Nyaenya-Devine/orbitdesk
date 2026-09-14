@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
+import LiveryBackground from './LiveryBackground';
 
 interface Props {
   onEnterLab: () => void;
@@ -73,15 +74,16 @@ export default function LandingPage({ onEnterLab }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-100 overflow-hidden">
+    <div className="min-h-screen text-zinc-100 overflow-hidden relative">
+      <LiveryBackground />
       {/* Header — web option */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#050507]/80 border-b border-zinc-800/60">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a0a]/80 border-b border-zinc-800/60">
         <div className="max-w-[1200px] mx-auto px-6 h-[64px] flex items-center justify-between">
           <Logo variant="full" size={36} animated />
           <div className="flex items-center gap-3">
-            <span className="hidden md:flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400">
+            <span className="hidden md:flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full bg-zinc-900/80 backdrop-blur border border-zinc-800 text-zinc-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live • Real Voice Both Sides • v3.0
+              Live • Livery M365 • Thread Humour • v5.2
             </span>
             <button onClick={onEnterLab} className="h-9 px-5 rounded-full bg-zinc-100 hover:bg-white text-zinc-900 text-[13px] font-semibold transition">
               Enter Lab →
@@ -90,14 +92,14 @@ export default function LandingPage({ onEnterLab }: Props) {
         </div>
       </header>
 
-      {/* Hero — human, not AI, not robotic */}
-      <section className="max-w-[1200px] mx-auto px-6 pt-20 pb-16">
+      {/* Hero — human, not AI, not robotic — livery background */}
+      <section className="max-w-[1200px] mx-auto px-6 pt-20 pb-16 relative">
         <div className="grid grid-cols-12 gap-12 items-center">
           <div className="col-span-12 lg:col-span-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="inline-flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 mb-6">
+              <div className="inline-flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full bg-violet-500/10 backdrop-blur border border-violet-500/20 text-violet-300 mb-6">
                 <span className="h-1 w-1 rounded-full bg-violet-500 animate-pulse" />
-                New v3.0 — Real Voice Both Sides • Live Scoring • Progress Saved • Competition Ready
+                New v5.2 — Livery M365 Background • Thread Humour 🧵 • Flowing Calls YOU Greet First • Student Mode
               </div>
               
               <h1 className="text-[48px] md:text-[56px] font-bold tracking-[-0.03em] leading-[0.95] text-zinc-100">

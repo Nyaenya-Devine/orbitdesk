@@ -20,6 +20,8 @@ import { StudentProgress, loadProgress, saveProgress, calculateLevel, getBadges,
 import Logo from '@/components/Logo';
 import RemoteDesktopV2 from '@/components/RemoteDesktopV2';
 import StudentModeGuide from '@/components/StudentModeGuide';
+import LiveryBackground from '@/components/LiveryBackground';
+import ThreadHumor from '@/components/ThreadHumor';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'assessment';
 
@@ -250,7 +252,8 @@ export default function HomeV3() {
   const breached = tickets.filter(t => t.slaBreach).length;
 
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-100 flex flex-col">
+    <div className="min-h-screen text-zinc-100 flex flex-col relative">
+      <LiveryBackground />
       <ToastSystem toasts={toasts} onRemove={removeToast} />
 
       <div className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a0a]/90 border-b border-zinc-800/60">
@@ -258,7 +261,7 @@ export default function HomeV3() {
           <div className="flex items-center gap-3">
             <Logo variant="full" size={28} animated />
             <span className="h-4 w-px bg-zinc-800 hidden md:block" />
-            <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">v3.0 Real Voice Both Sides • Live Scoring • Progress Saved • Realistic SLA • Competition Ready</span></div>
+            <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">v5.2 Livery M365 • Thread Humour • Flowing Calls YOU Greet First • Student Mode • Real Voice • Competition Ready</span></div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20"><span className="h-1 w-1 rounded-full bg-violet-500 animate-pulse" /><span className="text-violet-300">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls</span></div>
@@ -293,17 +296,21 @@ export default function HomeV3() {
             <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="space-y-4">
               <DashboardMetrics tickets={tickets} />
               <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-12 lg:col-span-8"><VoiceCallDemo /></div>
-                <div className="col-span-12 lg:col-span-4"><DesktopDownloadV2 />
-                  <div className="mt-4 p-3 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60">
-                    <h4 className="text-[12px] font-semibold text-zinc-200">✅ v3.0 Finest — Real Voice Both Sides — Competition Ready</h4>
+                <div className="col-span-12 lg:col-span-8 space-y-4">
+                  <VoiceCallDemo />
+                  <ThreadHumor />
+                </div>
+                <div className="col-span-12 lg:col-span-4 space-y-4">
+                  <DesktopDownloadV2 />
+                  <div className="p-3 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur-xl border border-zinc-800/60">
+                    <h4 className="text-[12px] font-semibold text-zinc-200 flex items-center gap-2">✅ v5.2 Livery + Thread Humour — Human Premium <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">NEW</span></h4>
                     <div className="mt-2 space-y-1.5 text-[11px] text-zinc-400">
-                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Live calls: Client TALKS with real voice TTS, you talk back with mic 🎙️ STT live — both sides real</div>
-                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Live scoring: Empathy, Clarity, Technical, Fluency, Client Lang — scored for Influx assessment</div>
-                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Notifications grouped, progress bar, swipe to dismiss — not stuck anymore</div>
-                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Progress saved: XP, Level, badges, CSAT, QA, SLA, communication — for final assessment</div>
-                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Realistic SLA: NovaTech 24/7 P1 60min, Bloom 9-5 P1 4h business hours, Apex Strict P1 1h SEC-2024-07</div>
-                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> 3 finest ideas: Live Call Intelligence (Gong+Chorus+Grammarly), Gamified Assessment (Duolingo+Coursera+Linear), Session Management (Figma+Loom+ServiceNow)</div>
+                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Livery background: M365 colors Entra blue #0078D4 Intune purple #5C2D91 Teams #6264A7 — animated orbs, grid, noise, F1 livery stripes — not basic black</div>
+                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Thread humour: 10 trending IT support threads r/sysadmin — P1 Horror, User Logic, DNS, Cloud — auto-rotates 5s, upvote, relatable</div>
+                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Flowing calls: YOU greet first "Hello? Is this IT support?" → you "How may I help?" → client introduces — phases badge + dynamic placeholder</div>
+                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Student Mode: Max 1 P1 in 5, P1 3% student, RemoteDesktopV2 portal→RDP real linkage green proof</div>
+                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Real voice both sides TTS+STT mic 🎙️ 5 voices, tech experts conference, PWA+Electron desktop</div>
+                      <div className="flex gap-2"><span className="h-4 w-4 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> Vercel cleaned: temp projects expire 60m, permanent orbitdesk-gamma.vercel.app via GitHub import auto-deploy</div>
                     </div>
                   </div>
                 </div>
@@ -349,7 +356,7 @@ export default function HomeV3() {
       {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
       <CallCenterV3 tickets={tickets} onAcceptCall={handleSelectTicket} onCallScore={handleCallScore} />
       <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
-      <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk Lab v3.0 — Real Voice Both Sides 🔊 • Live Scoring 📊 • Progress Saved 💾 • Realistic SLA ⏱️ • Competition Ready 🏆 • Educational</span><span className="font-mono">v3.0 • Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 8 routes • Finest Details</span></div></div>
+      <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk Lab v5.2 — Livery M365 🎨 • Thread Humour 🧵 • Flowing Calls YOU Greet First 📞 • Student Mode 🎓 • Real Voice 🔊 • Educational</span><span className="font-mono">v5.2 • Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Livery + Humour</span></div></div>
     </div>
   );
 }
