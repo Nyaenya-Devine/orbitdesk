@@ -2,6 +2,7 @@
 import { Ticket, getSLAColor } from '@/lib/ticketEngine';
 import { clients } from '@/data/clients';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   tickets: Ticket[];
@@ -88,24 +89,31 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
       </div>
 
       <div className="flex-1 overflow-y-auto divide-y divide-zinc-800/40">
+        <AnimatePresence>
         {filtered.length === 0 ? (
-          <div className="p-8 text-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 text-center">
             <div className="h-8 w-8 mx-auto mb-3 rounded-full bg-zinc-800 flex items-center justify-center">
               <span className="text-zinc-500 text-sm">◍</span>
             </div>
             <p className="text-[13px] text-zinc-500">No tickets match filter</p>
             <p className="text-[11px] text-zinc-600 mt-1">Real-time engine will generate new ones</p>
-          </div>
+          </motion.div>
         ) : (
-          filtered.map(ticket => {
+          filtered.map((ticket, idx) => {
             const client = clients.find(c => c.id === ticket.clientId);
             const isSelected = selectedTicketId === ticket.id;
             const p = priorityConfig[ticket.priority as keyof typeof priorityConfig];
             const isExpiring = ticket.timeLeftMs < 2 * 60_000 && !ticket.slaBreach;
             
             return (
-              <button
+              <motion.button
                 key={ticket.id}
+                initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.25, delay: idx * 0.03 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => onSelectTicket(ticket)}
                 className={`w-full text-left p-3.5 hover:bg-zinc-800/40 transition-colors group ${isSelected ? 'bg-violet-500/10 border-l-2 border-l-violet-500' : 'border-l-2 border-l-transparent'} ${ticket.slaBreach ? 'bg-red-500/[0.04]' : isExpiring ? 'bg-amber-500/[0.04]' : ''}`}
               >
@@ -152,10 +160,11 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
                     )}
                   </div>
                 </div>
-              </button>
+              </motion.button>
             );
           })
         )}
+        </AnimatePresence>
       </div>
 
       <div className="p-3 border-t border-zinc-800/60 bg-zinc-900/30 flex items-center justify-between">

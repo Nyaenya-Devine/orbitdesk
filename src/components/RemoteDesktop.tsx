@@ -6,9 +6,10 @@ interface Props {
   ticket: Ticket | null;
   isOpen: boolean;
   onClose: () => void;
+  onAction?: (action: string) => void;
 }
 
-export default function RemoteDesktop({ ticket, isOpen, onClose }: Props) {
+export default function RemoteDesktop({ ticket, isOpen, onClose, onAction }: Props) {
   const [activeApp, setActiveApp] = useState<'desktop' | 'terminal' | 'portal' | 'settings'>('desktop');
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [command, setCommand] = useState('');
@@ -35,7 +36,7 @@ export default function RemoteDesktop({ ticket, isOpen, onClose }: Props) {
 
   const runCommand = () => {
     if (!command.trim()) return;
-    
+    onAction?.(`RDP Terminal: ${command} on ${ticket?.userEmail} — real command executed`);
     let output: string[] = [...terminalOutput, `> ${command}`];
     
     const cmd = command.toLowerCase();

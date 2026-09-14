@@ -1,0 +1,38 @@
+DEVINE NYAENYA
+Customer Service Representative | Nairobi, Kenya (Remote)
+devinenyaenya@gmail.com | Nairobi, Kenya | github.com/Nyaenya-Devine/orbitdesk | orbitdesk-gamma.vercel.app | linkedin.com/in/devine-nyaenya
+
+PROFESSIONAL SUMMARY
+Detail-oriented and thoughtful customer support enthusiast with hands-on experience building OrbitDesk — a modern workplace operations lab that simulates real Influx workflows: live tickets with SLAs, CSAT tracking, real-time phone calls where clients do actions on the other side, and multi-channel comms (chat/call/video). Strong problem-solving, clear written/verbal English, sense of humour to defuse stress, ownership mindset until resolution. Fully available for 44h/week rotating roster including weekends, own laptop + noise-canceling headset, strong G Suite knowledge, continuous learner and team player eager to grow with Influx's 1000+ international team providing Support as a Service 24/7.
+
+CORE SKILLS — Aligned to Influx
+- Customer Communication: Excellent written/verbal English, simple steps no jargon, empathy under pressure, positive tone, sense of humour, active listening
+- Problem Diagnosis & Solving: Root cause analysis, What-If simulation, Break Glass verification, audit trail, ownership until appropriate to escalate
+- Multi-channel Support: Real-time phone (Web Audio API ringtone, mute/hold/conference), chat with typing indicators, video call readiness
+- KPIs & Quality: Call handling, Email/Chat response, CSAT & QA quotas, SLA tracking, HMAC-signed audit trail
+- Tools: G Suite (Docs, Gmail, Meet, Calendar), Vercel, Next.js, own laptop, noise-canceling headset, quiet remote workspace
+- Work Style: 44h/week rotating incl. weekends, fast-paced multitasking, personal integrity, team player, continuous learner
+
+PROJECTS
+OrbitDesk — Modern Workplace Operations Lab | Self-built 2026
+Live: orbitdesk-gamma.vercel.app | Real-time phone demo: temporary-zippy-aurora-nb3ruxa.vercel.app | GitHub: github.com/Nyaenya-Devine/orbitdesk
+- Built customer support simulator handling 100+ live tickets with SLA timers, priority P1-P3, CSAT tracking, QA ownership — mirroring Influx 24/7 on-demand operation
+- Implemented real-time phone scenario v2.1.1 (not robotic TTS): Web Audio API 800Hz ringtone loop, incoming modal dark #0a0a0a, Accept/Decline, active call timer, mute/hold, expert conference, transcript that feels like phone call
+- Client does live actions on other side: dsregcmd /status, Company Portal Sync, BitLocker, Entra Audit Logs, Sign-in logs CA tab 53000 — plus follow-up questions and typing bounce, holds legit conversation
+- Designed CommunicationChannel (Intercom-inspired): persona-based language — enterprise technical with Correlation ID vs SMB simple steps no jargon + emojis, empathy for deadline pressure
+- Achieved build verification: 8 routes, Lighthouse >90, security headers, Google Search Console verification, robots Allow, sitemap 4 urls, bento dashboard inspired by Linear/Stripe/Notion
+- Practiced Influx duties: diagnose & solve via chats/calls/video, communicate effectively, coordinate with peers/manager, friendly workplace culture
+
+Chokepoint — Policy Risk & Approval Simulator | 2026
+- Built voice approval center with real-time phone where requester does Entra Audit Logs action, asks ETA, What-If safe with 15min expiry — practiced dual-control approval with audit trail per SEC-2024-07
+
+AVAILABILITY & WORK SETUP — Meets Influx Requirements
+- Schedule: 44 hours/week full-time, rotating roster, OK to work weekends on any allocated shift, 24/7 mindset
+- Equipment: Own laptop, noise-canceling headset, quiet remote workspace in Nairobi, stable internet
+- Languages: English — Excellent written & verbal, Swahili native, Spanish basics, plus sense of humour
+
+EDUCATION & LEARNING
+- Continuous Learner — Customer Support Excellence, Modern Workplace, Intercom/Zendesk best practices, Support as a Service model
+- G Suite Proficient — Docs, Gmail, Meet, Calendar, Sheets
+
+References: OrbitDesk live demo + GitHub + Google verification available. Portfolio: orbitdesk-gamma.vercel.app

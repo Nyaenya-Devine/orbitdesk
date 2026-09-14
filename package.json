@@ -22,6 +22,7 @@
     "postinstall": "electron-builder install-app-deps || true"
   },
   "dependencies": {
+    "framer-motion": "^13.2.0",
     "next": "16.3.5",
     "react": "19.2.1",
     "react-dom": "19.2.1"
@@ -33,7 +34,7 @@
     "@types/react-dom": "^19",
     "concurrently": "^8.2.2",
     "electron": "^28.0.0",
-    "electron-builder": "^24.9.1",
+    "electron-builder": "^26.15.3",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
@@ -58,21 +59,32 @@
       {
         "from": "public/audio",
         "to": "audio",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
       "category": "public.app-category.business",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "public/icon-512.png",
       "darkModeSupport": true
     },
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "public/icon-512.png"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "public/icon-512.png",
       "category": "Office"
     },
@@ -84,5 +96,17 @@
     },
     "publish": null
   },
-  "keywords": ["msp", "modern-workplace", "team-lead", "entra-id", "intune", "voice-calls", "remote-pc", "pwa", "electron", "desktop-app", "simulator"]
+  "keywords": [
+    "msp",
+    "modern-workplace",
+    "team-lead",
+    "entra-id",
+    "intune",
+    "voice-calls",
+    "remote-pc",
+    "pwa",
+    "electron",
+    "desktop-app",
+    "simulator"
+  ]
 }
