@@ -7,7 +7,7 @@ import MockPortals from '@/components/MockPortals';
 import AgentRoster from '@/components/AgentRoster';
 import CommunicationChannel from '@/components/CommunicationChannel';
 import DashboardMetrics from '@/components/DashboardMetrics';
-import CallCenterV3 from '@/components/CallCenterV3';
+import VoiceCallCenter from '@/components/VoiceCallCenter';
 import RemoteDesktop from '@/components/RemoteDesktop';
 import PolicyCenter from '@/components/PolicyCenter';
 import VoiceCallDemo from '@/components/VoiceCallDemo';
@@ -354,7 +354,7 @@ export default function HomeV3() {
         </AnimatePresence>
       </div>
       {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
-      <CallCenterV3 tickets={tickets} onAcceptCall={handleSelectTicket} onCallScore={handleCallScore} />
+      <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} />
       <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
       <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk Lab v5.2 — Livery M365 🎨 • Thread Humour 🧵 • Flowing Calls YOU Greet First 📞 • Student Mode 🎓 • Real Voice 🔊 • Educational</span><span className="font-mono">v5.2 • Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Livery + Humour</span></div></div>
     </div>

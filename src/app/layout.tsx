@@ -13,41 +13,46 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OrbitDesk — Modern Workplace Operations Lab | MSP Team Lead Simulator",
-  description: "The finest MSP Team Lead Simulator — Real-time endless tickets (16 types), live voice calls with clients who talk back and do actions, remote PC access with encrypted RDP, per-client CA/Compliance policies, 5 agents with conflicts, 6 mock admin portals, tech experts conference. 100% real feel, security hardened, desktop installable.",
+  title: "OrbitDesk v6.0 — Queen Elizabeth 👑 Level Excellence | Voice-to-Voice Calls, Remote PC, 8k Logo",
+  description: "World-class expert Modern Workplace Operations Lab — MSP Team Lead Simulator: voice-to-voice calls mouth-to-ear no texting (you speak with mouth, caller hears voice, caller speaks voice you hear via ear, even baby understands), real-time endless tickets 16 types, remote PC access encrypted RDP 100% real feel, per-client policies NovaTech/Bloom/Apex different, ability to execute actions that seem real, bento clean dashboard, livery background related to project good nasty work, thread humor trending. Human premium not AI basic, inspired by top 20 sites combined, clear expectations like Influx, experience 100% real. God mode polished logo — orbit on top of PC with round wooden stand, PC on wood, orbit fixing things with enticing details. 8k advanced images, downloadable logo pack.",
   applicationName: "OrbitDesk",
   authors: [{ name: "Devine Nyaenya", url: "https://github.com/Nyaenya-Devine" }],
   creator: "Devine Nyaenya",
   publisher: "OrbitDesk",
-  keywords: ["MSP", "Modern Workplace", "Team Lead", "Entra ID", "Intune", "M365", "Conditional Access", "Service Desk", "Simulator", "PWA", "Desktop App", "Voice Calls", "Remote PC"],
+  keywords: ["MSP", "Modern Workplace", "Team Lead", "Entra ID", "Intune", "M365", "Conditional Access", "Service Desk", "Simulator", "PWA", "Desktop App", "Voice Calls Mouth-to-Ear", "Remote PC", "8k Logo", "Queen Elizabeth Excellence"],
   category: "Business",
   classification: "MSP Team Lead Simulator",
   referrer: "strict-origin-when-cross-origin",
   formatDetection: { email: false, address: false, telephone: false },
-  metadataBase: new URL("https://orbitdesk.vercel.app"),
+  metadataBase: new URL("https://orbitdesk-gamma.vercel.app"),
   alternates: { canonical: "/" },
   openGraph: {
-    title: "OrbitDesk — Modern Workplace Operations Lab",
-    description: "Real-time tickets, live voice calls where clients talk and do actions, remote PC access, per-client policies, tech experts. Security hardened, desktop installable.",
-    url: "https://orbitdesk.vercel.app",
+    title: "OrbitDesk v6.0 — Queen Elizabeth 👑 Level | Voice-to-Voice, No Texting, Orbit Fixing PC on Wooden Stand",
+    description: "Voice-to-voice calls mouth-to-ear — you speak with mouth caller hears, caller speaks you hear via ear, no texting back after talk like real phone. Orbit on top of PC with round wooden stand, orbit fixing things with enticing details M365, Entra, Intune, voice waveform, remote cursor. 8k advanced images, downloadable logo pack.",
+    url: "https://orbitdesk-gamma.vercel.app",
     siteName: "OrbitDesk",
     type: "website",
     locale: "en_US",
-    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "OrbitDesk Icon" }],
+    images: [
+      { url: "/orbitdesk-logo-godmode-polished.png", width: 1024, height: 1024, alt: "OrbitDesk God Mode Polished Logo — Orbit on top of PC with wooden stand, Queen Elizabeth excellence" },
+      { url: "/orbitdesk-dashboard-8k.png", width: 1200, height: 630, alt: "OrbitDesk Dashboard 8k — Bento clean, voice calls, remote PC" },
+      { url: "/orbitdesk-callcenter-8k.png", width: 1200, height: 630, alt: "OrbitDesk Voice Call Center 8k — Mouth-to-Ear, No Texting" },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "OrbitDesk — Modern Workplace Operations Lab",
-    description: "MSP Team Lead Simulator with real voice calls, remote PC, per-client policies, security hardened",
-    images: ["/icon-512.png"],
+    title: "OrbitDesk v6.0 — Queen Elizabeth 👑 Excellence | Voice-to-Voice Calls",
+    description: "Mouth-to-ear voice calls no texting, orbit fixing PC on wooden stand, 8k logo pack downloadable",
+    images: ["/orbitdesk-logo-godmode-polished.png", "/orbitdesk-dashboard-8k.png"],
   },
   manifest: "/manifest.json",
   icons: {
     icon: [
+      { url: "/orbitdesk-logo-godmode-polished.png", sizes: "512x512", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
+    apple: [{ url: "/orbitdesk-logo-godmode-polished.png", sizes: "512x512" }],
   },
   appleWebApp: {
     capable: true,
@@ -80,8 +85,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="OrbitDesk" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/orbitdesk-logo-godmode-polished.png" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="icon" href="/orbitdesk-logo-godmode-polished.png" />
       </head>
       <body className="min-h-full flex flex-col">
         {children}
@@ -95,13 +101,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     .catch(err => console.log('SW failed', err));
                 });
               }
-              // PWA install prompt
               let deferredPrompt;
               window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
                 console.log('OrbitDesk installable');
-                // Show custom install button if needed
                 const event = new CustomEvent('orbitdesk-installable', { detail: deferredPrompt });
                 window.dispatchEvent(event);
               });
