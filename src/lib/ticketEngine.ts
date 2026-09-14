@@ -46,15 +46,24 @@ function generateUserEmail(clientId: string): string {
   return `${first}.${last}@${domain}`.toLowerCase();
 }
 
-export function generateTicket(): Ticket {
+export function generateTicket(studentMode = true): Ticket {
   const template = randomFrom(ticketTemplates);
   const client = randomFrom(clients.filter(c => template.clientTypes.includes(c.type as any))) || randomFrom(clients);
   
   const now = new Date();
   
-  // Randomly make some P1 more likely if common
+  // Student mode: reduce P1 overwhelming — max 5% P1, not 15% — for learning not expert stress
   let priority = template.priority as 'P1' | 'P2' | 'P3' | 'P4';
-  if (Math.random() < 0.15) priority = 'P1';
+  if (studentMode) {
+    // In student mode, P1 only 3% chance, P2 20%, P3 40%, P4 37% — balanced for learning
+    const rand = Math.random();
+    if (rand < 0.03) priority = 'P1';
+    else if (rand < 0.23) priority = 'P2';
+    else if (rand < 0.63) priority = 'P3';
+    else priority = 'P4';
+  } else {
+    if (Math.random() < 0.05) priority = 'P1'; // Reduced from 15% to 5% even in expert mode
+  }
   
   // Realistic SLA based on client business hours
   const realistic = calculateRealisticSLA(priority, client.id as any, now.getTime());
@@ -84,13 +93,29 @@ export function generateTicket(): Ticket {
     rootCause: template.rootCause,
     correctFix: template.correctFix,
     errorCodes: template.errorCodes,
-    isRecurring: Math.random() < 0.3,
+    isRecurring: Math.random() < 0.2, // Reduced from 30% to 20% for less clutter
     tags: [template.code, template.category, client.id, priority, realistic.businessHoursOnly ? 'business-hours' : '24-7']
   };
 }
 
-export function generateInitialTickets(count: number = 8): Ticket[] {
-  return Array.from({ length: count }, () => generateTicket());
+export function generateInitialTickets(count: number = 5, studentMode = true): Ticket[] {
+  // Student mode: max 1 P1 in initial 5, rest P2-P4 for learning
+  const tickets: Ticket[] = [];
+  let p1Count = 0;
+  
+  for (let i = 0; i < count; i++) {
+    let ticket: Ticket;
+    let attempts = 0;
+    do {
+      ticket = generateTicket(studentMode);
+      attempts++;
+    } while (studentMode && ticket.priority === 'P1' && p1Count >= 1 && attempts < 10);
+    
+    if (ticket.priority === 'P1') p1Count++;
+    tickets.push(ticket);
+  }
+  
+  return tickets;
 }
 
 export function updateTicketTimers(tickets: Ticket[]): Ticket[] {

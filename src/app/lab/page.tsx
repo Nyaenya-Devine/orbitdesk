@@ -18,6 +18,8 @@ import AssessmentReport from '@/components/AssessmentReport';
 import { agents as initialAgents } from '@/data/agents';
 import { StudentProgress, loadProgress, saveProgress, calculateLevel, getBadges, initialProgress } from '@/lib/progressEngine';
 import Logo from '@/components/Logo';
+import RemoteDesktopV2 from '@/components/RemoteDesktopV2';
+import StudentModeGuide from '@/components/StudentModeGuide';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'assessment';
 
@@ -34,13 +36,17 @@ export default function HomeV3() {
   const [portalActionLog, setPortalActionLog] = useState<string[]>([]);
   const [progress, setProgress] = useState<StudentProgress>(initialProgress);
   const [showAssessment, setShowAssessment] = useState(false);
+  const [bitLockerFixed, setBitLockerFixed] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+  const [studentMode, setStudentMode] = useState(true);
+  const [showGuide, setShowGuide] = useState(true);
 
   // Load progress from localStorage
   useEffect(() => {
     const saved = loadProgress();
     setProgress(saved);
-    setTickets(generateInitialTickets(8));
-  }, []);
+    setTickets(generateInitialTickets(5, studentMode));
+  }, [studentMode]);
 
   // Save progress whenever it changes
   useEffect(() => {
@@ -155,14 +161,13 @@ export default function HomeV3() {
 
   const handlePortalAction = (action: string) => {
     setPortalActionLog(prev => [`${new Date().toLocaleTimeString()} — ${action}`, ...prev].slice(0,10));
-    // Group similar portal actions to prevent stuck notifications
     const groupKey = action.includes('BitLocker') ? 'bitlocker' : action.includes('Sign-in logs') ? 'signin-logs' : action.includes('Sync') ? 'sync' : action.substring(0,20);
     addToast(action, 'success', 3000, groupKey);
     
     if (action.includes('BitLocker') || action.includes('Enable encryption')) { 
       setChecklist(prev => ({ ...prev, tool: true })); 
-      // Don't spam toast for checklist — only once
-      if (!checklist.tool) addToast('BitLocker logged — checklist: Used correct tool ✓', 'info', 3000, 'checklist-tool');
+      setBitLockerFixed(true);
+      if (!checklist.tool) addToast('BitLocker enabled — RDP now Compliant ✓ — real linkage portal↔RDP', 'success', 4000, 'checklist-tool');
     }
     if (action.includes('Sign-in logs') || action.includes('Audit Logs') || action.includes('Message Trace')) { 
       setChecklist(prev => ({ ...prev, logs: true })); 
@@ -170,6 +175,7 @@ export default function HomeV3() {
     }
     if (action.includes('Release') || action.includes('Sync')) { 
       setChecklist(prev => ({ ...prev, tool: true })); 
+      setSyncDone(true);
     }
 
     setProgress(prev => ({
@@ -272,7 +278,12 @@ export default function HomeV3() {
               <span>{tab.icon}</span>{tab.label}{tab.badge !== undefined && tab.badge > 0 && <span className="ml-1 h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{tab.badge}</span>}
             </button>
           ))}
-          <div className="ml-auto flex items-center gap-2"><button onClick={() => window.location.href = '/'} className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-300 transition">← Back to Web</button><InstallPromptV2 /><span className="hidden md:block text-[11px] text-zinc-600">Real Voice • Live Scoring • Saved • SLA • Influx</span></div>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={() => setStudentMode(!studentMode)} className={`h-7 px-3 rounded-full text-[11px] font-medium border transition ${studentMode ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-amber-500/15 text-amber-300 border-amber-500/20'}`}>{studentMode ? '🎓 Student Mode • Max 1 P1 • 5 tickets • Guided' : '🔥 Expert Mode • P1 Flood • 25 tickets • Endless'}</button>
+            <button onClick={() => setShowGuide(true)} className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-300 transition">📚 Tutorial</button>
+            <button onClick={() => window.location.href = '/'} className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-300 transition">← Web</button>
+            <InstallPromptV2 />
+          </div>
         </div>
       </div>
 
@@ -335,8 +346,9 @@ export default function HomeV3() {
           {activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)] overflow-y-auto"><AssessmentReport progress={progress} onReset={handleResetProgress} /></motion.div>}
         </AnimatePresence>
       </div>
+      {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
       <CallCenterV3 tickets={tickets} onAcceptCall={handleSelectTicket} onCallScore={handleCallScore} />
-      <RemoteDesktop ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} />
+      <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
       <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk Lab v3.0 — Real Voice Both Sides 🔊 • Live Scoring 📊 • Progress Saved 💾 • Realistic SLA ⏱️ • Competition Ready 🏆 • Educational</span><span className="font-mono">v3.0 • Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 8 routes • Finest Details</span></div></div>
     </div>
   );
