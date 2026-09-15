@@ -13,6 +13,10 @@ export default function DashboardMetrics({ tickets }: Props) {
  const unassigned = tickets.filter(t => !t.assignedTo).length;
  const recurring = tickets.filter(t => t.isRecurring).length;
  const resolved = tickets.filter(t => t.status === 'resolved').length;
+ const beginner = tickets.filter((t:any) => t.difficulty === 'beginner').length;
+ const intermediate = tickets.filter((t:any) => t.difficulty === 'intermediate').length;
+ const advanced = tickets.filter((t:any) => t.difficulty === 'advanced').length;
+ const expert = tickets.filter((t:any) => t.difficulty === 'expert').length;
  
  const slaCompliance = total > 0 ? Math.round(((total - breached) / total) * 100) : 100;
  const avgCSAT = 4.2;
@@ -155,6 +159,24 @@ export default function DashboardMetrics({ tickets }: Props) {
    <div className="text-xs text-zinc-400 mt-1">{unassigned} unassigned • {recurring} recurring • {resolved} resolved today</div>
   </div>
   <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm">🎫</div>
+  </div>
+  <div className="mt-3 grid grid-cols-4 gap-2 text-[11px]">
+  <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-2 text-center">
+   <div className="font-bold text-emerald-300">{beginner}</div>
+   <div className="text-emerald-400/70">Beginner</div>
+  </div>
+  <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-2 text-center">
+   <div className="font-bold text-blue-300">{intermediate}</div>
+   <div className="text-blue-400/70">Inter</div>
+  </div>
+  <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-2 text-center">
+   <div className="font-bold text-amber-300">{advanced}</div>
+   <div className="text-amber-400/70">Adv</div>
+  </div>
+  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-2 text-center">
+   <div className="font-bold text-red-300">{expert}</div>
+   <div className="text-red-400/70">Expert</div>
+  </div>
   </div>
   <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
   <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-2 text-center">

@@ -15,7 +15,7 @@ import DesktopDownloadV2 from '@/components/DesktopDownloadV2';
 import ToastSystem, { Toast } from '@/components/ToastSystem';
 import AssessmentReport from '@/components/AssessmentReport';
 import { agents as initialAgents } from '@/data/agents';
-import { StudentProgress, loadProgress, saveProgress, calculateLevel, getBadges, initialProgress } from '@/lib/progressEngine';
+import { StudentProgress, loadProgress, saveProgress, calculateLevel, getBadges, initialProgress, getLevelInfo } from '@/lib/progressEngine';
 import Logo from '@/components/Logo';
 import RemoteDesktopV2 from '@/components/RemoteDesktopV2';
 import StudentModeGuide from '@/components/StudentModeGuide';
@@ -24,6 +24,7 @@ import ThreadHumor from '@/components/ThreadHumor';
 import AuthGate from '@/components/AuthGate';
 import ClassCommandCenter from '@/components/ClassCommandCenter';
 import GrowthStrategy from '@/components/GrowthStrategy';
+import LevelUpCelebration from '@/components/LevelUpCelebration';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'growth' | 'assessment';
 
@@ -47,6 +48,7 @@ export default function HomeV3() {
  const [studentMode, setStudentMode] = useState(true);
  const [showGuide, setShowGuide] = useState(true);
  const [showLiveChat, setShowLiveChat] = useState(false);
+ const [levelUp, setLevelUp] = useState<{ oldLevel: number; newLevel: number } | null>(null);
 
  // Check auth persistence — login to keep data not start from scratch
  useEffect(() => {
@@ -65,7 +67,7 @@ export default function HomeV3() {
  if (!isAuthenticated) return;
  const saved = loadProgress();
  setProgress(saved);
- setTickets(generateInitialTickets(5, studentMode));
+ setTickets(generateInitialTickets(5, studentMode, saved.ticketsResolved, saved.level));
  }, [studentMode, isAuthenticated]);
 
  // Save progress whenever it changes
@@ -78,15 +80,15 @@ export default function HomeV3() {
  const generator = setInterval(() => {
  setTickets(prev => {
   if (Math.random() < 0.2 && prev.length < 25) {
-  const newTicket = generateTicket();
-  addToast(`New ${newTicket.priority}: ${newTicket.code} — ${newTicket.title.substring(0,40)}...`, 'info', newTicket.priority === 'P1' ? 5000 : 4000, `new-${newTicket.priority}`);
+  const newTicket = generateTicket(studentMode, progress.ticketsResolved, progress.level);
+  addToast(`New ${newTicket.priority}: ${newTicket.code} — ${newTicket.title.substring(0,40)}... [${newTicket.difficulty}] Lvl ${progress.level}`, 'info', newTicket.priority === 'P1' ? 5000 : 4000, `new-${newTicket.priority}`);
   return [newTicket, ...prev];
   }
   return prev;
  });
  }, 6000);
  return () => { clearInterval(timer); clearInterval(generator); };
- }, []);
+ }, [progress.ticketsResolved, progress.level, studentMode]);
 
  const addToast = (message: string, type: Toast['type'] = 'success', duration = 4000, groupKey?: string) => {
  const id = Date.now().toString() + Math.random().toString(36).substring(7);
@@ -137,14 +139,25 @@ export default function HomeV3() {
  setTickets(prev => prev.map(t => t.id === selectedTicket.id ? { ...t, status: 'resolved' as const, csat, qaScore: qa } : t));
  setResolvedCount(c => c + 1);
  
- // Update progress — saved for assessment
+ // Update progress — saved for assessment — with difficulty scaling
  setProgress(prev => {
  const newResolved = prev.ticketsResolved + 1;
  const newBreached = isBreached ? prev.ticketsBreached + 1 : prev.ticketsBreached;
  const newAvgCSAT = ((prev.avgCSAT * prev.ticketsResolved) + csat) / newResolved;
  const newAvgQA = ((prev.avgQA * prev.ticketsResolved) + qa) / newResolved;
- const xpGain = isBreached ? 10 : qa >= 90 ? 30 : qa >= 75 ? 20 : 10;
- const newXp = prev.xp + xpGain + (checklist.lang ? 10 : 0);
+ // XP based on difficulty + QA
+ const difficultyXp = selectedTicket.difficulty === 'beginner' ? 10 : selectedTicket.difficulty === 'intermediate' ? 20 : selectedTicket.difficulty === 'advanced' ? 30 : 50;
+ const baseXp = isBreached ? 5 : qa >= 90 ? difficultyXp + 10 : qa >= 75 ? difficultyXp : Math.floor(difficultyXp/2);
+ const xpGain = baseXp + (checklist.lang ? 10 : 0);
+ const newXp = prev.xp + xpGain;
+ const oldLevel = prev.level;
+ const newLevel = calculateLevel(newXp);
+ 
+ // Trigger OrbitDesk level up animation if leveled up
+ if (newLevel > oldLevel) {
+  setTimeout(() => setLevelUp({ oldLevel, newLevel }), 800);
+  addToast(`🚀 LEVEL UP! Lvl ${oldLevel} → ${newLevel} — ${getLevelInfo(newLevel).title} — Orbit expanded! New: ${getLevelInfo(newLevel).unlocks[0]}`, 'success', 6000, `levelup-${newLevel}`);
+ }
  
  return {
   ...prev,
@@ -153,7 +166,7 @@ export default function HomeV3() {
   avgCSAT: newAvgCSAT,
   avgQA: newAvgQA,
   xp: newXp,
-  level: calculateLevel(newXp),
+  level: newLevel,
   slaCompliance: Math.round((newResolved / (newResolved + newBreached)) * 100) || 100,
   communicationScores: {
   ...prev.communicationScores,
@@ -163,14 +176,14 @@ export default function HomeV3() {
   badges: getBadges({ ...prev, ticketsResolved: newResolved, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp } as any),
   history: [...prev.history, { 
   timestamp: Date.now(), 
-  action: `Resolved ${selectedTicket.code} — CSAT ${csat} QA ${qa}% ${isBreached ? 'BREACHED' : ''}`, 
+  action: `Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] — CSAT ${csat} QA ${qa}% ${isBreached ? 'BREACHED' : ''} +${xpGain} XP`, 
   ticketCode: selectedTicket.code,
   score: Math.round((csat * 20 + qa) / 2),
   }].slice(-50),
  };
  });
  
- addToast(`Resolved ${selectedTicket.code} — CSAT ${csat} ⭐ QA ${qa}% ${isBreached ? '⚠️ BREACHED -10 XP' : `+${qa >= 90 ? 30 : 20} XP`} — ${checklist.lang ? 'Client language used ✓' : 'Use client language next time'}`, isBreached ? 'warning' : 'success', 5000, `resolve-${selectedTicket.code}`);
+ addToast(`Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] — CSAT ${csat} ⭐ QA ${qa}% ${isBreached ? '⚠️ BREACHED -5 XP' : `+${selectedTicket.difficulty === 'expert' ? 50 : selectedTicket.difficulty === 'advanced' ? 30 : selectedTicket.difficulty === 'intermediate' ? 20 : 10} XP base`} — ${checklist.lang ? 'Client language ✓' : 'Use client language next time'}`, isBreached ? 'warning' : 'success', 5000, `resolve-${selectedTicket.code}`);
  
  setTimeout(() => { 
  setTickets(prev => prev.filter(t => t.id !== selectedTicket.id)); 
@@ -212,12 +225,18 @@ export default function HomeV3() {
  }));
  addToast(`Conflict resolved via 1:1 SBI — coaching, shadowing 2 tickets/day. Culture improved.`, 'success', 4000, `conflict-${agentId}`);
  
- setProgress(prev => ({
- ...prev,
- xp: prev.xp + 15,
- level: calculateLevel(prev.xp + 15),
- history: [...prev.history, { timestamp: Date.now(), action: `Resolved conflict for ${agentId} — SBI coaching` }].slice(-50),
- }));
+ setProgress(prev => {
+  const newXp = prev.xp + 15;
+  const oldLevel = prev.level;
+  const newLevel = calculateLevel(newXp);
+  if (newLevel > oldLevel) setTimeout(() => setLevelUp({ oldLevel, newLevel }), 500);
+  return {
+  ...prev,
+  xp: newXp,
+  level: newLevel,
+  history: [...prev.history, { timestamp: Date.now(), action: `Resolved conflict for ${agentId} — SBI coaching +15 XP` }].slice(-50),
+  };
+ });
  };
 
  const handleClientLanguageToggle = () => {
@@ -234,6 +253,10 @@ export default function HomeV3() {
  const avgFluency = Math.round((prev.communicationScores.fluency * prev.callsHandled + scores.avgFluency) / newCalls);
  const avgClientLang = Math.round((prev.communicationScores.clientLanguage * prev.callsHandled + scores.avgClientLang) / newCalls);
  const xpGain = scores.overall >= 80 ? 40 : scores.overall >= 60 ? 25 : 10;
+ const newXp = prev.xp + xpGain;
+ const oldLevel = prev.level;
+ const newLevel = calculateLevel(newXp);
+ if (newLevel > oldLevel) setTimeout(() => setLevelUp({ oldLevel, newLevel }), 500);
  
  return {
   ...prev,
@@ -245,11 +268,11 @@ export default function HomeV3() {
   fluency: avgFluency,
   clientLanguage: avgClientLang,
   },
-  xp: prev.xp + xpGain,
-  level: calculateLevel(prev.xp + xpGain),
+  xp: newXp,
+  level: newLevel,
   callScores: [...prev.callScores, { duration, empathy: scores.avgEmpathy, resolution: scores.overall, clientSatisfaction: scores.overall }].slice(-20),
-  badges: getBadges({ ...prev, callsHandled: newCalls, xp: prev.xp + xpGain } as any),
-  history: [...prev.history, { timestamp: Date.now(), action: `Call handled — Score ${scores.overall}/100 — Duration ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')}`, score: scores.overall }].slice(-50),
+  badges: getBadges({ ...prev, callsHandled: newCalls, xp: newXp } as any),
+  history: [...prev.history, { timestamp: Date.now(), action: `Call handled — Score ${scores.overall}/100 — Duration ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')} +${xpGain} XP`, score: scores.overall }].slice(-50),
  };
  });
  
@@ -440,7 +463,10 @@ export default function HomeV3() {
  {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
  <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} />
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
- <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk — Modern Workplace Operations Lab</span><span className="font-mono">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Livery + Humour</span></div></div>
+ {levelUp && (
+  <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />
+ )}
+ <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk — Modern Workplace Operations Lab • {getLevelInfo(progress.level).title} • Orbit {getLevelInfo(progress.level).orbitRings} rings • {progress.ticketsResolved < 5 ? 'Beginner' : progress.ticketsResolved < 10 ? 'Intermediate' : progress.ticketsResolved < 20 ? 'Advanced' : 'Expert'} pool</span><span className="font-mono">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Progression ON</span></div></div>
  </div>
  );
 }

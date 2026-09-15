@@ -1,5 +1,5 @@
 'use client';
-import { Ticket, getSLAColor } from '@/lib/ticketEngine';
+import { Ticket, getDifficultyLabel } from '@/lib/ticketEngine';
 import { clients } from '@/data/clients';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,7 +25,7 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
  const filtered = tickets.filter(t => {
  if (filter === 'P1' && t.priority !== 'P1') return false;
  if (filter === 'unassigned' && t.assignedTo) return false;
- if (search && !`${t.title} ${t.code} ${t.clientName} ${t.userEmail}`.toLowerCase().includes(search.toLowerCase())) return false;
+ if (search && !`${t.title} ${t.code} ${t.clientName} ${t.userEmail} ${(t as any).difficulty || ''}`.toLowerCase().includes(search.toLowerCase())) return false;
  return true;
  }).sort((a, b) => {
  if (a.priority === 'P1' && b.priority !== 'P1') return -1;
@@ -77,7 +77,7 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
 
   <div className="relative">
   <input
-  placeholder="Search tickets, clients, codes..."
+  placeholder="Search tickets, clients, codes, difficulty..."
   value={search}
   onChange={e => setSearch(e.target.value)}
   className="w-full h-8 pl-8 pr-3 rounded-lg bg-zinc-800/60 border border-zinc-700/50 text-[13px] text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20"
@@ -104,6 +104,7 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
   const isSelected = selectedTicketId === ticket.id;
   const p = priorityConfig[ticket.priority as keyof typeof priorityConfig];
   const isExpiring = ticket.timeLeftMs < 2 * 60_000 && !ticket.slaBreach;
+  const diff = getDifficultyLabel((ticket as any).difficulty || 'beginner');
   
   return (
    <motion.button
@@ -119,9 +120,12 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
    >
    <div className="flex items-start justify-between gap-3">
    <div className="min-w-0 flex-1">
-    <div className="flex items-center gap-2 mb-1.5">
+    <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
     <span className={`h-5 px-1.5 rounded text-[10px] font-bold flex items-center ${p.bg} ${p.text} border ${p.border}`}>
     {p.label}
+    </span>
+    <span className={`h-5 px-1.5 rounded text-[9px] font-bold flex items-center border ${diff.color}`}>
+    {diff.label} +{diff.xp}XP
     </span>
     <span className="h-5 w-5 rounded-full bg-zinc-800 border border-zinc-700/50 flex items-center justify-center">
     <span className={`h-1.5 w-1.5 rounded-full ${p.dot} ${ticket.priority === 'P1' ? 'animate-pulse' : ''}`} />
@@ -178,7 +182,7 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
   {breached} breached
   </span>
   </div>
-  <span className="text-[10px] text-zinc-600 font-mono">Live • Endless • Real-time</span>
+  <span className="text-[10px] text-zinc-600 font-mono">Live • {filtered[0] ? (filtered[0] as any).difficulty : 'beginner'} • Real-time</span>
  </div>
  </div>
  );

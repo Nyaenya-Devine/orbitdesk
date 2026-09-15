@@ -1,6 +1,8 @@
 export type TicketCategory = 'entra' | 'intune' | 'exchange' | 'teams' | 'windows' | 'm365' | 'defender';
 export type TicketPriority = 'P1' | 'P2' | 'P3' | 'P4';
 
+export type TicketDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
 export interface TicketTemplate {
  id: string;
  category: TicketCategory;
@@ -9,6 +11,7 @@ export interface TicketTemplate {
  description: string;
  userMessage: string;
  priority: TicketPriority;
+ difficulty: TicketDifficulty;
  common: boolean;
  modern: boolean;
  requiredTools: string[];
@@ -20,16 +23,16 @@ export interface TicketTemplate {
  clientTypes: ('enterprise-tech' | 'smb-non-tech' | 'enterprise-regulated')[];
  estimatedMTTR: number;
  csatFactors: {
- checkLogsFirst: number;
- correctTool: number;
- clientLanguage: number;
- confirmResolution: number;
- documentKB: number;
+  checkLogsFirst: number;
+  correctTool: number;
+  clientLanguage: number;
+  confirmResolution: number;
+  documentKB: number;
  };
 }
 
 export const ticketTemplates: TicketTemplate[] = [
- // ENTRA ID - 8 templates
+ // ENTRA ID - 5 templates
  {
  id: 'entra-001',
  category: 'entra',
@@ -38,6 +41,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User cannot access M365 apps, blocked by CA policy requiring compliant device',
  userMessage: "I can't access Outlook and Teams, says 'You cannot access this right now' and 'Device not compliant'. Need email urgently for payroll!",
  priority: 'P2',
+ difficulty: 'intermediate',
  common: true,
  modern: true,
  requiredTools: ['Service Health Dashboard', 'Entra ID > Sign-in logs > Conditional Access tab', 'Intune > Device Compliance', 'dsregcmd /status', 'Company Portal Sync'],
@@ -58,6 +62,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User traveling, blocked by location-based CA policy',
  userMessage: "I'm in Mombasa for client meeting and can't access SharePoint, says blocked due to location. I'm supposed to present in 1 hour!",
  priority: 'P1',
+ difficulty: 'advanced',
  common: true,
  modern: true,
  requiredTools: ['Sign-in logs > Location', 'Conditional Access > Named Locations', 'What If tool', 'MFA'],
@@ -78,6 +83,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User not receiving MFA prompt or stuck in loop',
  userMessage: "I changed phone and now Authenticator doesn't work, keeps asking for code but never sends. Can't login to anything!",
  priority: 'P2',
+ difficulty: 'beginner',
  common: true,
  modern: true,
  requiredTools: ['Entra ID > Users > Authentication methods', 'MFA reset', 'Service Health'],
@@ -98,6 +104,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User account locked due to multiple failed attempts, possible attack',
  userMessage: "My account is locked, says too many failed attempts but I didn't try to login today. Is this hacking?",
  priority: 'P1',
+ difficulty: 'advanced',
  common: true,
  modern: true,
  requiredTools: ['Sign-in logs > Failure reason', 'Risky sign-ins', 'Audit logs', 'Entra ID Protection'],
@@ -118,6 +125,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User cannot SSO into third-party app via Entra',
  userMessage: "I click on Salesforce app in My Apps portal but it says 'You do not have access' but my manager says I should have access.",
  priority: 'P3',
+ difficulty: 'expert',
  common: true,
  modern: false,
  requiredTools: ['Enterprise Applications > User assignment', 'Sign-in logs > Application', 'Groups'],
@@ -130,7 +138,7 @@ export const ticketTemplates: TicketTemplate[] = [
  estimatedMTTR: 15,
  csatFactors: { checkLogsFirst: 2, correctTool: 2, clientLanguage: 1, confirmResolution: 1, documentKB: 1 }
  },
- // INTUNE - 10 templates
+ // INTUNE - 5 templates
  {
  id: 'intune-001',
  category: 'intune',
@@ -139,6 +147,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'Windows device enrollment fails, already enrolled stale record',
  userMessage: "I'm trying to enroll my new laptop to Company Portal but it says 'Device already enrolled' error 0x80180024. I had old laptop before.",
  priority: 'P2',
+ difficulty: 'intermediate',
  common: true,
  modern: true,
  requiredTools: ['Intune > Devices > Enrollment failures', 'Entra ID > Devices', 'dsregcmd /status', 'Settings > Accounts > Access work or school'],
@@ -159,6 +168,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'MDM scope is None in Entra ID',
  userMessage: "All new users cannot enroll devices, getting 'MDM authority not defined' error. Started today after admin change.",
  priority: 'P1',
+ difficulty: 'advanced',
  common: true,
  modern: true,
  requiredTools: ['Entra ID > Mobility (MDM and MAM)', 'Audit logs', 'Intune > Enrollment'],
@@ -179,6 +189,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User hit Entra device limit',
  userMessage: "I got new phone and can't enroll it, says 'Device cap reached' - I have old phones and tablets enrolled.",
  priority: 'P3',
+ difficulty: 'beginner',
  common: true,
  modern: false,
  requiredTools: ['Entra ID > Devices > User devices', 'Intune > Devices'],
@@ -199,6 +210,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'Device non-compliant due to BitLocker',
  userMessage: "My laptop says 'Device not compliant - Contact IT' and I can't access Teams. I need it for client call in 30 mins!",
  priority: 'P1',
+ difficulty: 'intermediate',
  common: true,
  modern: true,
  requiredTools: ['Intune > Device Compliance > Failing setting', 'dsregcmd /status', 'Company Portal Sync', 'BitLocker status'],
@@ -219,6 +231,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'New devices failing Autopilot',
  userMessage: "We received 20 new laptops for onboarding, Autopilot stuck at 'Securing your hardware' - TPM error. Onboarding delayed!",
  priority: 'P1',
+ difficulty: 'expert',
  common: true,
  modern: true,
  requiredTools: ['Intune > Enrollment > Windows > Autopilot diagnostics', 'TPM.msc', 'Event Viewer'],
@@ -231,7 +244,7 @@ export const ticketTemplates: TicketTemplate[] = [
  estimatedMTTR: 60,
  csatFactors: { checkLogsFirst: 2, correctTool: 2, clientLanguage: 1, confirmResolution: 1, documentKB: 2 }
  },
- // EXCHANGE
+ // EXCHANGE - 3
  {
  id: 'exchange-001',
  category: 'exchange',
@@ -240,6 +253,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'Legit external email quarantined as spam/phish',
  userMessage: "Client sent invoice from vendor@supplier.com but it's not in inbox, finance needs it urgently for payment today! I checked junk, not there.",
  priority: 'P1',
+ difficulty: 'intermediate',
  common: true,
  modern: true,
  requiredTools: ['Exchange > Mail flow > Message Trace', 'Security > Quarantine', 'Defender > Anti-spam policy', 'Allowed senders'],
@@ -260,6 +274,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User has Full Access but shared mailbox not auto-mapping',
  userMessage: "My manager gave me access to finance@company.com shared mailbox but it's not showing in Outlook. I can see it in webmail though.",
  priority: 'P2',
+ difficulty: 'beginner',
  common: true,
  modern: false,
  requiredTools: ['Exchange > Mailboxes > Shared > Delegation', 'OWA test', 'Outlook profile', 'Auto-mapping'],
@@ -280,6 +295,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'All users cannot send external emails, mail flow blocked',
  userMessage: "URGENT: No one can send emails to external clients since 9am, all stuck in Outbox. We have client proposals due!",
  priority: 'P1',
+ difficulty: 'expert',
  common: false,
  modern: true,
  requiredTools: ['Exchange > Mail flow > Message Trace', 'Mail flow rules', 'Service Health', 'Audit logs'],
@@ -292,7 +308,7 @@ export const ticketTemplates: TicketTemplate[] = [
  estimatedMTTR: 40,
  csatFactors: { checkLogsFirst: 2, correctTool: 2, clientLanguage: 1, confirmResolution: 1, documentKB: 2 }
  },
- // TEAMS
+ // TEAMS - 1
  {
  id: 'teams-001',
  category: 'teams',
@@ -301,6 +317,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'Teams presence stuck, chat delayed',
  userMessage: "My Teams shows offline but I'm online, and chats are delayed by 10 mins. Colleagues think I'm away!",
  priority: 'P3',
+ difficulty: 'beginner',
  common: true,
  modern: false,
  requiredTools: ['Teams Admin Center > Users > Presence', 'Service Health', 'Teams cache clear'],
@@ -313,7 +330,7 @@ export const ticketTemplates: TicketTemplate[] = [
  estimatedMTTR: 15,
  csatFactors: { checkLogsFirst: 1, correctTool: 2, clientLanguage: 2, confirmResolution: 1, documentKB: 1 }
  },
- // WINDOWS + M365
+ // M365 + WINDOWS + DEFENDER
  {
  id: 'm365-001',
  category: 'm365',
@@ -322,6 +339,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'New user cannot access M365 apps due to no license',
  userMessage: "New hire John started today but can't access email or Teams, says no license. Onboarding blocked!",
  priority: 'P2',
+ difficulty: 'beginner',
  common: true,
  modern: false,
  requiredTools: ['M365 Admin Center > Billing > Licenses', 'Users > Licenses', 'Groups'],
@@ -342,6 +360,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'User prompted for BitLocker recovery key after update',
  userMessage: "After Windows update, my laptop asks for BitLocker recovery key, I don't have it! Can't work!",
  priority: 'P1',
+ difficulty: 'intermediate',
  common: true,
  modern: true,
  requiredTools: ['Entra ID > Devices > BitLocker keys', 'Intune > Devices > Recovery keys', 'Manage-BDE'],
@@ -354,7 +373,6 @@ export const ticketTemplates: TicketTemplate[] = [
  estimatedMTTR: 25,
  csatFactors: { checkLogsFirst: 2, correctTool: 2, clientLanguage: 2, confirmResolution: 2, documentKB: 1 }
  },
- // DEFENDER - Modern
  {
  id: 'defender-001',
  category: 'defender',
@@ -363,6 +381,7 @@ export const ticketTemplates: TicketTemplate[] = [
  description: 'Defender for Endpoint blocking business app as malware',
  userMessage: "Our custom finance app is being blocked by Defender as malware, but it's safe! We need it for month-end close today!",
  priority: 'P1',
+ difficulty: 'advanced',
  common: true,
  modern: true,
  requiredTools: ['Defender portal > Alerts', 'Defender > Indicators', 'Intune > Antivirus exclusions'],
