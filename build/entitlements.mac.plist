@@ -2,19 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- OrbitDesk — macOS Hardened Runtime Entitlements — Security -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
     <true/>
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
-    <!-- Network — required for Vercel live deployment + auto-update via GitHub Releases -->
     <key>com.apple.security.network.client</key>
     <true/>
-    <!-- Microphone — required for voice call center STT (Web Speech API) -->
     <key>com.apple.security.device.audio-input</key>
     <true/>
-    <!-- No camera, no location — zero-trust -->
 </dict>
 </plist>
