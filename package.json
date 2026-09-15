@@ -1,6 +1,6 @@
 {
   "name": "orbitdesk",
-  "version": "6.0.0",
+  "version": "6.6.0",
   "private": true,
   "description": "Modern Workplace Operations Lab — MSP Team Lead Simulator with real voice calls, remote PC access, tech experts conference, desktop installable",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
@@ -13,30 +13,39 @@
     "lint": "next lint",
     "desktop": "electron .",
     "desktop:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "desktop:build": "next build && next export || echo 'Export skipped for Next 16, using build'",
+    "desktop:build": "next build",
     "desktop:dist": "npm run build && electron-builder --publish=never",
     "desktop:dist:win": "electron-builder --win --publish=never",
     "desktop:dist:mac": "electron-builder --mac --publish=never",
     "desktop:dist:linux": "electron-builder --linux --publish=never",
+    "desktop:publish": "electron-builder --publish=always",
     "pwa:build": "next build",
-    "postinstall": "electron-builder install-app-deps || true"
+    "sbom": "cyclonedx-npm --output-file sbom.json --output-format json",
+    "audit:fix": "npm audit fix",
+    "postinstall": "electron-builder install-app-deps || true",
+    "prepare": "husky install || true"
   },
   "dependencies": {
+    "electron-log": "^5.2.1",
+    "electron-updater": "^6.6.2",
     "framer-motion": "^13.2.0",
     "next": "16.3.5",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
   "devDependencies": {
+    "@cyclonedx/cyclonedx-npm": "^3.0.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "concurrently": "^8.2.2",
-    "electron": "^28.0.0",
-    "electron-builder": "^26.15.3",
+    "electron": "^32.3.3",
+    "electron-builder": "^26.0.12",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wait-on": "^7.2.0"
@@ -44,46 +53,54 @@
   "build": {
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
-    "copyright": "© 2026 OrbitDesk — Educational Simulator — MIT",
+    "copyright": "© 2026 OrbitDesk — Educational Simulator — MIT — Devine Nyaenya",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "public"
     },
     "files": [
       "electron.js",
       "preload.js",
       "out/**/*",
       "public/**/*",
-      "node_modules/**/*"
+      "!public/audio/*.wav",
+      "!**/*.map"
     ],
     "extraResources": [
       {
         "from": "public/audio",
         "to": "audio",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       }
     ],
+    "asar": true,
+    "asarUnpack": ["**/*.node"],
     "mac": {
       "category": "public.app-category.business",
       "target": [
-        "dmg",
-        "zip"
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
       ],
       "icon": "public/icon-512.png",
-      "darkModeSupport": true
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        { "target": "nsis", "arch": ["x64", "ia32"] },
+        { "target": "portable", "arch": ["x64"] }
       ],
-      "icon": "public/icon-512.png"
+      "icon": "public/icon-512.png",
+      "publisherName": "Devine Nyaenya",
+      "verifyUpdateCodeSignature": false
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
       ],
       "icon": "public/icon-512.png",
       "category": "Office"
@@ -92,9 +109,25 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "OrbitDesk Lab",
+      "artifactName": "OrbitDesk-Setup-${version}.${ext}"
     },
-    "publish": null
+    "dmg": {
+      "sign": false,
+      "artifactName": "OrbitDesk-${version}-${arch}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Nyaenya-Devine",
+      "repo": "orbitdesk",
+      "private": false,
+      "releaseType": "release"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": ["eslint --fix"],
+    "*.{json,md,yml,yaml}": ["prettier --write || true"]
   },
   "keywords": [
     "msp",
@@ -107,6 +140,10 @@
     "pwa",
     "electron",
     "desktop-app",
-    "simulator"
+    "simulator",
+    "cybersecurity",
+    "zero-trust",
+    "conditional-access",
+    "security-hardening"
   ]
 }

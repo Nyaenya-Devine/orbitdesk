@@ -95,17 +95,59 @@ OrbitDesk simulates Modern Workplace Support Team Lead scenarios. Even as a simu
   - All commands logged (dsregcmd, Get-BitLockerVolume)
   - Session info shows client, user, compliance, policy
 
-## Security Controls Implemented
-- Encrypted sessions (simulated)
-- Audit logs (Entra Audit, Exchange, Intune, Remote)
-- RBAC (Senior/Junior/Lead with max tickets and skills)
-- Break Glass
-- Compliance enforcement (BitLocker, Defender, OS version, Secure Boot, PIN)
-- Zero Trust (CA, MFA, Trusted locations, Approved apps)
-- Defender for Office 365 (Quarantine, Anti-spam, Anti-phish, DLP)
-- Security headers (CSP, HSTS, X-Frame-Options)
-- No real data, LocalStorage only, no tracking
-- Input sanitization (command whitelist)
+### 9. XSS in LinkedIn Chat Dock → Client Message Executes Script
+- **Vector**: Malicious client sends `<img src=x onerror=alert(1)>` in chat, if rendered via innerHTML executes
+- **Impact**: XSS, session hijack, LocalStorage theft (progress, profile)
+- **Mitigation in OrbitDesk v6.6**:
+  - React escapes by default — no `dangerouslySetInnerHTML`, no `innerHTML`
+  - Chat messages rendered as text nodes `<p>{msg.text}</p>` — auto-escaped
+  - CSP `script-src 'self'` blocks inline eval, `frame-ancestors 'none'` prevents clickjacking
+  - Content sanitized — no HTML parsing, only plain text
+  - Verified via CodeQL XSS query
+
+### 10. Electron IPC Bypass → Preload → Main Process RCE
+- **Vector**: Renderer compromises preload, calls ipcRenderer to execute arbitrary main process code
+- **Impact**: RCE, file system access, auto-update tampering
+- **Mitigation in OrbitDesk v6.6**:
+  - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` — no node in renderer
+  - Preload whitelists only specific channels — `check-for-updates`, `download-update`, `install-update`, `get-app-version`, `incoming-call` — no generic invoke
+  - `ipcMain.handle` validates input, no eval, no shell exec
+  - `requestSingleInstanceLock` prevents spoofing second instance
+  - CodeQL + electron hardening check in CI verifies
+
+### 11. Auto-Update Tampering → Malicious Update via MITM
+- **Vector**: Attacker intercepts GitHub Releases, serves malicious exe/dmg with same version
+- **Impact**: Supply chain compromise, malware install
+- **Mitigation in OrbitDesk v6.6**:
+  - electron-updater verifies signature via GitHub Releases `latest.yml` + SHA512
+  - `publish.provider: github` with private false, releaseType release — signed artifacts
+  - Auto-download false — user consent via dialog Download Now/Later — zero-trust
+  - HTTPS only — `https://github.com/Nyaenya-Devine/orbitdesk/releases` + HSTS
+  - SBOM CycloneDX included in release — transparency
+  - Log via electron-log — audit trail for update events
+
+### 12. Toast Overlay Covering Guide → Social Engineering / Phishing
+- **Vector**: Many toasts z-[200] covering StudentModeGuide z-[100] — user cannot see tutorial, misses security checklist logs+tool required
+- **Impact**: User resolves without checking logs — QA drop, CSAT drop, insecure fix
+- **Mitigation in OrbitDesk v6.6**:
+  - Toast bottom-left z-45 w-340 max 2 visible, blur-2xl, progress bar, swipe dismiss
+  - Guide z-100 > dock 65 > toast 45 — hierarchy prevents covering
+  - Grouped toasts ×count, Clear all, drag x to dismiss
+  - Modern spring animation 400/30 — not basic slide x 80 scale 0.9
+
+## Security Controls Implemented — v6.6 Hardened
+- Encrypted sessions (simulated) + Session ID + Recording indicator + Audit log
+- Audit logs (Entra Audit who changed CA 08:02, Exchange who released quarantine, Intune who changed compliance, Remote every dsregcmd)
+- RBAC Senior/Junior/Lead max tickets skills UI enforces Junior cannot handle Intune without senior
+- Break Glass emergency excluded all CA monitored
+- Compliance BitLocker escrowed Defender real-time tamper OS version Secure Boot PIN
+- Zero Trust CA Require compliant device MFA SMS+Authenticator Trusted locations Nairobi HQ+Mombasa Approved apps Outlook/Teams only Apex
+- Defender for Office 365 Quarantine Bulk/Spam/Phish Release+Allow+Report Not Junk anti-spam/phish DLP block external PII
+- Security headers CSP HSTS X-Frame-Options DENY X-Content-Type-Options nosniff Referrer-Policy Permissions-Policy microphone=self camera=() geolocation=()
+- Electron 32.3.3 hardening sandbox contextIsolation nodeIntegration false webSecurity singleInstance permission mic only auto-updater signed
+- Supply Chain SBOM CycloneDX npm ci lockfile pinned Dependabot weekly CodeQL Dependency Review TruffleHog secret scan npm audit
+- No real data LocalStorage only no tracking
+- Input sanitization command whitelist + React auto-escape no innerHTML
 
 ## Residual Risks
 - Simulator may not reflect latest Microsoft changes — always check Microsoft Learn

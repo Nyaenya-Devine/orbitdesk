@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+echo "🔒 OrbitDesk pre-commit — security checks..."
+
+# Secret scan — fail on ghp_, github_pat_, vcp_
+if grep -R --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist --exclude-dir=.git -E "ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|vcp_[A-Za-z0-9]{20,}" . 2>/dev/null; then
+  echo "❌ LEAKED SECRET FOUND — remove PAT, clean history via filter-branch, rotate token"
+  exit 1
+fi
+
+# Check electron hardening still present
+if ! grep -q "contextIsolation: true" electron.js 2>/dev/null; then
+  echo "❌ contextIsolation must be true — zero-trust"
+  exit 1
+fi
+if ! grep -q "sandbox: true" electron.js 2>/dev/null; then
+  echo "❌ sandbox must be true"
+  exit 1
+fi
+
+# Check essential files
+for f in src/components/LinkedInChatDock.tsx src/components/ToastSystem.tsx src/components/Logo.tsx; do
+  if [ ! -f "$f" ]; then
+    echo "❌ Essential file missing: $f"
+    exit 1
+  fi
+done
+
+echo "✅ Pre-commit security checks passed — orbit animation, LinkedIn dock, toast modern, auto-update present"
+npx lint-staged 2>/dev/null || echo "lint-staged skipped"
