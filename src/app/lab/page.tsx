@@ -22,8 +22,10 @@ import StudentModeGuide from '@/components/StudentModeGuide';
 import LiveryBackground from '@/components/LiveryBackground';
 import ThreadHumor from '@/components/ThreadHumor';
 import AuthGate from '@/components/AuthGate';
+import ClassCommandCenter from '@/components/ClassCommandCenter';
+import GrowthStrategy from '@/components/GrowthStrategy';
 
-type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'assessment';
+type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'growth' | 'assessment';
 
 export default function HomeV3() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -311,7 +313,7 @@ export default function HomeV3() {
           <div className="flex items-center gap-3">
             <Logo variant="full" size={28} animated />
             <span className="h-4 w-px bg-zinc-800 hidden md:block" />
-            <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">v6.0 Secure Install • AuthGate • Real Calls • Teaching Portals • Win11 RDP • Live Chat</span></div>
+            <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">v6.2 Human Real • Polished Logo • Real Ringtone • Class Command • Growth • Livery • Thread Humor</span></div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20"><span className="h-1 w-1 rounded-full bg-violet-500 animate-pulse" /><span className="text-violet-300">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls</span></div>
@@ -330,6 +332,8 @@ export default function HomeV3() {
             { id: 'queue', label: 'Live Queue', icon: '◐', badge: pendingCount },
             { id: 'comms', label: 'Comms', icon: '◑', badge: 3 },
             { id: 'clients', label: 'Clients', icon: '◒', badge: undefined },
+            { id: 'class', label: 'Class Hub', icon: '👥', badge: 5 },
+            { id: 'growth', label: 'Growth', icon: '🚀', badge: undefined },
             { id: 'assessment', label: 'Assessment', icon: '📊', badge: progress.ticketsResolved },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} className={`h-7 px-3 rounded-lg text-[12px] font-medium flex items-center gap-1.5 border transition-all ${activeTab === tab.id ? 'bg-violet-500/15 text-violet-300 border-violet-500/30' : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-800/50 hover:text-zinc-300'}`}>
@@ -415,13 +419,15 @@ export default function HomeV3() {
           )}
           {activeTab === 'comms' && <motion.div key="comms" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)]"><CommunicationChannel /></motion.div>}
           {activeTab === 'clients' && <motion.div key="clients" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="grid grid-cols-12 gap-4 h-[calc(100vh-120px)]"><div className="col-span-12 lg:col-span-5 h-full"><PolicyCenter selectedClientId={selectedClientForPolicies} onSelectClient={setSelectedClientForPolicies} /></div><div className="col-span-12 lg:col-span-7 h-full"><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></div></motion.div>}
+          {activeTab === 'class' && <motion.div key="class" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)]"><ClassCommandCenter myProgress={progress} userProfile={userProfile} /></motion.div>}
+          {activeTab === 'growth' && <motion.div key="growth" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)] overflow-y-auto"><GrowthStrategy /></motion.div>}
           {activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)] overflow-y-auto"><AssessmentReport progress={progress} onReset={handleResetProgress} /></motion.div>}
         </AnimatePresence>
       </div>
       {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
       <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} />
       <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
-      <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk Lab v5.2 — Livery M365 🎨 • Thread Humour 🧵 • Flowing Calls YOU Greet First 📞 • Student Mode 🎓 • Real Voice 🔊 • Educational</span><span className="font-mono">v5.2 • Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Livery + Humour</span></div></div>
+      <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk Lab v6.2 — Polished Logo 👑 • Real Ringtone 🔔 • Human Calls 📞 • Class Hub 👥 • Growth 🚀 • Livery M365 🎨 • Thread Humour 🧵 • Real Voice 🔊</span><span className="font-mono">v6.2 • Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Livery + Humour</span></div></div>
     </div>
   );
 }
