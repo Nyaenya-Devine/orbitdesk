@@ -100,15 +100,97 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
     if (transcriptRef.current) transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
   }, [activeCall?.transcript, liveTranscript]);
 
+  const [nextCallIn, setNextCallIn] = useState(12);
+  const [missedCalls, setMissedCalls] = useState<any[]>([]);
+
+  // Fix: Guaranteed call after 12s + manual trigger + countdown — user reported no calls
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (tickets.length > 0 && !activeCall && !incoming && Math.random() < 0.08) {
-        const ticket = tickets[Math.floor(Math.random() * tickets.length)];
-        setIncoming(ticket);
+    // Initial guaranteed call after 12s for first-time users
+    const initialTimer = setTimeout(() => {
+      if (!activeCall && !incoming) {
+        const fallbackTicket = tickets.length > 0 ? tickets[0] : {
+          id: `call-${Date.now()}`,
+          clientId: 'client-a',
+          clientName: 'NovaTech Financial',
+          priority: 'P1',
+          userEmail: 'sarah.finance@novatech.com',
+          userMessage: "Hello? Is this IT support? I'm blocked by Conditional Access, error 53000 DeviceNotCompliant. Payroll deadline in 45 minutes, P1. Could you help?",
+          code: 'ENTRA-53000',
+          title: 'Conditional Access Block - Payroll Urgent',
+        };
+        setIncoming(fallbackTicket);
         playRingtone();
+        setNextCallIn(30);
       }
-    }, 10000);
-    return () => clearInterval(interval);
+    }, 12000);
+
+    // Countdown for next call
+    const countdown = setInterval(() => {
+      setNextCallIn(prev => {
+        if (prev <= 1) {
+          if (!activeCall && !incoming) {
+            const ticket = tickets.length > 0 ? tickets[Math.floor(Math.random() * tickets.length)] : {
+              id: `call-${Date.now()}`,
+              clientId: ['client-a', 'client-b', 'client-c'][Math.floor(Math.random()*3)],
+              clientName: ['NovaTech Financial', 'Bloom Studio', 'Apex Financial'][Math.floor(Math.random()*3)],
+              priority: Math.random() < 0.3 ? 'P1' : 'P2',
+              userEmail: ['sarah.finance@novatech.com', 'emma@bloomco.studio', 'risk@apexfin.com'][Math.floor(Math.random()*3)],
+              userMessage: "Hello? Is this IT support? Need help with my account.",
+              code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
+              title: 'Live Call - Need Assistance',
+            };
+            setIncoming(ticket as any);
+            playRingtone();
+          }
+          return 30 + Math.floor(Math.random()*20); // 30-50s next
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Also random chance every 6s increased to 18% — more calls
+    const interval = setInterval(() => {
+      if (!activeCall && !incoming && Math.random() < 0.18) {
+        const ticket = tickets.length > 0 ? tickets[Math.floor(Math.random() * tickets.length)] : {
+          id: `call-${Date.now()}`,
+          clientId: 'client-a',
+          clientName: 'NovaTech Financial',
+          priority: 'P1',
+          userEmail: 'sarah.finance@novatech.com',
+          userMessage: "Hello? Is this IT support? I'm having an issue with my account.",
+          code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
+          title: 'Live Call - Need Assistance',
+        };
+        setIncoming(ticket as any);
+        playRingtone();
+        setNextCallIn(30);
+      }
+    }, 6000);
+
+    // Expose manual trigger globally for header button
+    (window as any).triggerIncomingCall = () => {
+      if (!activeCall && !incoming) {
+        const ticket = tickets.length > 0 ? tickets[Math.floor(Math.random() * tickets.length)] : {
+          id: `call-${Date.now()}`,
+          clientId: 'client-a',
+          clientName: 'NovaTech Financial',
+          priority: 'P1',
+          userEmail: 'sarah.finance@novatech.com',
+          userMessage: "Hello? Is this IT support? I'm blocked by Conditional Access, error 53000 DeviceNotCompliant. Payroll deadline in 45 minutes, P1. Could you help?",
+          code: 'ENTRA-53000',
+          title: 'Conditional Access Block - Payroll Urgent',
+        };
+        setIncoming(ticket as any);
+        playRingtone();
+        setNextCallIn(30);
+      }
+    };
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(countdown);
+      clearInterval(interval);
+    };
   }, [tickets, activeCall, incoming]);
 
   useEffect(() => {
@@ -252,8 +334,28 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
     setTimeout(() => speakClient(greeting, persona), 600);
   };
 
-  const declineCall = () => { stopRingtone(); setIncoming(null); };
-  const endCall = () => { stopRingtone(); if (synthRef.current) synthRef.current.cancel(); stopMic(); setActiveCall(null); };
+  const declineCall = () => { 
+    if (incoming) setMissedCalls(prev => [{ ...incoming, missedAt: Date.now() }, ...prev].slice(0,5));
+    stopRingtone(); 
+    setIncoming(null); 
+    setNextCallIn(20);
+  };
+  const endCall = () => { stopRingtone(); if (synthRef.current) synthRef.current.cancel(); stopMic(); setActiveCall(null); setNextCallIn(25); };
+
+  // Fix audio context blocked — resume on user interaction
+  useEffect(() => {
+    const resumeAudio = () => {
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
+    };
+    window.addEventListener('click', resumeAudio);
+    window.addEventListener('keydown', resumeAudio);
+    return () => {
+      window.removeEventListener('click', resumeAudio);
+      window.removeEventListener('keydown', resumeAudio);
+    };
+  }, []);
 
   return (
     <>
@@ -290,6 +392,32 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Persistent call status — user reported no calls, now shows countdown + manual trigger */}
+      {!activeCall && !incoming && (
+        <div className="fixed bottom-4 right-4 z-30 flex flex-col gap-2">
+          <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-zinc-800 rounded-full px-4 py-2 flex items-center gap-3 shadow-2xl">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] text-zinc-400">Next call in {nextCallIn}s • Live Queue • Real Workstation</span>
+            <button
+              onClick={() => (window as any).triggerIncomingCall?.()}
+              className="h-7 px-3 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold"
+            >
+              📞 Simulate Call Now
+            </button>
+          </div>
+          {missedCalls.length > 0 && (
+            <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl max-w-[280px]">
+              <p className="text-[11px] font-bold text-zinc-300">Missed Calls ({missedCalls.length})</p>
+              <div className="mt-2 space-y-1">
+                {missedCalls.slice(0,3).map((c, i) => (
+                  <div key={i} className="text-[11px] text-zinc-500 truncate">📞 {c.clientName} • {c.priority} • {c.userEmail}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {activeCall && activeCall.status === 'active' && (
         <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[96%] max-w-5xl bg-[#0a0a0a] rounded-[24px] shadow-2xl border border-zinc-800 overflow-hidden flex flex-col max-h-[85vh]">

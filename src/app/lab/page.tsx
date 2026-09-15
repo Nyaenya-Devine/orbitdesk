@@ -21,10 +21,13 @@ import RemoteDesktopV2 from '@/components/RemoteDesktopV2';
 import StudentModeGuide from '@/components/StudentModeGuide';
 import LiveryBackground from '@/components/LiveryBackground';
 import ThreadHumor from '@/components/ThreadHumor';
+import AuthGate from '@/components/AuthGate';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'assessment';
 
 export default function HomeV3() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('queue');
@@ -41,13 +44,27 @@ export default function HomeV3() {
   const [syncDone, setSyncDone] = useState(false);
   const [studentMode, setStudentMode] = useState(true);
   const [showGuide, setShowGuide] = useState(true);
+  const [showLiveChat, setShowLiveChat] = useState(false);
+
+  // Check auth persistence — login to keep data not start from scratch
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('orbitdesk_user_profile');
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        setUserProfile(parsed);
+        setIsAuthenticated(true);
+      } catch {}
+    }
+  }, []);
 
   // Load progress from localStorage
   useEffect(() => {
+    if (!isAuthenticated) return;
     const saved = loadProgress();
     setProgress(saved);
     setTickets(generateInitialTickets(5, studentMode));
-  }, [studentMode]);
+  }, [studentMode, isAuthenticated]);
 
   // Save progress whenever it changes
   useEffect(() => {
@@ -250,6 +267,40 @@ export default function HomeV3() {
   const p1Count = tickets.filter(t => t.priority === 'P1' && t.status !== 'resolved').length;
   const breached = tickets.filter(t => t.slaBreach).length;
 
+  const handleAuthenticated = (profile: any) => {
+    setUserProfile(profile);
+    setIsAuthenticated(true);
+    localStorage.setItem('orbitdesk_user_profile', JSON.stringify(profile));
+    addToast(`Welcome ${profile.name} — ${profile.role} • ${profile.experience} • progress restored: ${progress.ticketsResolved} tickets, ${progress.callsHandled} calls, Lvl ${progress.level}`, 'success', 4000, 'auth');
+  };
+
+  const handleLogout = () => {
+    if (confirm('Logout? Your progress stays saved locally (tickets, XP, calls). Login again to restore. Export report for interview before logout.')) {
+      localStorage.removeItem('orbitdesk_user_profile');
+      setIsAuthenticated(false);
+      setUserProfile(null);
+    }
+  };
+
+  const triggerManualCall = () => {
+    // Use global exposed by VoiceCallCenter for manual simulate button in header
+    if ((window as any).triggerIncomingCall) {
+      (window as any).triggerIncomingCall();
+      addToast('Manual call triggered — guaranteed ring, YOU greet first', 'info', 3000, 'manual-call');
+    } else {
+      addToast('Call system initializing... wait 2s then try again — countdown widget bottom-right also has Simulate Call Now', 'info', 3000, 'manual-call-wait');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen relative">
+        <LiveryBackground />
+        <AuthGate onAuthenticated={handleAuthenticated} existingProgress={progress} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col relative">
       <LiveryBackground />
@@ -260,12 +311,17 @@ export default function HomeV3() {
           <div className="flex items-center gap-3">
             <Logo variant="full" size={28} animated />
             <span className="h-4 w-px bg-zinc-800 hidden md:block" />
-            <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">v5.2 Livery M365 • Thread Humour • Flowing Calls YOU Greet First • Student Mode • Real Voice • Competition Ready</span></div>
+            <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">v6.0 Secure Install • AuthGate • Real Calls • Teaching Portals • Win11 RDP • Live Chat</span></div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20"><span className="h-1 w-1 rounded-full bg-violet-500 animate-pulse" /><span className="text-violet-300">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls</span></div>
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-zinc-800/60 border border-zinc-700/50"><span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" /><span className="text-zinc-400">{pendingCount} pending • {p1Count} P1 • {breached} breach • Live</span></div>
-            <span className="hidden md:block text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">✓ Real Voice • Scored • Saved</span>
+            <button onClick={triggerManualCall} className="h-7 px-3 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-[11px] text-red-300 font-bold transition flex items-center gap-1.5">📞 Simulate Call Now</button>
+            <div className="hidden md:flex items-center gap-2 text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700">
+              <span className="h-5 w-5 rounded-full bg-violet-500 flex items-center justify-center text-white font-bold text-[10px]">{userProfile?.name?.[0] || 'U'}</span>
+              <span className="text-zinc-300 max-w-[80px] truncate">{userProfile?.name}</span>
+              <button onClick={handleLogout} className="text-zinc-500 hover:text-zinc-300 ml-1">↪</button>
+            </div>
           </div>
         </div>
         <div className="max-w-[1600px] mx-auto px-4 h-10 flex items-center gap-1 border-t border-zinc-800/40">
@@ -321,10 +377,20 @@ export default function HomeV3() {
               <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-3">
                 <TicketQueue tickets={tickets} onSelectTicket={handleSelectTicket} onAssign={handleAssign} selectedTicketId={selectedTicket?.id} />
                 <div className="p-3 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60">
-                  <div className="flex items-center justify-between mb-2"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access — Real RDP</p><p className="text-[11px] text-zinc-500">Encrypted • Actions log • Toast grouped • Not stuck</p></div>
+                  <div className="flex items-center justify-between mb-2"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access — Real RDP Win11</p><p className="text-[11px] text-zinc-500">Stages: Connecting→Auth→MFA→Consent→Connected</p></div>
                     <button onClick={() => { if (selectedTicket) { setShowRemotePC(true); addToast(`RDP connecting to ${selectedTicket.userEmail.split('@')[0]}-LAPTOP — encrypted, recording ON`, 'info', 3000, `rdp-${selectedTicket.id}`); } else { addToast('Select a ticket first — then Connect to open real RDP', 'error', 3000, 'rdp-error'); } }} className={`h-8 px-3 rounded-full text-[12px] font-semibold transition ${selectedTicket ? 'bg-zinc-100 text-zinc-900 hover:bg-white' : 'bg-zinc-800 text-zinc-500'}`}>Connect →</button>
                   </div>
                   {portalActionLog.length > 0 && <div className="mt-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800"><p className="text-[10px] font-semibold text-zinc-500 uppercase">Recent Portal Actions — Grouped</p><div className="mt-1 space-y-0.5">{portalActionLog.slice(0,3).map((log,i) => <p key={i} className="text-[11px] font-mono text-zinc-400">{log}</p>)}</div></div>}
+                  <div className="mt-2 flex gap-2">
+                    <button onClick={() => setShowLiveChat(!showLiveChat)} className={`flex-1 h-8 rounded-full text-[11px] font-medium border transition ${showLiveChat ? 'bg-violet-500/15 text-violet-300 border-violet-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
+                      {showLiveChat ? '💬 Hide Live Chat' : '💬 Show Live Chat Workstation — Teams/Slack style'}
+                    </button>
+                  </div>
+                  {showLiveChat && (
+                    <div className="mt-3 h-[280px] rounded-xl border border-zinc-800 overflow-hidden">
+                      <CommunicationChannel compact ticket={selectedTicket} />
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="col-span-12 lg:col-span-8 h-full grid grid-cols-12 gap-4">
