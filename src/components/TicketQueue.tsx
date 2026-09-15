@@ -9,6 +9,7 @@ interface Props {
  onSelectTicket: (ticket: Ticket) => void;
  onAssign: (ticketId: string, agentId: string) => void;
  selectedTicketId?: string;
+ isPaused?: boolean;
 }
 
 const priorityConfig = {
@@ -18,7 +19,7 @@ const priorityConfig = {
  P4: { label: 'P4', bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/20', dot: 'bg-zinc-500' },
 };
 
-export default function TicketQueue({ tickets, onSelectTicket, onAssign, selectedTicketId }: Props) {
+export default function TicketQueue({ tickets, onSelectTicket, onAssign, selectedTicketId, isPaused }: Props) {
  const [filter, setFilter] = useState<'all' | 'P1' | 'unassigned'>('all');
  const [search, setSearch] = useState('');
 
@@ -50,7 +51,15 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
  const p1Count = tickets.filter(t => t.priority === 'P1' && t.status !== 'resolved').length;
 
  return (
- <div className="bg-[#0a0a0a] rounded-2xl border border-zinc-800/60 shadow-sm flex flex-col h-full overflow-hidden">
+ <div className="bg-[#0a0a0a] rounded-2xl border border-zinc-800/60 shadow-sm flex flex-col h-full overflow-hidden relative">
+ {isPaused && (
+  <div className="absolute inset-0 z-10 bg-black/50 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+   <div className="bg-[#0a0a0a] border border-amber-500/20 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-xl">
+    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+    <span className="text-[11px] text-amber-300 font-medium">Orbit Paused — SLA & Queue on hold</span>
+   </div>
+  </div>
+ )}
  <div className="p-4 border-b border-zinc-800/60 bg-zinc-900/30">
   <div className="flex items-center justify-between mb-3">
   <h2 className="text-[13px] font-semibold tracking-[0.02em] text-zinc-100 flex items-center gap-2">

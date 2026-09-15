@@ -26,6 +26,8 @@ import ClassCommandCenter from '@/components/ClassCommandCenter';
 import GrowthStrategy from '@/components/GrowthStrategy';
 import LevelUpCelebration from '@/components/LevelUpCelebration';
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt';
+import OrbitPauseOverlay, { AwayWelcomeBack } from '@/components/OrbitPauseOverlay';
+import ShiftStatus from '@/components/ShiftStatus';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'growth' | 'assessment';
 
@@ -50,6 +52,11 @@ export default function HomeV3() {
  const [showGuide, setShowGuide] = useState(true);
  const [showLiveChat, setShowLiveChat] = useState(false);
  const [levelUp, setLevelUp] = useState<{ oldLevel: number; newLevel: number } | null>(null);
+ const [isPaused, setIsPaused] = useState(false);
+ const [isManualPaused, setIsManualPaused] = useState(false);
+ const [awayMinutes, setAwayMinutes] = useState(0);
+ const [showAwayWelcome, setShowAwayWelcome] = useState<{ minutes: number; added: number } | null>(null);
+ const [lastActive, setLastActive] = useState<number>(Date.now());
 
  // Check auth persistence — login to keep data not start from scratch
  useEffect(() => {
@@ -76,7 +83,9 @@ export default function HomeV3() {
  saveProgress(progress);
  }, [progress]);
 
+ // Realistic pause — when away, everything on hold (SLA, queue, calls)
  useEffect(() => {
+ if (isPaused) return; // Don't tick when paused
  const timer = setInterval(() => setTickets(prev => updateTicketTimers(prev)), 1000);
  const generator = setInterval(() => {
  setTickets(prev => {
@@ -89,7 +98,125 @@ export default function HomeV3() {
  });
  }, 6000);
  return () => { clearInterval(timer); clearInterval(generator); };
- }, [progress.ticketsResolved, progress.level, studentMode]);
+ }, [progress.ticketsResolved, progress.level, studentMode, isPaused]);
+
+ // Track last active + auto-pause on tab hidden / blur
+ useEffect(() => {
+ if (!isAuthenticated) return;
+ 
+ // Load last active from storage for welcome back
+ const storedLast = localStorage.getItem('orbitdesk_last_active');
+ if (storedLast) {
+  const last = parseInt(storedLast, 10);
+  const now = Date.now();
+  const diffMs = now - last;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin >= 1) {
+   // User was away — protect SLAs by pushing deadlines forward by away time
+   const awayMs = diffMs;
+   setTickets(prev => prev.map(t => ({
+    ...t,
+    slaDeadline: new Date(t.slaDeadline.getTime() + awayMs),
+    timeLeftMs: t.timeLeftMs + awayMs
+   })));
+   setAwayMinutes(diffMin);
+   const added = diffMin >= 5 ? Math.min(3, Math.floor(diffMin / 10)) : 0;
+   if (added > 0) {
+    // Add some tickets that arrived while away (realistic handover)
+    const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, progress.ticketsResolved, progress.level));
+    setTickets(prev => [...newOnes, ...prev]);
+   }
+   setShowAwayWelcome({ minutes: diffMin, added });
+   addToast(`👋 Welcome back! You were away ${diffMin}m — orbit was on hold, SLAs protected, ${added} new tickets arrived`, 'info', 6000, 'welcome-back');
+  }
+ }
+
+ const saveActive = () => {
+  localStorage.setItem('orbitdesk_last_active', Date.now().toString());
+  setLastActive(Date.now());
+ };
+
+ // Save every 10s
+ const activeInterval = setInterval(saveActive, 10000);
+
+ const handleVisibility = () => {
+  if (document.hidden) {
+   // Going away — pause orbit
+   if (!isManualPaused) {
+    setIsPaused(true);
+    saveActive();
+    document.title = '⏸️ Orbit Paused — Away | OrbitDesk';
+    console.log('[OrbitDesk] Paused — tab hidden');
+   }
+  } else {
+   // Returning
+   const stored = localStorage.getItem('orbitdesk_last_active');
+   const now = Date.now();
+   const last = stored ? parseInt(stored, 10) : lastActive;
+   const diffMs = now - last;
+   const diffMin = Math.floor(diffMs / 60000);
+   if (diffMin >= 1 && isPaused && !isManualPaused) {
+    // Auto-resume after away, but protect SLAs
+    setTickets(prev => prev.map(t => ({
+     ...t,
+     slaDeadline: new Date(t.slaDeadline.getTime() + diffMs),
+     timeLeftMs: t.timeLeftMs + diffMs
+    })));
+    setAwayMinutes(diffMin);
+    const added = diffMin >= 5 ? Math.min(3, Math.floor(diffMin / 10)) : 0;
+    if (added > 0) {
+     const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, progress.ticketsResolved, progress.level));
+     setTickets(prev => [...newOnes, ...prev]);
+    }
+    setShowAwayWelcome({ minutes: diffMin, added });
+    addToast(`▶️ Orbit resumed — you were away ${diffMin}m, SLAs protected`, 'success', 4000, 'resume');
+   }
+   if (!isManualPaused) {
+    setIsPaused(false);
+    document.title = 'OrbitDesk — Modern Workplace Operations Lab';
+   }
+   saveActive();
+  }
+ };
+
+ const handleBlur = () => {
+  if (!isManualPaused && !document.hidden) {
+   // Window lost focus — pause after 30s of inactivity
+   // For now, don't auto-pause on blur, only on hidden, to avoid annoying
+  }
+ };
+
+ const handleFocus = () => {
+  if (!isManualPaused && document.hidden === false) {
+   // Don't auto-resume if manually paused
+   if (isPaused) {
+    // Check away time
+    const stored = localStorage.getItem('orbitdesk_last_active');
+    const now = Date.now();
+    const last = stored ? parseInt(stored, 10) : lastActive;
+    const diffMs = now - last;
+    if (diffMs > 60000) {
+     setTickets(prev => prev.map(t => ({
+      ...t,
+      slaDeadline: new Date(t.slaDeadline.getTime() + diffMs),
+      timeLeftMs: t.timeLeftMs + diffMs
+     })));
+    }
+   }
+  }
+ };
+
+ document.addEventListener('visibilitychange', handleVisibility);
+ window.addEventListener('blur', handleBlur);
+ window.addEventListener('focus', handleFocus);
+
+ return () => {
+  clearInterval(activeInterval);
+  document.removeEventListener('visibilitychange', handleVisibility);
+  window.removeEventListener('blur', handleBlur);
+  window.removeEventListener('focus', handleFocus);
+ };
+ }, [isAuthenticated, isPaused, isManualPaused, lastActive, studentMode, progress.ticketsResolved, progress.level]);
 
  const addToast = (message: string, type: Toast['type'] = 'success', duration = 4000, groupKey?: string) => {
  const id = Date.now().toString() + Math.random().toString(36).substring(7);
@@ -308,6 +435,36 @@ export default function HomeV3() {
  }
  };
 
+ const toggleManualPause = () => {
+  if (isPaused && isManualPaused) {
+   // Resume
+   setIsPaused(false);
+   setIsManualPaused(false);
+   document.title = 'OrbitDesk — Modern Workplace Operations Lab';
+   addToast('▶️ Orbit resumed — shift active, SLA timers ticking, queue live', 'success', 3000, 'manual-resume');
+   // Push deadlines forward by pause duration? For manual pause, we already paused, so protect
+   const stored = localStorage.getItem('orbitdesk_last_active');
+   const now = Date.now();
+   if (stored) {
+    const diff = now - parseInt(stored, 10);
+    if (diff > 10000) {
+     setTickets(prev => prev.map(t => ({
+      ...t,
+      slaDeadline: new Date(t.slaDeadline.getTime() + diff),
+      timeLeftMs: t.timeLeftMs + diff
+     })));
+    }
+   }
+  } else {
+   // Pause manually — realistic break
+   setIsPaused(true);
+   setIsManualPaused(true);
+   localStorage.setItem('orbitdesk_last_active', Date.now().toString());
+   document.title = '⏸️ Orbit On Hold — Break | OrbitDesk';
+   addToast('⏸️ Orbit on hold — you took a break, SLAs paused, team covering', 'info', 4000, 'manual-pause');
+  }
+ };
+
  const triggerManualCall = () => {
  // Use global exposed by VoiceCallCenter for manual simulate button in header
  if ((window as any).triggerIncomingCall) {
@@ -332,6 +489,8 @@ export default function HomeV3() {
  <LiveryBackground />
  <ToastSystem toasts={toasts} onRemove={removeToast} />
  <PWAUpdatePrompt />
+ <OrbitPauseOverlay isPaused={isPaused} isManual={isManualPaused} awayMinutes={awayMinutes} pendingCount={pendingCount} onResume={toggleManualPause} />
+ {showAwayWelcome && <AwayWelcomeBack awayMinutes={showAwayWelcome.minutes} ticketsAdded={showAwayWelcome.added} onClose={() => setShowAwayWelcome(null)} />}
 
  <div className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a0a]/90 border-b border-zinc-800/60">
   <div className="max-w-[1600px] mx-auto px-4 h-11 flex items-center justify-between">
@@ -342,7 +501,8 @@ export default function HomeV3() {
   </div>
   <div className="flex items-center gap-2">
   <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20"><span className="h-1 w-1 rounded-full bg-violet-500 animate-pulse" /><span className="text-violet-300">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls</span></div>
-  <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-zinc-800/60 border border-zinc-700/50"><span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" /><span className="text-zinc-400">{pendingCount} pending • {p1Count} P1 • {breached} breach • Live</span></div>
+  <div className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border ${isPaused ? "bg-amber-500/10 border-amber-500/20" : "bg-zinc-800/60 border-zinc-700/50"}`}><span className={`h-1 w-1 rounded-full ${isPaused ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} /><span className={`${isPaused ? "text-amber-300" : "text-zinc-400"}`}>{isPaused ? `⏸️ Paused • ${pendingCount} on hold • No breach` : `${pendingCount} pending • ${p1Count} P1 • ${breached} breach • Live`}</span></div>
+  <button onClick={toggleManualPause} className={`h-7 px-3 rounded-full border text-[11px] font-bold transition flex items-center gap-1.5 ${isPaused ? "bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/20 text-amber-300" : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-300"}`}>{isPaused ? "▶️ Resume Orbit" : "⏸️ Pause Orbit"}</button>
   <button onClick={triggerManualCall} className="h-7 px-3 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-[11px] text-red-300 font-bold transition flex items-center gap-1.5">📞 Simulate Call Now</button>
   <div className="hidden md:flex items-center gap-2 text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700">
    <span className="h-5 w-5 rounded-full bg-violet-500 flex items-center justify-center text-white font-bold text-[10px]">{userProfile?.name?.[0] || 'U'}</span>
@@ -378,6 +538,7 @@ export default function HomeV3() {
   <AnimatePresence mode="wait">
   {activeTab === 'overview' && (
   <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="space-y-4">
+   <ShiftStatus isPaused={isPaused} isManual={isManualPaused} ticketsResolved={progress.ticketsResolved} level={progress.level} xp={progress.xp} pendingCount={pendingCount} awayMinutes={awayMinutes} onTogglePause={toggleManualPause} />
    <DashboardMetrics tickets={tickets} />
    <div className="grid grid-cols-12 gap-4">
    <div className="col-span-12 lg:col-span-8 space-y-4">
@@ -417,7 +578,7 @@ export default function HomeV3() {
   {activeTab === 'queue' && (
   <motion.div key="queue" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="grid grid-cols-12 gap-4 h-[calc(100vh-120px)]">
    <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-3">
-   <TicketQueue tickets={tickets} onSelectTicket={handleSelectTicket} onAssign={handleAssign} selectedTicketId={selectedTicket?.id} />
+   <TicketQueue tickets={tickets} onSelectTicket={handleSelectTicket} onAssign={handleAssign} selectedTicketId={selectedTicket?.id} isPaused={isPaused} />
    <div className="p-3 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60">
    <div className="flex items-center justify-between mb-2"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access — Real RDP Win11</p><p className="text-[11px] text-zinc-500">Stages: Connecting→Auth→MFA→Consent→Connected</p></div>
     <button onClick={() => { if (selectedTicket) { setShowRemotePC(true); addToast(`RDP connecting to ${selectedTicket.userEmail.split('@')[0]}-LAPTOP — encrypted, recording ON`, 'info', 3000, `rdp-${selectedTicket.id}`); } else { addToast('Select a ticket first — then Connect to open real RDP', 'error', 3000, 'rdp-error'); } }} className={`h-8 px-3 rounded-full text-[12px] font-semibold transition ${selectedTicket ? 'bg-zinc-100 text-zinc-900 hover:bg-white' : 'bg-zinc-800 text-zinc-500'}`}>Connect →</button>
