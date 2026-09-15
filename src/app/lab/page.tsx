@@ -38,14 +38,12 @@ export default function HomeV3() {
  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
  const [activeTab, setActiveTab] = useState<Tab>('queue');
  const [agents, setAgents] = useState(initialAgents);
- const [resolvedCount, setResolvedCount] = useState(0);
  const [showRemotePC, setShowRemotePC] = useState(false);
  const [selectedClientForPolicies, setSelectedClientForPolicies] = useState('client-a');
  const [toasts, setToasts] = useState<Toast[]>([]);
  const [checklist, setChecklist] = useState({ logs: false, tool: false, lang: false, confirm: false });
  const [portalActionLog, setPortalActionLog] = useState<string[]>([]);
  const [progress, setProgress] = useState<StudentProgress>(initialProgress);
- const [showAssessment, setShowAssessment] = useState(false);
  const [bitLockerFixed, setBitLockerFixed] = useState(false);
  const [syncDone, setSyncDone] = useState(false);
  const [studentMode, setStudentMode] = useState(true);
@@ -58,19 +56,13 @@ export default function HomeV3() {
  const [showAwayWelcome, setShowAwayWelcome] = useState<{ minutes: number; added: number } | null>(null);
  const [lastActive, setLastActive] = useState<number>(Date.now());
 
- // Check auth persistence — login to keep data not start from scratch
  useEffect(() => {
  const savedProfile = localStorage.getItem('orbitdesk_user_profile');
  if (savedProfile) {
- try {
-  const parsed = JSON.parse(savedProfile);
-  setUserProfile(parsed);
-  setIsAuthenticated(true);
- } catch {}
+ try { setUserProfile(JSON.parse(savedProfile)); setIsAuthenticated(true); } catch {}
  }
  }, []);
 
- // Load progress from localStorage
  useEffect(() => {
  if (!isAuthenticated) return;
  const saved = loadProgress();
@@ -78,20 +70,16 @@ export default function HomeV3() {
  setTickets(generateInitialTickets(5, studentMode, saved.ticketsResolved, saved.level));
  }, [studentMode, isAuthenticated]);
 
- // Save progress whenever it changes
- useEffect(() => {
- saveProgress(progress);
- }, [progress]);
+ useEffect(() => { saveProgress(progress); }, [progress]);
 
- // Realistic pause — when away, everything on hold (SLA, queue, calls)
  useEffect(() => {
- if (isPaused) return; // Don't tick when paused
+ if (isPaused) return;
  const timer = setInterval(() => setTickets(prev => updateTicketTimers(prev)), 1000);
  const generator = setInterval(() => {
  setTickets(prev => {
   if (Math.random() < 0.2 && prev.length < 25) {
   const newTicket = generateTicket(studentMode, progress.ticketsResolved, progress.level);
-  addToast(`New ${newTicket.priority}: ${newTicket.code} — ${newTicket.title.substring(0,40)}... [${newTicket.difficulty}] Lvl ${progress.level}`, 'info', newTicket.priority === 'P1' ? 5000 : 4000, `new-${newTicket.priority}`);
+  addToast(`New ${newTicket.priority}: ${newTicket.code} — ${newTicket.title.substring(0,40)}... [${newTicket.difficulty}]`, 'info', newTicket.priority === 'P1' ? 5000 : 4000, `new-${newTicket.priority}`);
   return [newTicket, ...prev];
   }
   return prev;
@@ -100,11 +88,8 @@ export default function HomeV3() {
  return () => { clearInterval(timer); clearInterval(generator); };
  }, [progress.ticketsResolved, progress.level, studentMode, isPaused]);
 
- // Track last active + auto-pause on tab hidden / blur
  useEffect(() => {
  if (!isAuthenticated) return;
- 
- // Load last active from storage for welcome back
  const storedLast = localStorage.getItem('orbitdesk_last_active');
  if (storedLast) {
   const last = parseInt(storedLast, 10);
@@ -112,524 +97,297 @@ export default function HomeV3() {
   const diffMs = now - last;
   const diffMin = Math.floor(diffMs / 60000);
   if (diffMin >= 1) {
-   // User was away — protect SLAs by pushing deadlines forward by away time
-   const awayMs = diffMs;
-   setTickets(prev => prev.map(t => ({
-    ...t,
-    slaDeadline: new Date(t.slaDeadline.getTime() + awayMs),
-    timeLeftMs: t.timeLeftMs + awayMs
-   })));
+   setTickets(prev => prev.map(t => ({ ...t, slaDeadline: new Date(t.slaDeadline.getTime() + diffMs), timeLeftMs: t.timeLeftMs + diffMs })));
    setAwayMinutes(diffMin);
    const added = diffMin >= 5 ? Math.min(3, Math.floor(diffMin / 10)) : 0;
    if (added > 0) {
-    // Add some tickets that arrived while away (realistic handover)
     const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, progress.ticketsResolved, progress.level));
     setTickets(prev => [...newOnes, ...prev]);
    }
    setShowAwayWelcome({ minutes: diffMin, added });
-   addToast(`👋 Welcome back! You were away ${diffMin}m — orbit was on hold, SLAs protected, ${added} new tickets arrived`, 'info', 6000, 'welcome-back');
+   addToast(`👋 Welcome back! Away ${diffMin}m — SLAs protected, ${added} new tickets`, 'info', 6000, 'welcome-back');
   }
  }
-
- const saveActive = () => {
-  localStorage.setItem('orbitdesk_last_active', Date.now().toString());
-  setLastActive(Date.now());
- };
-
- // Save every 10s
+ const saveActive = () => { localStorage.setItem('orbitdesk_last_active', Date.now().toString()); setLastActive(Date.now()); };
  const activeInterval = setInterval(saveActive, 10000);
-
  const handleVisibility = () => {
   if (document.hidden) {
-   // Going away — pause orbit
-   if (!isManualPaused) {
-    setIsPaused(true);
-    saveActive();
-    document.title = '⏸️ Orbit Paused — Away | OrbitDesk';
-    console.log('[OrbitDesk] Paused — tab hidden');
-   }
+   if (!isManualPaused) { setIsPaused(true); saveActive(); document.title = '⏸️ Paused — OrbitDesk'; }
   } else {
-   // Returning
    const stored = localStorage.getItem('orbitdesk_last_active');
    const now = Date.now();
    const last = stored ? parseInt(stored, 10) : lastActive;
    const diffMs = now - last;
    const diffMin = Math.floor(diffMs / 60000);
    if (diffMin >= 1 && isPaused && !isManualPaused) {
-    // Auto-resume after away, but protect SLAs
-    setTickets(prev => prev.map(t => ({
-     ...t,
-     slaDeadline: new Date(t.slaDeadline.getTime() + diffMs),
-     timeLeftMs: t.timeLeftMs + diffMs
-    })));
+    setTickets(prev => prev.map(t => ({ ...t, slaDeadline: new Date(t.slaDeadline.getTime() + diffMs), timeLeftMs: t.timeLeftMs + diffMs })));
     setAwayMinutes(diffMin);
     const added = diffMin >= 5 ? Math.min(3, Math.floor(diffMin / 10)) : 0;
-    if (added > 0) {
-     const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, progress.ticketsResolved, progress.level));
-     setTickets(prev => [...newOnes, ...prev]);
-    }
+    if (added > 0) { const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, progress.ticketsResolved, progress.level)); setTickets(prev => [...newOnes, ...prev]); }
     setShowAwayWelcome({ minutes: diffMin, added });
-    addToast(`▶️ Orbit resumed — you were away ${diffMin}m, SLAs protected`, 'success', 4000, 'resume');
+    addToast(`▶️ Resumed — away ${diffMin}m, SLAs protected`, 'success', 4000, 'resume');
    }
-   if (!isManualPaused) {
-    setIsPaused(false);
-    document.title = 'OrbitDesk — Modern Workplace Operations Lab';
-   }
+   if (!isManualPaused) { setIsPaused(false); document.title = 'OrbitDesk — Modern Workplace Operations Lab'; }
    saveActive();
   }
  };
-
- const handleBlur = () => {
-  if (!isManualPaused && !document.hidden) {
-   // Window lost focus — pause after 30s of inactivity
-   // For now, don't auto-pause on blur, only on hidden, to avoid annoying
-  }
- };
-
- const handleFocus = () => {
-  if (!isManualPaused && document.hidden === false) {
-   // Don't auto-resume if manually paused
-   if (isPaused) {
-    // Check away time
-    const stored = localStorage.getItem('orbitdesk_last_active');
-    const now = Date.now();
-    const last = stored ? parseInt(stored, 10) : lastActive;
-    const diffMs = now - last;
-    if (diffMs > 60000) {
-     setTickets(prev => prev.map(t => ({
-      ...t,
-      slaDeadline: new Date(t.slaDeadline.getTime() + diffMs),
-      timeLeftMs: t.timeLeftMs + diffMs
-     })));
-    }
-   }
-  }
- };
-
  document.addEventListener('visibilitychange', handleVisibility);
- window.addEventListener('blur', handleBlur);
- window.addEventListener('focus', handleFocus);
-
- return () => {
-  clearInterval(activeInterval);
-  document.removeEventListener('visibilitychange', handleVisibility);
-  window.removeEventListener('blur', handleBlur);
-  window.removeEventListener('focus', handleFocus);
- };
+ return () => { clearInterval(activeInterval); document.removeEventListener('visibilitychange', handleVisibility); };
  }, [isAuthenticated, isPaused, isManualPaused, lastActive, studentMode, progress.ticketsResolved, progress.level]);
 
  const addToast = (message: string, type: Toast['type'] = 'success', duration = 4000, groupKey?: string) => {
  const id = Date.now().toString() + Math.random().toString(36).substring(7);
- // Group similar toasts — if same groupKey exists, don't add duplicate immediately, group them
- setToasts(prev => {
- // Limit to 10 max, oldest removed
- const newToasts = [...prev, { id, message, type, duration, groupKey: groupKey || message.substring(0,30) }];
- if (newToasts.length > 10) return newToasts.slice(-10);
- return newToasts;
- });
+ setToasts(prev => { const n = [...prev, { id, message, type, duration, groupKey: groupKey || message.substring(0,30) }]; return n.length > 10 ? n.slice(-10) : n; });
  };
-
- const removeToast = (id: string) => {
- setToasts(prev => prev.filter(t => t.id !== id));
- };
+ const removeToast = (id: string) => setToasts(prev => prev.filter(t => t.id !== id));
 
  const handleSelectTicket = (ticket: Ticket) => {
  setSelectedTicket(ticket);
  setSelectedClientForPolicies(ticket.clientId);
  setChecklist({ logs: false, tool: false, lang: false, confirm: false });
- addToast(`Opened ${ticket.code} — ${ticket.clientName} • ${ticket.userEmail} • ${ticket.tags.includes('business-hours') ? 'Business Hours' : '24/7'}`, 'info', 3000, `open-${ticket.code}`);
+ addToast(`Opened ${ticket.code} • ${ticket.clientName}`, 'info', 3000, `open-${ticket.code}`);
  };
-
  const handleAssign = (ticketId: string, agentId: string) => {
  setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, assignedTo: agentId, status: 'assigned' as const } : t));
  const agent = agents.find(a => a.id === agentId);
  const ticket = tickets.find(t => t.id === ticketId);
  if (ticket) setSelectedTicket({ ...ticket, assignedTo: agentId, status: 'assigned' });
- addToast(`Assigned ${ticketId.substring(0,8)} to ${agent?.name || agentId} — assigned`, 'success', 3000, `assign-${ticketId}`);
- setAgents(prev => prev.map(a => a.id === agentId ? { ...a, currentTickets: Math.min(a.maxTickets, a.currentTickets + 1), weeklyHours: a.weeklyHours + 1 } : a));
- 
- setProgress(prev => ({
- ...prev,
- history: [...prev.history, { timestamp: Date.now(), action: `Assigned ${ticketId.substring(0,8)} to ${agent?.name}`, ticketCode: ticketId.substring(0,8) }].slice(-50),
- }));
+ addToast(`Assigned to ${agent?.name || agentId}`, 'success', 3000, `assign-${ticketId}`);
+ setAgents(prev => prev.map(a => a.id === agentId ? { ...a, currentTickets: Math.min(a.maxTickets, a.currentTickets + 1) } : a));
+ setProgress(prev => ({ ...prev, history: [...prev.history, { timestamp: Date.now(), action: `Assigned ${ticketId.substring(0,8)} to ${agent?.name}`, ticketCode: ticketId.substring(0,8) }].slice(-50) }));
  };
-
  const handleResolve = () => {
  if (!selectedTicket) return;
- if (!checklist.logs) { addToast('Check logs first — required for QA. Open Sign-in Logs CA tab.', 'error', 4000, 'check-logs'); return; }
- if (!checklist.tool) { addToast('Use correct tool — required. Check Intune/Exchange per ticket.', 'error', 4000, 'check-tool'); return; }
- 
+ if (!checklist.logs) { addToast('Check logs first — Sign-in Logs CA tab', 'error', 4000, 'check-logs'); return; }
+ if (!checklist.tool) { addToast('Use correct tool — Intune/Exchange', 'error', 4000, 'check-tool'); return; }
  const actions = { checkedLogsFirst: checklist.logs, usedCorrectTool: checklist.tool, usedClientLanguage: checklist.lang, confirmedResolution: checklist.confirm, documentedKB: false };
  const csat = calculateCSAT(selectedTicket, actions);
  const qa = checklist.logs && checklist.tool ? (checklist.lang ? 92 : 75) : 55;
  const isBreached = selectedTicket.slaBreach;
- 
  setTickets(prev => prev.map(t => t.id === selectedTicket.id ? { ...t, status: 'resolved' as const, csat, qaScore: qa } : t));
- setResolvedCount(c => c + 1);
- 
- // Update progress — saved for assessment — with difficulty scaling
  setProgress(prev => {
  const newResolved = prev.ticketsResolved + 1;
  const newBreached = isBreached ? prev.ticketsBreached + 1 : prev.ticketsBreached;
  const newAvgCSAT = ((prev.avgCSAT * prev.ticketsResolved) + csat) / newResolved;
  const newAvgQA = ((prev.avgQA * prev.ticketsResolved) + qa) / newResolved;
- // XP based on difficulty + QA
  const difficultyXp = selectedTicket.difficulty === 'beginner' ? 10 : selectedTicket.difficulty === 'intermediate' ? 20 : selectedTicket.difficulty === 'advanced' ? 30 : 50;
  const baseXp = isBreached ? 5 : qa >= 90 ? difficultyXp + 10 : qa >= 75 ? difficultyXp : Math.floor(difficultyXp/2);
  const xpGain = baseXp + (checklist.lang ? 10 : 0);
  const newXp = prev.xp + xpGain;
  const oldLevel = prev.level;
  const newLevel = calculateLevel(newXp);
- 
- // Trigger OrbitDesk level up animation if leveled up
- if (newLevel > oldLevel) {
-  setTimeout(() => setLevelUp({ oldLevel, newLevel }), 800);
-  addToast(`🚀 LEVEL UP! Lvl ${oldLevel} → ${newLevel} — ${getLevelInfo(newLevel).title} — Orbit expanded! New: ${getLevelInfo(newLevel).unlocks[0]}`, 'success', 6000, `levelup-${newLevel}`);
- }
- 
- return {
-  ...prev,
-  ticketsResolved: newResolved,
-  ticketsBreached: newBreached,
-  avgCSAT: newAvgCSAT,
-  avgQA: newAvgQA,
-  xp: newXp,
-  level: newLevel,
-  slaCompliance: Math.round((newResolved / (newResolved + newBreached)) * 100) || 100,
-  communicationScores: {
-  ...prev.communicationScores,
-  technicalAccuracy: Math.round((prev.communicationScores.technicalAccuracy * prev.ticketsResolved + qa) / newResolved),
-  clientLanguage: checklist.lang ? Math.min(100, prev.communicationScores.clientLanguage + 10) : prev.communicationScores.clientLanguage,
-  },
-  badges: getBadges({ ...prev, ticketsResolved: newResolved, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp } as any),
-  history: [...prev.history, { 
-  timestamp: Date.now(), 
-  action: `Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] — CSAT ${csat} QA ${qa}% ${isBreached ? 'BREACHED' : ''} +${xpGain} XP`, 
-  ticketCode: selectedTicket.code,
-  score: Math.round((csat * 20 + qa) / 2),
-  }].slice(-50),
- };
+ if (newLevel > oldLevel) { setTimeout(() => setLevelUp({ oldLevel, newLevel }), 800); addToast(`🚀 LEVEL UP! ${oldLevel} → ${newLevel} — ${getLevelInfo(newLevel).title}`, 'success', 6000, `levelup-${newLevel}`); }
+ return { ...prev, ticketsResolved: newResolved, ticketsBreached: newBreached, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp, level: newLevel, slaCompliance: Math.round((newResolved / (newResolved + newBreached)) * 100) || 100, communicationScores: { ...prev.communicationScores, technicalAccuracy: Math.round((prev.communicationScores.technicalAccuracy * prev.ticketsResolved + qa) / newResolved), clientLanguage: checklist.lang ? Math.min(100, prev.communicationScores.clientLanguage + 10) : prev.communicationScores.clientLanguage }, badges: getBadges({ ...prev, ticketsResolved: newResolved, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp } as any), history: [...prev.history, { timestamp: Date.now(), action: `Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] +${xpGain} XP`, ticketCode: selectedTicket.code, score: Math.round((csat * 20 + qa) / 2) }].slice(-50) };
  });
- 
- addToast(`Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] — CSAT ${csat} ⭐ QA ${qa}% ${isBreached ? '⚠️ BREACHED -5 XP' : `+${selectedTicket.difficulty === 'expert' ? 50 : selectedTicket.difficulty === 'advanced' ? 30 : selectedTicket.difficulty === 'intermediate' ? 20 : 10} XP base`} — ${checklist.lang ? 'Client language ✓' : 'Use client language next time'}`, isBreached ? 'warning' : 'success', 5000, `resolve-${selectedTicket.code}`);
- 
- setTimeout(() => { 
- setTickets(prev => prev.filter(t => t.id !== selectedTicket.id)); 
- setSelectedTicket(null); 
- setChecklist({ logs: false, tool: false, lang: false, confirm: false }); 
- }, 1800);
+ addToast(`Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] +${selectedTicket.difficulty === 'expert' ? 50 : selectedTicket.difficulty === 'advanced' ? 30 : selectedTicket.difficulty === 'intermediate' ? 20 : 10} XP`, isBreached ? 'warning' : 'success', 5000, `resolve-${selectedTicket.code}`);
+ setTimeout(() => { setTickets(prev => prev.filter(t => t.id !== selectedTicket.id)); setSelectedTicket(null); setChecklist({ logs: false, tool: false, lang: false, confirm: false }); }, 1200);
  };
-
  const handlePortalAction = (action: string) => {
  setPortalActionLog(prev => [`${new Date().toLocaleTimeString()} — ${action}`, ...prev].slice(0,10));
- const groupKey = action.includes('BitLocker') ? 'bitlocker' : action.includes('Sign-in logs') ? 'signin-logs' : action.includes('Sync') ? 'sync' : action.substring(0,20);
- addToast(action, 'success', 3000, groupKey);
- 
- if (action.includes('BitLocker') || action.includes('Enable encryption')) { 
- setChecklist(prev => ({ ...prev, tool: true })); 
- setBitLockerFixed(true);
- if (!checklist.tool) addToast('BitLocker enabled — RDP now Compliant ✓ — real linkage portal↔RDP', 'success', 4000, 'checklist-tool');
- }
- if (action.includes('Sign-in logs') || action.includes('Audit Logs') || action.includes('Message Trace')) { 
- setChecklist(prev => ({ ...prev, logs: true })); 
- if (!checklist.logs) addToast('Logs checked — checklist: Checked logs first ✓', 'info', 3000, 'checklist-logs');
- }
- if (action.includes('Release') || action.includes('Sync')) { 
- setChecklist(prev => ({ ...prev, tool: true })); 
- setSyncDone(true);
- }
-
- setProgress(prev => ({
- ...prev,
- history: [...prev.history, { timestamp: Date.now(), action, ticketCode: selectedTicket?.code }].slice(-50),
- }));
+ addToast(action, 'success', 3000, action.substring(0,20));
+ if (action.includes('BitLocker') || action.includes('Enable encryption')) { setChecklist(prev => ({ ...prev, tool: true })); setBitLockerFixed(true); }
+ if (action.includes('Sign-in logs') || action.includes('Audit Logs') || action.includes('Message Trace')) { setChecklist(prev => ({ ...prev, logs: true })); }
+ if (action.includes('Release') || action.includes('Sync')) { setChecklist(prev => ({ ...prev, tool: true })); setSyncDone(true); }
+ setProgress(prev => ({ ...prev, history: [...prev.history, { timestamp: Date.now(), action, ticketCode: selectedTicket?.code }].slice(-50) }));
  };
-
  const handleResolveConflict = (agentId: string) => {
- setAgents(prev => prev.map(a => {
- if (a.id === agentId) return { ...a, mood: 'neutral' as const, conflictWith: undefined, weeklyHours: Math.max(0, a.weeklyHours - 1) };
- if (a.id === agents.find(x => x.id === agentId)?.conflictWith) return { ...a, mood: 'neutral' as const, conflictWith: undefined };
- return a;
- }));
- addToast(`Conflict resolved via 1:1 SBI — coaching, shadowing 2 tickets/day. Culture improved.`, 'success', 4000, `conflict-${agentId}`);
- 
- setProgress(prev => {
-  const newXp = prev.xp + 15;
-  const oldLevel = prev.level;
-  const newLevel = calculateLevel(newXp);
-  if (newLevel > oldLevel) setTimeout(() => setLevelUp({ oldLevel, newLevel }), 500);
-  return {
-  ...prev,
-  xp: newXp,
-  level: newLevel,
-  history: [...prev.history, { timestamp: Date.now(), action: `Resolved conflict for ${agentId} — SBI coaching +15 XP` }].slice(-50),
-  };
- });
+ setAgents(prev => prev.map(a => { if (a.id === agentId) return { ...a, mood: 'neutral' as const, conflictWith: undefined }; if (a.id === agents.find(x => x.id === agentId)?.conflictWith) return { ...a, mood: 'neutral' as const, conflictWith: undefined }; return a; }));
+ addToast('Conflict resolved via SBI coaching', 'success', 4000, `conflict-${agentId}`);
+ setProgress(prev => { const newXp = prev.xp + 15; const oldLevel = prev.level; const newLevel = calculateLevel(newXp); if (newLevel > oldLevel) setTimeout(() => setLevelUp({ oldLevel, newLevel }), 500); return { ...prev, xp: newXp, level: newLevel, history: [...prev.history, { timestamp: Date.now(), action: `Resolved conflict ${agentId}` }].slice(-50) }; });
  };
-
- const handleClientLanguageToggle = () => {
- setChecklist(prev => ({ ...prev, lang: !prev.lang }));
- addToast(checklist.lang ? 'Client language: OFF — CSAT may drop' : 'Client language: ON — simple steps, no jargon, emojis for SMB ✓', 'info', 3000, 'client-lang');
+ const handleClientLanguageToggle = () => { setChecklist(prev => ({ ...prev, lang: !prev.lang })); };
+ const handleResetProgress = () => { if (confirm('Reset progress?')) { const np = { ...initialProgress, sessionId: `sess_${Math.random().toString(36).substring(7)}_${Date.now()}`, startTime: Date.now() }; setProgress(np); saveProgress(np); } };
+ const handleAuthenticated = (profile: any) => { setUserProfile(profile); setIsAuthenticated(true); localStorage.setItem('orbitdesk_user_profile', JSON.stringify(profile)); };
+ const handleLogout = () => { if (confirm('Logout? Progress saved locally.')) { localStorage.removeItem('orbitdesk_user_profile'); setIsAuthenticated(false); setUserProfile(null); } };
+ const toggleManualPause = () => {
+ if (isPaused && isManualPaused) { setIsPaused(false); setIsManualPaused(false); document.title = 'OrbitDesk — Modern Workplace Operations Lab'; addToast('▶️ Resumed', 'success', 2000, 'resume'); const stored = localStorage.getItem('orbitdesk_last_active'); if (stored) { const diff = Date.now() - parseInt(stored, 10); if (diff > 10000) setTickets(prev => prev.map(t => ({ ...t, slaDeadline: new Date(t.slaDeadline.getTime() + diff), timeLeftMs: t.timeLeftMs + diff }))); } }
+ else { setIsPaused(true); setIsManualPaused(true); localStorage.setItem('orbitdesk_last_active', Date.now().toString()); document.title = '⏸️ On Hold — OrbitDesk'; addToast('⏸️ On hold — break', 'info', 3000, 'pause'); }
  };
-
- const handleCallScore = (scores: any, duration: number) => {
- setProgress(prev => {
- const newCalls = prev.callsHandled + 1;
- const avgEmpathy = Math.round((prev.communicationScores.empathy * prev.callsHandled + scores.avgEmpathy) / newCalls);
- const avgClarity = Math.round((prev.communicationScores.clarity * prev.callsHandled + scores.avgClarity) / newCalls);
- const avgTechnical = Math.round((prev.communicationScores.technicalAccuracy * prev.callsHandled + scores.avgTechnical) / newCalls);
- const avgFluency = Math.round((prev.communicationScores.fluency * prev.callsHandled + scores.avgFluency) / newCalls);
- const avgClientLang = Math.round((prev.communicationScores.clientLanguage * prev.callsHandled + scores.avgClientLang) / newCalls);
- const xpGain = scores.overall >= 80 ? 40 : scores.overall >= 60 ? 25 : 10;
- const newXp = prev.xp + xpGain;
- const oldLevel = prev.level;
- const newLevel = calculateLevel(newXp);
- if (newLevel > oldLevel) setTimeout(() => setLevelUp({ oldLevel, newLevel }), 500);
- 
- return {
-  ...prev,
-  callsHandled: newCalls,
-  communicationScores: {
-  empathy: avgEmpathy,
-  clarity: avgClarity,
-  technicalAccuracy: avgTechnical,
-  fluency: avgFluency,
-  clientLanguage: avgClientLang,
-  },
-  xp: newXp,
-  level: newLevel,
-  callScores: [...prev.callScores, { duration, empathy: scores.avgEmpathy, resolution: scores.overall, clientSatisfaction: scores.overall }].slice(-20),
-  badges: getBadges({ ...prev, callsHandled: newCalls, xp: newXp } as any),
-  history: [...prev.history, { timestamp: Date.now(), action: `Call handled — Score ${scores.overall}/100 — Duration ${Math.floor(duration/60)}:${String(duration%60).padStart(2,'0')} +${xpGain} XP`, score: scores.overall }].slice(-50),
- };
- });
- 
- addToast(`Call scored ${scores.overall}/100 — Empathy ${scores.avgEmpathy} Clarity ${scores.avgClarity} Tech ${scores.avgTechnical} — ${scores.overall >= 80 ? '+40 XP Influx Ready!' : '+${scores.overall >= 60 ? 25 : 10} XP'}`, scores.overall >= 80 ? 'success' : 'info', 5000, `call-${Date.now()}`);
- };
-
- const handleResetProgress = () => {
- if (confirm('Reset all progress? This will clear XP, levels, badges, history — for new assessment.')) {
- const newProgress = { ...initialProgress, sessionId: `sess_${Math.random().toString(36).substring(7)}_${Date.now()}`, startTime: Date.now() };
- setProgress(newProgress);
- saveProgress(newProgress);
- addToast('Progress reset — new session started', 'info', 3000, 'reset');
- }
- };
+ const triggerManualCall = () => { if ((window as any).triggerIncomingCall) { (window as any).triggerIncomingCall(); addToast('Call triggered', 'info', 2000, 'call'); } };
 
  const pendingCount = tickets.filter(t => t.status !== 'resolved').length;
  const p1Count = tickets.filter(t => t.priority === 'P1' && t.status !== 'resolved').length;
  const breached = tickets.filter(t => t.slaBreach).length;
 
- const handleAuthenticated = (profile: any) => {
- setUserProfile(profile);
- setIsAuthenticated(true);
- localStorage.setItem('orbitdesk_user_profile', JSON.stringify(profile));
- addToast(`Welcome ${profile.name} — ${profile.role} • ${profile.experience} • progress restored: ${progress.ticketsResolved} tickets, ${progress.callsHandled} calls, Lvl ${progress.level}`, 'success', 4000, 'auth');
- };
-
- const handleLogout = () => {
- if (confirm('Logout? Your progress stays saved locally (tickets, XP, calls). Login again to restore. Export report for interview before logout.')) {
- localStorage.removeItem('orbitdesk_user_profile');
- setIsAuthenticated(false);
- setUserProfile(null);
- }
- };
-
- const toggleManualPause = () => {
-  if (isPaused && isManualPaused) {
-   // Resume
-   setIsPaused(false);
-   setIsManualPaused(false);
-   document.title = 'OrbitDesk — Modern Workplace Operations Lab';
-   addToast('▶️ Orbit resumed — shift active, SLA timers ticking, queue live', 'success', 3000, 'manual-resume');
-   // Push deadlines forward by pause duration? For manual pause, we already paused, so protect
-   const stored = localStorage.getItem('orbitdesk_last_active');
-   const now = Date.now();
-   if (stored) {
-    const diff = now - parseInt(stored, 10);
-    if (diff > 10000) {
-     setTickets(prev => prev.map(t => ({
-      ...t,
-      slaDeadline: new Date(t.slaDeadline.getTime() + diff),
-      timeLeftMs: t.timeLeftMs + diff
-     })));
-    }
-   }
-  } else {
-   // Pause manually — realistic break
-   setIsPaused(true);
-   setIsManualPaused(true);
-   localStorage.setItem('orbitdesk_last_active', Date.now().toString());
-   document.title = '⏸️ Orbit On Hold — Break | OrbitDesk';
-   addToast('⏸️ Orbit on hold — you took a break, SLAs paused, team covering', 'info', 4000, 'manual-pause');
-  }
- };
-
- const triggerManualCall = () => {
- // Use global exposed by VoiceCallCenter for manual simulate button in header
- if ((window as any).triggerIncomingCall) {
- (window as any).triggerIncomingCall();
- addToast('Manual call triggered — guaranteed ring, YOU greet first', 'info', 3000, 'manual-call');
- } else {
- addToast('Call system initializing... wait 2s then try again — countdown widget bottom-right also has Simulate Call Now', 'info', 3000, 'manual-call-wait');
- }
- };
-
  if (!isAuthenticated) {
- return (
- <div className="min-h-screen relative">
-  <LiveryBackground />
-  <AuthGate onAuthenticated={handleAuthenticated} existingProgress={progress} />
- </div>
- );
+ return <div className="min-h-screen relative"><LiveryBackground /><AuthGate onAuthenticated={handleAuthenticated} existingProgress={progress} /></div>;
  }
 
+ const tabs: any[] = [
+ { id: 'overview', label: 'Overview', icon: '◍' },
+ { id: 'queue', label: 'Queue', icon: '◐', badge: pendingCount },
+ { id: 'comms', label: 'Comms', icon: '◑' },
+ { id: 'clients', label: 'Clients', icon: '◒' },
+ { id: 'class', label: 'Class', icon: '👥' },
+ { id: 'growth', label: 'Growth', icon: '🚀' },
+ { id: 'assessment', label: 'Report', icon: '📊', badge: progress.ticketsResolved },
+ ];
+
  return (
- <div className="min-h-screen text-zinc-100 flex flex-col relative">
+ <div className="min-h-screen flex flex-col text-zinc-100 relative">
  <LiveryBackground />
  <ToastSystem toasts={toasts} onRemove={removeToast} />
  <PWAUpdatePrompt />
  <OrbitPauseOverlay isPaused={isPaused} isManual={isManualPaused} awayMinutes={awayMinutes} pendingCount={pendingCount} onResume={toggleManualPause} />
  {showAwayWelcome && <AwayWelcomeBack awayMinutes={showAwayWelcome.minutes} ticketsAdded={showAwayWelcome.added} onClose={() => setShowAwayWelcome(null)} />}
 
- <div className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a0a]/90 border-b border-zinc-800/60">
-  <div className="max-w-[1600px] mx-auto px-4 h-11 flex items-center justify-between">
-  <div className="flex items-center gap-3">
-  <Logo variant="full" size={28} animated />
-  <span className="h-4 w-px bg-zinc-800 hidden md:block" />
-  <div className="hidden md:flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[11px] font-medium tracking-widest text-zinc-400 uppercase">Modern Workplace Operations • Entra ID • Intune • Exchange</span></div>
-  </div>
-  <div className="flex items-center gap-2">
-  <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20"><span className="h-1 w-1 rounded-full bg-violet-500 animate-pulse" /><span className="text-violet-300">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls</span></div>
-  <div className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border ${isPaused ? "bg-amber-500/10 border-amber-500/20" : "bg-zinc-800/60 border-zinc-700/50"}`}><span className={`h-1 w-1 rounded-full ${isPaused ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} /><span className={`${isPaused ? "text-amber-300" : "text-zinc-400"}`}>{isPaused ? `⏸️ Paused • ${pendingCount} on hold • No breach` : `${pendingCount} pending • ${p1Count} P1 • ${breached} breach • Live`}</span></div>
-  <button onClick={toggleManualPause} className={`h-7 px-3 rounded-full border text-[11px] font-bold transition flex items-center gap-1.5 ${isPaused ? "bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/20 text-amber-300" : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-300"}`}>{isPaused ? "▶️ Resume Orbit" : "⏸️ Pause Orbit"}</button>
-  <button onClick={triggerManualCall} className="h-7 px-3 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-[11px] text-red-300 font-bold transition flex items-center gap-1.5">📞 Simulate Call Now</button>
-  <div className="hidden md:flex items-center gap-2 text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700">
-   <span className="h-5 w-5 rounded-full bg-violet-500 flex items-center justify-center text-white font-bold text-[10px]">{userProfile?.name?.[0] || 'U'}</span>
-   <span className="text-zinc-300 max-w-[80px] truncate">{userProfile?.name}</span>
-   <button onClick={handleLogout} className="text-zinc-500 hover:text-zinc-300 ml-1">↪</button>
-  </div>
-  </div>
-  </div>
-  <div className="max-w-[1600px] mx-auto px-4 h-10 flex items-center gap-1 border-t border-zinc-800/40">
-  {[
-  { id: 'overview', label: 'Overview', icon: '◍', badge: undefined },
-  { id: 'queue', label: 'Live Queue', icon: '◐', badge: pendingCount },
-  { id: 'comms', label: 'Comms', icon: '◑', badge: 3 },
-  { id: 'clients', label: 'Clients', icon: '◒', badge: undefined },
-  { id: 'class', label: 'Class Hub', icon: '👥', badge: 5 },
-  { id: 'growth', label: 'Growth', icon: '🚀', badge: undefined },
-  { id: 'assessment', label: 'Assessment', icon: '📊', badge: progress.ticketsResolved },
-  ].map(tab => (
-  <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} className={`h-7 px-3 rounded-lg text-[12px] font-medium flex items-center gap-1.5 border transition-all ${activeTab === tab.id ? 'bg-violet-500/15 text-violet-300 border-violet-500/30' : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-800/50 hover:text-zinc-300'}`}>
-   <span>{tab.icon}</span>{tab.label}{tab.badge !== undefined && tab.badge > 0 && <span className="ml-1 h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{tab.badge}</span>}
-  </button>
-  ))}
-  <div className="ml-auto flex items-center gap-2">
-  <button onClick={() => setStudentMode(!studentMode)} className={`h-7 px-3 rounded-full text-[11px] font-medium border transition ${studentMode ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' : 'bg-amber-500/15 text-amber-300 border-amber-500/20'}`}>{studentMode ? 'Student Mode' : 'Expert Mode'}</button>
-  <button onClick={() => setShowGuide(true)} className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-300 transition">📚 Tutorial</button>
-  <button onClick={() => window.location.href = '/'} className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-300 transition">← Web</button>
-  <InstallPromptV2 />
-  </div>
-  </div>
- </div>
+ {/* Modern Header — Single row, clean */}
+ <header className="sticky top-0 z-40 backdrop-blur-2xl bg-[#0a0a0a]/80 border-b border-zinc-800/50">
+  <div className="max-w-[1600px] mx-auto px-5 h-[56px] flex items-center justify-between gap-4">
+   <div className="flex items-center gap-4">
+    <Logo variant="full" size={30} animated />
+    <div className="hidden lg:flex items-center gap-2 ml-6 pl-6 border-l border-zinc-800">
+     {tabs.map(tab => (
+      <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} className={`h-8 px-3.5 rounded-full text-[13px] font-medium flex items-center gap-1.5 transition-all ${activeTab === tab.id ? 'bg-zinc-100 text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60'}`}>
+       <span className="text-[11px]">{tab.icon}</span>{tab.label}{tab.badge ? <span className={`ml-1 h-4 min-w-[16px] px-1 rounded-full text-[10px] flex items-center justify-center ${activeTab === tab.id ? 'bg-zinc-900 text-white' : 'bg-red-500 text-white'}`}>{tab.badge}</span> : null}
+      </button>
+     ))}
+    </div>
+   </div>
 
- <div className="flex-1 max-w-[1600px] mx-auto w-full p-4">
+   <div className="flex items-center gap-2">
+    <div className="hidden md:flex items-center gap-2">
+     <div className="flex items-center gap-2 h-8 px-3 rounded-full bg-zinc-900 border border-zinc-800">
+      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white">{progress.level}</div>
+      <span className="text-[11px] text-zinc-300 font-medium">{getLevelInfo(progress.level).title}</span>
+      <span className="text-[10px] text-zinc-500">• {progress.xp} XP</span>
+      <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden ml-1"><div className="h-full bg-violet-500" style={{ width: `${progress.xp % 100}%` }} /></div>
+     </div>
+     <div className={`h-8 px-3 rounded-full border flex items-center gap-1.5 text-[11px] ${isPaused ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />{isPaused ? 'Paused' : `${pendingCount} • ${p1Count} P1 • Live`}
+     </div>
+    </div>
+    <button onClick={toggleManualPause} className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${isPaused ? 'bg-amber-500 text-zinc-900 border-amber-500' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200'}`} title={isPaused ? 'Resume' : 'Pause'}>{isPaused ? '▶️' : '⏸️'}</button>
+    <button onClick={triggerManualCall} className="h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 flex items-center justify-center transition" title="Simulate Call">📞</button>
+    <div className="h-8 w-px bg-zinc-800 mx-1 hidden md:block" />
+    <button onClick={() => setStudentMode(!studentMode)} className={`hidden md:flex h-8 px-3 rounded-full text-[11px] font-medium border transition ${studentMode ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>{studentMode ? 'Student' : 'Expert'}</button>
+    <div className="flex items-center gap-2 h-8 pl-2 pr-1 rounded-full bg-zinc-900 border border-zinc-800">
+     <span className="h-6 w-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-[11px] font-bold">{userProfile?.name?.[0] || 'U'}</span>
+     <span className="hidden md:block text-[11px] text-zinc-300 max-w-[80px] truncate">{userProfile?.name}</span>
+     <button onClick={handleLogout} className="h-6 w-6 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-500">↪</button>
+    </div>
+   </div>
+  </div>
+
+  {/* Mobile tabs */}
+  <div className="lg:hidden border-t border-zinc-800/50 px-3 h-10 flex items-center gap-1 overflow-x-auto">
+   {tabs.map(tab => (
+    <button key={tab.id} onClick={() => setActiveTab(tab.id as Tab)} className={`h-7 px-3 rounded-full text-[12px] font-medium whitespace-nowrap flex items-center gap-1.5 border ${activeTab === tab.id ? 'bg-zinc-100 text-zinc-900 border-zinc-100' : 'text-zinc-500 border-transparent'}`}>{tab.icon} {tab.label}{tab.badge ? <span className="bg-red-500 text-white h-4 min-w-[14px] px-1 rounded-full text-[10px] flex items-center justify-center">{tab.badge}</span> : null}</button>
+   ))}
+  </div>
+ </header>
+
+ {/* Main — flex-1, no calc, no overlapping footer */}
+ <main className="flex-1 min-h-0 max-w-[1600px] mx-auto w-full px-4 py-4 flex flex-col">
   <AnimatePresence mode="wait">
-  {activeTab === 'overview' && (
-  <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="space-y-4">
-   <ShiftStatus isPaused={isPaused} isManual={isManualPaused} ticketsResolved={progress.ticketsResolved} level={progress.level} xp={progress.xp} pendingCount={pendingCount} awayMinutes={awayMinutes} onTogglePause={toggleManualPause} />
-   <DashboardMetrics tickets={tickets} />
-   <div className="grid grid-cols-12 gap-4">
-   <div className="col-span-12 lg:col-span-8 space-y-4">
-   <VoiceCallDemo />
-   <ThreadHumor />
-   </div>
-   <div className="col-span-12 lg:col-span-4 space-y-4">
-   <DesktopDownloadV2 />
-   <div className="p-4 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur-xl border border-zinc-800/60">
-    <div className="flex items-center gap-3">
-    <img src="/orbitdesk-logo-godmode-polished.png" alt="OrbitDesk" className="h-8 w-8 rounded-full object-cover border border-zinc-800" />
-    <div>
-    <h4 className="text-[13px] font-semibold text-zinc-100">Your Progress — Ready for Interview</h4>
-    <p className="text-[11px] text-zinc-500">Track tickets, calls, and performance metrics</p>
-    </div>
-    </div>
-    <div className="mt-4 grid grid-cols-2 gap-3">
-    <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-    <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Tickets Resolved</p>
-    <p className="text-[20px] font-bold text-white mt-1">{progress.ticketsResolved}</p>
-    <p className="text-[10px] text-zinc-500 mt-1">Avg CSAT {progress.avgCSAT.toFixed(1)} • QA {progress.avgQA}%</p>
-    </div>
-    <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-    <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Calls Handled</p>
-    <p className="text-[20px] font-bold text-white mt-1">{progress.callsHandled}</p>
-    <p className="text-[10px] text-zinc-500 mt-1">Level {progress.level} • {progress.xp} XP</p>
-    </div>
-    </div>
-    <div className="mt-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
-    <p className="text-[11px] text-violet-300 font-medium">Professional training environment — practice real M365 scenarios with guided workflows and performance tracking.</p>
-    </div>
-   </div>
-   </div>
-   </div>
-  </motion.div>
-  )}
-  {activeTab === 'queue' && (
-  <motion.div key="queue" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="grid grid-cols-12 gap-4 h-[calc(100vh-120px)]">
-   <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-3">
-   <TicketQueue tickets={tickets} onSelectTicket={handleSelectTicket} onAssign={handleAssign} selectedTicketId={selectedTicket?.id} isPaused={isPaused} />
-   <div className="p-3 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60">
-   <div className="flex items-center justify-between mb-2"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access — Real RDP Win11</p><p className="text-[11px] text-zinc-500">Stages: Connecting→Auth→MFA→Consent→Connected</p></div>
-    <button onClick={() => { if (selectedTicket) { setShowRemotePC(true); addToast(`RDP connecting to ${selectedTicket.userEmail.split('@')[0]}-LAPTOP — encrypted, recording ON`, 'info', 3000, `rdp-${selectedTicket.id}`); } else { addToast('Select a ticket first — then Connect to open real RDP', 'error', 3000, 'rdp-error'); } }} className={`h-8 px-3 rounded-full text-[12px] font-semibold transition ${selectedTicket ? 'bg-zinc-100 text-zinc-900 hover:bg-white' : 'bg-zinc-800 text-zinc-500'}`}>Connect →</button>
-   </div>
-   {portalActionLog.length > 0 && <div className="mt-2 p-2 rounded-lg bg-zinc-900 border border-zinc-800"><p className="text-[10px] font-semibold text-zinc-500 uppercase">Recent Portal Actions — Grouped</p><div className="mt-1 space-y-0.5">{portalActionLog.slice(0,3).map((log,i) => <p key={i} className="text-[11px] font-mono text-zinc-400">{log}</p>)}</div></div>}
-   <div className="mt-2 flex gap-2">
-    <button onClick={() => setShowLiveChat(!showLiveChat)} className={`flex-1 h-8 rounded-full text-[11px] font-medium border transition ${showLiveChat ? 'bg-violet-500/15 text-violet-300 border-violet-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
-    {showLiveChat ? '💬 Hide Live Chat' : '💬 Show Live Chat Workstation — Teams/Slack style'}
-    </button>
-   </div>
-   {showLiveChat && (
-    <div className="mt-3 h-[280px] rounded-xl border border-zinc-800 overflow-hidden">
-    <CommunicationChannel compact ticket={selectedTicket} />
-    </div>
+   {activeTab === 'overview' && (
+    <motion.div key="overview" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="space-y-4 flex-1">
+     <ShiftStatus isPaused={isPaused} isManual={isManualPaused} ticketsResolved={progress.ticketsResolved} level={progress.level} xp={progress.xp} pendingCount={pendingCount} awayMinutes={awayMinutes} onTogglePause={toggleManualPause} />
+     <DashboardMetrics tickets={tickets} />
+     <div className="grid grid-cols-12 gap-4">
+      <div className="col-span-12 lg:col-span-8 space-y-4"><VoiceCallDemo /><ThreadHumor /></div>
+      <div className="col-span-12 lg:col-span-4 space-y-4">
+       <DesktopDownloadV2 />
+       <div className="p-4 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur border border-zinc-800/60">
+        <div className="flex items-center gap-3"><img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-8 w-8 rounded-full object-cover" /><div><h4 className="text-[13px] font-semibold text-zinc-100">Progress — Interview Ready</h4><p className="text-[11px] text-zinc-500">Tickets, calls, metrics</p></div></div>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+         <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Resolved</p><p className="text-[20px] font-bold text-white">{progress.ticketsResolved}</p><p className="text-[10px] text-zinc-500">CSAT {progress.avgCSAT.toFixed(1)} • QA {progress.avgQA}%</p></div>
+         <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Calls</p><p className="text-[20px] font-bold text-white">{progress.callsHandled}</p><p className="text-[10px] text-zinc-500">Lvl {progress.level} • {progress.xp} XP</p></div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </motion.div>
    )}
-   </div>
-   </div>
-   <div className="col-span-12 lg:col-span-8 h-full grid grid-cols-12 gap-4">
-   <div className="col-span-12 lg:col-span-5 h-full bg-[#0a0a0a] rounded-2xl border border-zinc-800/60 overflow-hidden flex flex-col">
-   {selectedTicket ? <>
-    <div className="p-4 border-b border-zinc-800/60"><div className="flex items-center gap-2 mb-2"><span className={`text-[11px] font-bold px-2 py-1 rounded-full ${selectedTicket.priority === 'P1' ? 'bg-red-500/15 text-red-300 border border-red-500/20' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'}`}>{selectedTicket.priority}</span><span className="text-[11px] font-mono text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full border border-zinc-700">{selectedTicket.code}</span><span className="text-[11px] bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2 py-1 rounded-full">{selectedTicket.clientName}</span><span className="text-[10px] px-2 py-1 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">{selectedTicket.tags.includes('business-hours') ? 'Business Hours' : '24/7'}</span></div><h2 className="text-[14px] font-semibold text-zinc-100 leading-tight">{selectedTicket.title}</h2><p className="text-[13px] text-zinc-400 mt-2 leading-[1.4]">"{selectedTicket.userMessage}"</p><div className="mt-2 flex items-center gap-2 text-[11px] text-zinc-500"><span className="font-mono bg-zinc-800 px-2 py-1 rounded-full border border-zinc-700">{selectedTicket.userEmail}</span><span>{Math.floor(selectedTicket.timeLeftMs/60000)}m left • {selectedTicket.tags.includes('business-hours') ? '9-5 Mon-Fri' : '24/7'} • Realistic SLA</span>{selectedTicket.assignedTo && <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Assigned to {agents.find(a=>a.id===selectedTicket.assignedTo)?.name}</span>}</div></div>
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-    <div><h4 className="text-[11px] font-semibold tracking-widest text-zinc-500 uppercase mb-2">Required Tools — Real Actions (Grouped Toasts)</h4><div className="space-y-1.5">{selectedTicket.requiredTools.map(tool => <div key={tool} className="text-[12px] bg-zinc-900/50 border border-zinc-800/50 p-2.5 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px]">✓</span> {tool}</span><button onClick={() => handlePortalAction(`Opened ${tool} for ${selectedTicket.code} — checked logs`)} className="h-6 px-2 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[11px] text-zinc-300">Open →</button></div>)}</div></div>
-    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"><p className="text-[11px] font-medium text-amber-300">Root Cause — Real:</p><p className="text-[12px] text-zinc-400 mt-1 leading-[1.4]">{selectedTicket.rootCause}</p></div>
-    <div className="p-3 rounded-xl bg-[#0a0a0a] border border-zinc-800"><h4 className="text-[11px] font-semibold text-zinc-200 mb-3 flex items-center justify-between">Resolve — Real Checklist + XP + Saved Progress<span className="text-[10px] font-normal text-zinc-500">{Object.values(checklist).filter(Boolean).length}/4 checked • Lvl {progress.level} • {progress.xp} XP</span></h4><div className="space-y-2.5">
-    <label className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/50 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.logs} onChange={e => { setChecklist(prev => ({ ...prev, logs: e.target.checked })); if (e.target.checked) addToast('Checked logs first ✓ — QA higher', 'success', 3000, 'checklist-logs'); }} className="rounded h-4 w-4" /><div><p className="text-[12px] text-zinc-200">Checked logs first (Sign-in Logs CA tab, Audit Logs)</p><p className="text-[11px] text-zinc-500">Required — always check logs before fix +10 XP</p></div></label>
-    <label className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/50 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.tool} onChange={e => { setChecklist(prev => ({ ...prev, tool: e.target.checked })); if (e.target.checked) addToast('Used correct tool ✓ — Intune/Exchange', 'success', 3000, 'checklist-tool'); }} className="rounded h-4 w-4" /><div><p className="text-[12px] text-zinc-200">Used correct tool (Intune, Message Trace, What If)</p><p className="text-[11px] text-zinc-500">Required — wrong tool = QA drop +20 XP if QA≥75</p></div></label>
-    <label className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/50 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.lang} onChange={() => handleClientLanguageToggle()} className="rounded h-4 w-4" /><div><p className="text-[12px] text-zinc-200">Used client language (simple Bloom, technical NovaTech, SEC-2024-07 Apex)</p><p className="text-[11px] text-zinc-500">Boosts CSAT +10 XP — Bloom no jargon + emojis</p></div></label>
-    <label className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/50 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.confirm} onChange={e => setChecklist(prev => ({ ...prev, confirm: e.target.checked }))} className="rounded h-4 w-4" /><div><p className="text-[12px] text-zinc-200">Confirmed resolution with user + documented</p><p className="text-[11px] text-zinc-500">Ensures 5 stars, prevents reopen</p></div></label>
-    </div><button onClick={handleResolve} className={`w-full mt-4 h-10 rounded-xl text-[13px] font-semibold transition ${checklist.logs && checklist.tool ? 'bg-zinc-100 text-zinc-900 hover:bg-white shadow' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>{checklist.logs && checklist.tool ? `Resolve → CSAT + QA + XP (Saved for Assessment)` : 'Check required boxes first — logs + tool required'}</button><p className="text-[10px] text-zinc-600 mt-2 text-center">Every resolve commits real CSAT ⭐ QA % → XP → Level → saved for final assessment → toast grouped not stuck</p></div>
-    </div>
-   </> : <div className="flex-1 flex items-center justify-center p-8 text-center"><div><div className="h-12 w-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center mx-auto mb-3"><span className="text-zinc-500">◍</span></div><p className="text-[13px] font-medium text-zinc-300">Select a ticket — action commits real + XP + saved</p><p className="text-[11px] text-zinc-500 mt-1">Click ticket in left queue → detail → portals → checklist → Resolve → toast grouped + CSAT + XP + saved progress</p></div></div>}
-   </div>
-   <div className="col-span-12 lg:col-span-7 h-full"><MockPortals ticket={selectedTicket} onAction={handlePortalAction} /></div>
-   </div>
-  </motion.div>
-  )}
-  {activeTab === 'comms' && <motion.div key="comms" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)]"><CommunicationChannel /></motion.div>}
-  {activeTab === 'clients' && <motion.div key="clients" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="grid grid-cols-12 gap-4 h-[calc(100vh-120px)]"><div className="col-span-12 lg:col-span-5 h-full"><PolicyCenter selectedClientId={selectedClientForPolicies} onSelectClient={setSelectedClientForPolicies} /></div><div className="col-span-12 lg:col-span-7 h-full"><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></div></motion.div>}
-  {activeTab === 'class' && <motion.div key="class" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)]"><ClassCommandCenter myProgress={progress} userProfile={userProfile} /></motion.div>}
-  {activeTab === 'growth' && <motion.div key="growth" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)] overflow-y-auto"><GrowthStrategy /></motion.div>}
-  {activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="h-[calc(100vh-120px)] overflow-y-auto"><AssessmentReport progress={progress} onReset={handleResetProgress} /></motion.div>}
+
+   {activeTab === 'queue' && (
+    <motion.div key="queue" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4">
+     {/* Left — Queue */}
+     <div className="w-full lg:w-[360px] flex-shrink-0 flex flex-col gap-3 min-h-0">
+      <div className="flex-1 min-h-[400px]"><TicketQueue tickets={tickets} onSelectTicket={handleSelectTicket} onAssign={handleAssign} selectedTicketId={selectedTicket?.id} isPaused={isPaused} /></div>
+      <div className="rounded-2xl bg-[#0a0a0a] border border-zinc-800/60 p-3">
+       <div className="flex items-center justify-between"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access</p><p className="text-[11px] text-zinc-500">Win11 • Encrypted</p></div><button onClick={() => { if (selectedTicket) setShowRemotePC(true); }} className={`h-8 px-3 rounded-full text-[12px] font-semibold ${selectedTicket ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-800 text-zinc-500'}`}>Connect →</button></div>
+       {portalActionLog.length > 0 && <div className="mt-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] text-zinc-500 uppercase">Recent Actions</p><div className="mt-1 space-y-1">{portalActionLog.slice(0,3).map((l,i) => <p key={i} className="text-[11px] font-mono text-zinc-400 truncate">{l}</p>)}</div></div>}
+       <button onClick={() => setShowLiveChat(!showLiveChat)} className={`w-full mt-2 h-8 rounded-full text-[11px] border ${showLiveChat ? 'bg-violet-500/15 text-violet-300 border-violet-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>{showLiveChat ? 'Hide Chat' : '💬 Live Chat'}</button>
+       {showLiveChat && <div className="mt-3 h-[260px] rounded-xl border border-zinc-800 overflow-hidden"><CommunicationChannel compact ticket={selectedTicket} /></div>}
+      </div>
+     </div>
+
+     {/* Center — Ticket Detail */}
+     <div className="w-full lg:w-[400px] flex-shrink-0 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60 flex flex-col min-h-0 overflow-hidden">
+      {selectedTicket ? (
+       <>
+        <div className="p-4 border-b border-zinc-800/50">
+         <div className="flex items-center gap-2 flex-wrap mb-2.5">
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${selectedTicket.priority === 'P1' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>{selectedTicket.priority}</span>
+          <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700">{selectedTicket.code}</span>
+          <span className={`text-[10px] px-2 py-1 rounded-full border ${(selectedTicket as any).difficulty === 'expert' ? 'bg-red-500/10 text-red-300 border-red-500/20' : (selectedTicket as any).difficulty === 'advanced' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : (selectedTicket as any).difficulty === 'intermediate' ? 'bg-blue-500/10 text-blue-300 border-blue-500/20' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'}`}>{(selectedTicket as any).difficulty}</span>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/20">{selectedTicket.clientName}</span>
+         </div>
+         <h2 className="text-[15px] font-semibold text-zinc-100 leading-tight">{selectedTicket.title}</h2>
+         <p className="text-[13px] text-zinc-400 mt-2 leading-relaxed">"{selectedTicket.userMessage}"</p>
+         <div className="mt-3 flex items-center gap-2 text-[11px] text-zinc-500">
+          <span className="font-mono bg-zinc-900 px-2 py-1 rounded-full border border-zinc-800">{selectedTicket.userEmail}</span>
+          <span className="font-mono">{Math.floor(selectedTicket.timeLeftMs/60000)}m left</span>
+         </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+         <div>
+          <h4 className="text-[11px] font-semibold tracking-widest text-zinc-500 uppercase mb-2">Tools</h4>
+          <div className="space-y-2">{selectedTicket.requiredTools.map(t => <div key={t} className="text-[12px] bg-zinc-900/60 border border-zinc-800 p-2.5 rounded-xl flex items-center justify-between"><span className="text-zinc-300">{t}</span><button onClick={() => handlePortalAction(`Opened ${t}`)} className="h-6 px-2.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-300 border border-zinc-700">Open</button></div>)}</div>
+         </div>
+         <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10"><p className="text-[11px] font-medium text-amber-300">Root Cause</p><p className="text-[12px] text-zinc-400 mt-1 leading-relaxed">{selectedTicket.rootCause}</p></div>
+         <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+          <h4 className="text-[11px] font-semibold text-zinc-200 mb-3">Checklist • Lvl {progress.level} • {progress.xp} XP</h4>
+          <div className="space-y-2">
+           <label className="flex gap-2.5 p-2.5 rounded-xl bg-[#0a0a0a] border border-zinc-800 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.logs} onChange={e => setChecklist(p => ({ ...p, logs: e.target.checked }))} className="mt-0.5" /><div><p className="text-[12px] text-zinc-200">Checked logs first</p><p className="text-[11px] text-zinc-500">Sign-in Logs, Audit Logs</p></div></label>
+           <label className="flex gap-2.5 p-2.5 rounded-xl bg-[#0a0a0a] border border-zinc-800 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.tool} onChange={e => setChecklist(p => ({ ...p, tool: e.target.checked }))} className="mt-0.5" /><div><p className="text-[12px] text-zinc-200">Used correct tool</p><p className="text-[11px] text-zinc-500">Intune / Exchange / What If</p></div></label>
+           <label className="flex gap-2.5 p-2.5 rounded-xl bg-[#0a0a0a] border border-zinc-800 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.lang} onChange={() => setChecklist(p => ({ ...p, lang: !p.lang }))} className="mt-0.5" /><div><p className="text-[12px] text-zinc-200">Client language</p><p className="text-[11px] text-zinc-500">Simple for SMB, technical for Enterprise</p></div></label>
+           <label className="flex gap-2.5 p-2.5 rounded-xl bg-[#0a0a0a] border border-zinc-800 cursor-pointer hover:border-zinc-700"><input type="checkbox" checked={checklist.confirm} onChange={e => setChecklist(p => ({ ...p, confirm: e.target.checked }))} className="mt-0.5" /><div><p className="text-[12px] text-zinc-200">Confirmed resolution</p><p className="text-[11px] text-zinc-500">User confirmed + documented</p></div></label>
+          </div>
+          <button onClick={handleResolve} className={`w-full mt-4 h-10 rounded-full text-[13px] font-semibold transition ${checklist.logs && checklist.tool ? 'bg-zinc-100 text-zinc-900 hover:bg-white' : 'bg-zinc-800 text-zinc-500'}`}>Resolve Ticket →</button>
+         </div>
+        </div>
+       </>
+      ) : (
+       <div className="flex-1 flex items-center justify-center p-8 text-center"><div><div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-3 text-zinc-600">◍</div><p className="text-[13px] font-medium text-zinc-300">Select a ticket</p><p className="text-[11px] text-zinc-500 mt-1 max-w-[240px]">Choose from queue left → investigate logs → fix in portals → resolve</p></div></div>
+      )}
+     </div>
+
+     {/* Right — Portals */}
+     <div className="flex-1 min-w-0 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60 overflow-hidden flex flex-col min-h-[600px] lg:min-h-0"><MockPortals ticket={selectedTicket} onAction={handlePortalAction} /></div>
+    </motion.div>
+   )}
+
+   {activeTab === 'comms' && <motion.div key="comms" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><CommunicationChannel /></motion.div>}
+   {activeTab === 'clients' && <motion.div key="clients" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 grid lg:grid-cols-2 gap-4"><PolicyCenter selectedClientId={selectedClientForPolicies} onSelectClient={setSelectedClientForPolicies} /><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></motion.div>}
+   {activeTab === 'class' && <motion.div key="class" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><ClassCommandCenter myProgress={progress} userProfile={userProfile} /></motion.div>}
+   {activeTab === 'growth' && <motion.div key="growth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto"><GrowthStrategy /></motion.div>}
+   {activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto"><AssessmentReport progress={progress} onReset={handleResetProgress} /></motion.div>}
   </AnimatePresence>
- </div>
+ </main>
+
+ {/* Clean Footer — No overlapping, simple, classy */}
+ <footer className="mt-auto border-t border-zinc-800/50 bg-[#0a0a0a]/80 backdrop-blur-xl">
+  <div className="max-w-[1600px] mx-auto px-5 h-11 flex items-center justify-between text-[11px] text-zinc-500">
+   <div className="flex items-center gap-3">
+    <span className="font-medium text-zinc-400">OrbitDesk</span>
+    <span className="hidden md:inline w-px h-3 bg-zinc-800" />
+    <span className="hidden md:inline">{getLevelInfo(progress.level).title} • {getLevelInfo(progress.level).orbitRings} rings</span>
+    <span className="hidden md:inline w-px h-3 bg-zinc-800" />
+    <span className="hidden md:inline">{progress.ticketsResolved < 5 ? 'Beginner' : progress.ticketsResolved < 10 ? 'Intermediate' : progress.ticketsResolved < 20 ? 'Advanced' : 'Expert'} • {isPaused ? 'Paused' : 'Live'}</span>
+   </div>
+   <div className="flex items-center gap-3 font-mono">
+    <span>Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} ✓</span>
+    <span className="hidden md:inline">• Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100</span>
+   </div>
+  </div>
+ </footer>
+
  {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
  <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} />
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
- {levelUp && (
-  <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />
- )}
- <div className="border-t border-zinc-800/60 bg-[#0a0a0a]/80 backdrop-blur mt-8"><div className="max-w-[1600px] mx-auto px-4 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-zinc-600"><span>OrbitDesk — Modern Workplace Operations Lab • {getLevelInfo(progress.level).title} • Orbit {getLevelInfo(progress.level).orbitRings} rings • {progress.ticketsResolved < 5 ? 'Beginner' : progress.ticketsResolved < 10 ? 'Intermediate' : progress.ticketsResolved < 20 ? 'Advanced' : 'Expert'} pool</span><span className="font-mono">Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} resolved • {progress.callsHandled} calls • Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100 • 7 routes • Progression ON</span></div></div>
+ {levelUp && <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />}
  </div>
  );
 }
