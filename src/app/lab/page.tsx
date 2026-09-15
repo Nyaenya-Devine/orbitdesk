@@ -28,6 +28,7 @@ import LevelUpCelebration from '@/components/LevelUpCelebration';
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt';
 import OrbitPauseOverlay, { AwayWelcomeBack } from '@/components/OrbitPauseOverlay';
 import ShiftStatus from '@/components/ShiftStatus';
+import LinkedInChatDock from '@/components/LinkedInChatDock';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'growth' | 'assessment';
 
@@ -48,7 +49,6 @@ export default function HomeV3() {
  const [syncDone, setSyncDone] = useState(false);
  const [studentMode, setStudentMode] = useState(true);
  const [showGuide, setShowGuide] = useState(true);
- const [showLiveChat, setShowLiveChat] = useState(false);
  const [levelUp, setLevelUp] = useState<{ oldLevel: number; newLevel: number } | null>(null);
  const [isPaused, setIsPaused] = useState(false);
  const [isManualPaused, setIsManualPaused] = useState(false);
@@ -278,7 +278,7 @@ export default function HomeV3() {
  </header>
 
  {/* Main — flex-1, no calc, no overlapping footer */}
- <main className="flex-1 min-h-0 max-w-[1600px] mx-auto w-full px-4 py-4 flex flex-col">
+ <main className="flex-1 min-h-0 max-w-[1600px] mx-auto w-full px-4 py-4 flex flex-col pb-[80px]">
   <AnimatePresence mode="wait">
    {activeTab === 'overview' && (
     <motion.div key="overview" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="space-y-4 flex-1">
@@ -306,10 +306,9 @@ export default function HomeV3() {
      <div className="w-full lg:w-[360px] flex-shrink-0 flex flex-col gap-3 min-h-0">
       <div className="flex-1 min-h-[400px]"><TicketQueue tickets={tickets} onSelectTicket={handleSelectTicket} onAssign={handleAssign} selectedTicketId={selectedTicket?.id} isPaused={isPaused} /></div>
       <div className="rounded-2xl bg-[#0a0a0a] border border-zinc-800/60 p-3">
-       <div className="flex items-center justify-between"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access</p><p className="text-[11px] text-zinc-500">Win11 • Encrypted</p></div><button onClick={() => { if (selectedTicket) setShowRemotePC(true); }} className={`h-8 px-3 rounded-full text-[12px] font-semibold ${selectedTicket ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-800 text-zinc-500'}`}>Connect →</button></div>
-       {portalActionLog.length > 0 && <div className="mt-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] text-zinc-500 uppercase">Recent Actions</p><div className="mt-1 space-y-1">{portalActionLog.slice(0,3).map((l,i) => <p key={i} className="text-[11px] font-mono text-zinc-400 truncate">{l}</p>)}</div></div>}
-       <button onClick={() => setShowLiveChat(!showLiveChat)} className={`w-full mt-2 h-8 rounded-full text-[11px] border ${showLiveChat ? 'bg-violet-500/15 text-violet-300 border-violet-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>{showLiveChat ? 'Hide Chat' : '💬 Live Chat'}</button>
-       {showLiveChat && <div className="mt-3 h-[260px] rounded-xl border border-zinc-800 overflow-hidden"><CommunicationChannel compact ticket={selectedTicket} /></div>}
+       <div className="flex items-center justify-between"><div><p className="text-[12px] font-medium text-zinc-200">Remote Access</p><p className="text-[11px] text-zinc-500">Win11 • Encrypted • MSP</p></div><button onClick={() => { if (selectedTicket) setShowRemotePC(true); }} className={`h-8 px-3 rounded-full text-[12px] font-semibold transition ${selectedTicket ? 'bg-zinc-100 text-zinc-900 hover:bg-white' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>Connect →</button></div>
+       {portalActionLog.length > 0 && <div className="mt-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Recent Actions • Live</p><div className="mt-1 space-y-1">{portalActionLog.slice(0,3).map((l,i) => <p key={i} className="text-[11px] font-mono text-zinc-400 truncate">{l}</p>)}</div></div>}
+       <p className="mt-2 text-[10px] text-zinc-600 text-center">💬 LinkedIn-style dock bottom-right → auto-opens live ticket</p>
       </div>
      </div>
 
@@ -388,6 +387,7 @@ export default function HomeV3() {
  <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} />
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
  {levelUp && <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />}
+ <LinkedInChatDock ticket={selectedTicket} isPaused={isPaused} />
  </div>
  );
 }
