@@ -3,8 +3,21 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.orbitdesk.twa",
-      "sha256_cert_fingerprints": ["00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"]
+      "package_name": "com.orbitdesk.lab.twa",
+      "sha256_cert_fingerprints": [
+        "REPLACE_WITH_YOUR_KEYSTORE_SHA256_FINGERPRINT_FROM_PWABUILDER",
+        "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.orbitdesk.lab",
+      "sha256_cert_fingerprints": [
+        "REPLACE_WITH_YOUR_KEYSTORE_SHA256_FINGERPRINT_FROM_PWABUILDER"
+      ]
     }
   }
 ]

@@ -5,8 +5,11 @@
 ![CodeQL](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/security.yml/badge.svg)
 ![Electron Release](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/electron-release.yml/badge.svg)
 ![SBOM](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/sbom.yml/badge.svg)
+![SLSA](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/slsa.yml/badge.svg)
+![Signed Commits](https://img.shields.io/badge/Commits-Signed%20Verified-brightgreen?logo=git)
 ![Electron](https://img.shields.io/badge/Electron-32.3.3-47848F?logo=electron)
 ![PWA](https://img.shields.io/badge/PWA-TWA%20Ready-5A0FC8?logo=pwa)
+![Play Store](https://img.shields.io/badge/Play%20Store-TWA%20assetlinks.json-3DDC84?logo=googleplay)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Simulated MSP Team Lead environment for Entra ID, Intune, Exchange, Teams, and Windows troubleshooting — with LinkedIn-style messaging dock, real-time voice calls, remote PC access, per-client policies, audit trails, and Electron auto-update.
@@ -14,6 +17,14 @@ Simulated MSP Team Lead environment for Entra ID, Intune, Exchange, Teams, and W
 **Live:** https://orbitdesk-gamma.vercel.app · **GitHub:** https://github.com/Nyaenya-Devine/orbitdesk · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
 
 ---
+
+## v6.7.1 — What's New (Signed Commits + SLSA + AssetLinks)
+
+### Signed Commits + SLSA Provenance + Play Store AssetLinks (NEW)
+- **Signed Commits Guide** `docs/SIGNED_COMMITS.md` — SSH (ed25519) or GPG, Verified badge, branch protection Require signed commits + status checks + CODEOWNERS, troubleshooting GPG_TTY
+- **SLSA L3 Provenance** `.github/workflows/slsa.yml` — slsa-framework/slsa-github-generator generic SLSA3, builds Linux artifacts, generates SHA256 digests base64, provenance attests commit → workflow → artifact, verify via slsa-verifier, upload-assets true
+- **AssetLinks** `public/.well-known/assetlinks.json` — TWA Play Store verification delegate_permission/common.handle_all_urls for com.orbitdesk.lab.twa + com.orbitdesk.lab, SHA256 fingerprints placeholder REPLACE_WITH_YOUR_KEYSTORE, served as application/json via next.config.ts headers + CORS
+- **Version bump** 6.7.0 → 6.7.1 — badges CI Security CodeQL Electron Release SBOM SLSA Signed Verified Electron PWA Play Store MIT
 
 ## v6.6 — What's New (Essential Cybersecurity + GitHub)
 
