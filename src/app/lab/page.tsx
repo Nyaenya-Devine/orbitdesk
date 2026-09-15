@@ -25,6 +25,7 @@ import AuthGate from '@/components/AuthGate';
 import ClassCommandCenter from '@/components/ClassCommandCenter';
 import GrowthStrategy from '@/components/GrowthStrategy';
 import LevelUpCelebration from '@/components/LevelUpCelebration';
+import PWAUpdatePrompt from '@/components/PWAUpdatePrompt';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'growth' | 'assessment';
 
@@ -330,6 +331,7 @@ export default function HomeV3() {
  <div className="min-h-screen text-zinc-100 flex flex-col relative">
  <LiveryBackground />
  <ToastSystem toasts={toasts} onRemove={removeToast} />
+ <PWAUpdatePrompt />
 
  <div className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a0a]/90 border-b border-zinc-800/60">
   <div className="max-w-[1600px] mx-auto px-4 h-11 flex items-center justify-between">
