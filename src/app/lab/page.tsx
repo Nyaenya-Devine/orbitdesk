@@ -30,6 +30,7 @@ import ShiftStatus from '@/components/ShiftStatus';
 import LinkedInChatDock from '@/components/LinkedInChatDock';
 import ProfileMenu from '@/components/ProfileMenu';
 import ShortcutsHelp from '@/components/ShortcutsHelp';
+import ClassCallOverlay from '@/components/ClassCallOverlay';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'assessment';
 
@@ -466,6 +467,7 @@ export default function HomeV3() {
 
  {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
  <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} level={progress.level} />
+ <ClassCallOverlay classCode="INFLUX-2026-A" currentUserId="me" currentUserProfile={userProfile} />
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
  {levelUp && <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />}
  <LinkedInChatDock ticket={selectedTicket} isPaused={isPaused} />

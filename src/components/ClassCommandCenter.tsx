@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
+import ClassCallCenter from './ClassCallCenter';
 
 interface StudentProgress {
  id: string;
  name: string;
  email: string;
  avatar: string;
+ role: 'student' | 'junior' | 'senior' | 'team-lead';
  joinedAt: number;
  ticketsResolved: number;
  callsHandled: number;
@@ -31,6 +33,7 @@ const mockStudents: StudentProgress[] = [
  name: 'Aisha Kamau',
  email: 'aisha@influx-class.test',
  avatar: 'A',
+ role: 'junior',
  joinedAt: Date.now() - 1000*60*60*24*5,
  ticketsResolved: 23,
  callsHandled: 8,
@@ -52,6 +55,7 @@ const mockStudents: StudentProgress[] = [
  name: 'Brian Otieno',
  email: 'brian@influx-class.test',
  avatar: 'B',
+ role: 'student',
  joinedAt: Date.now() - 1000*60*60*24*3,
  ticketsResolved: 12,
  callsHandled: 3,
@@ -73,6 +77,7 @@ const mockStudents: StudentProgress[] = [
  name: 'Cynthia Mwangi',
  email: 'cynthia@influx-class.test',
  avatar: 'C',
+ role: 'senior',
  joinedAt: Date.now() - 1000*60*60*24*7,
  ticketsResolved: 34,
  callsHandled: 15,
@@ -93,6 +98,7 @@ const mockStudents: StudentProgress[] = [
  name: 'David Kimani',
  email: 'david@influx-class.test',
  avatar: 'D',
+ role: 'student',
  joinedAt: Date.now() - 1000*60*60*24*1,
  ticketsResolved: 3,
  callsHandled: 0,
@@ -120,7 +126,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  const [students, setStudents] = useState<StudentProgress[]>(mockStudents);
  const [showCreateModal, setShowCreateModal] = useState(false);
  const [showJoinModal, setShowJoinModal] = useState(false);
- const [activeView, setActiveView] = useState<'overview' | 'live' | 'leaderboard' | 'insights' | 'export'>('overview');
+ const [activeView, setActiveView] = useState<'overview' | 'live' | 'leaderboard' | 'insights' | 'export' | 'calls'>('overview');
  const [newClassName, setNewClassName] = useState('Influx Support Training — Batch A');
  const [joinCode, setJoinCode] = useState('');
 
@@ -131,6 +137,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  name: userProfile?.name || 'You',
  email: userProfile?.email || 'you@orbitdesk.local',
  avatar: (userProfile?.name?.[0] || 'Y').toUpperCase(),
+ role: (userProfile?.role || 'team-lead') as any,
  joinedAt: Date.now(),
  ticketsResolved: myProgress?.ticketsResolved || 0,
  callsHandled: myProgress?.callsHandled || 0,
@@ -155,13 +162,18 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  const totalCalls = allStudents.reduce((a: number, s: any) => a + s.callsHandled, 0);
  const onlineCount = allStudents.filter((s: any) => s.status === 'online' || s.status === 'in-call').length;
 
- const handleCreateClass = () => {
+  const handleCreateClass = () => {
  const code = `INFLUX-${new Date().getFullYear()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
  setClassCode(code);
  setShowCreateModal(false);
  // Save to localStorage for persistence
  localStorage.setItem('orbitdesk_class_code', code);
  localStorage.setItem('orbitdesk_class_name', newClassName);
+ // Notify call engine
+ try {
+  const { classCallEngine } = require('@/lib/classCallEngine');
+  classCallEngine.setClassCode(code);
+ } catch {}
  };
 
  const handleExport = (format: 'csv' | 'json' | 'sheets') => {
@@ -252,9 +264,10 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  </div>
 
  {/* Tabs */}
- <div className="h-10 px-4 border-b border-zinc-800 flex items-center gap-1 bg-zinc-900/20">
+ <div className="h-10 px-4 border-b border-zinc-800 flex items-center gap-1 bg-zinc-900/20 overflow-x-auto">
   {[
   { id: 'overview', label: 'Overview', icon: '◍' },
+  { id: 'calls', label: 'Team Calls', icon: '📞', badge: 'New' },
   { id: 'live', label: 'Live Activity', icon: '🔴', badge: onlineCount },
   { id: 'leaderboard', label: 'Leaderboard', icon: '🏆' },
   { id: 'insights', label: 'AI Insights', icon: '💡' },
@@ -469,6 +482,15 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   </div>
   )}
 
+  {activeView === 'calls' && (
+  <ClassCallCenter
+    classCode={classCode}
+    students={allStudents as any}
+    currentUserId="me"
+    currentUserProfile={userProfile}
+  />
+  )}
+
   {activeView === 'export' && (
   <div className="grid grid-cols-2 gap-4">
   <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800">
@@ -553,7 +575,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    </div>
    <div className="flex gap-3 mt-5">
    <button onClick={() => setShowJoinModal(false)} className="flex-1 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-[13px]">Cancel</button>
-   <button onClick={() => { if (joinCode.trim()) { setClassCode(joinCode.trim().toUpperCase()); setShowJoinModal(false); alert(`Joined class ${joinCode.toUpperCase()} — instructor can now monitor your progress live!`); } }} className="flex-1 h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[13px]">Join → Monitored</button>
+   <button onClick={() => { if (joinCode.trim()) { const code = joinCode.trim().toUpperCase(); setClassCode(code); localStorage.setItem('orbitdesk_class_code', code); try { const { classCallEngine } = require('@/lib/classCallEngine'); classCallEngine.setClassCode(code); } catch {}; setShowJoinModal(false); alert(`Joined class ${code} — instructor can now monitor your progress live! Team calling enabled for same class.`); } }} className="flex-1 h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[13px]">Join → Monitored</button>
    </div>
   </motion.div>
   </motion.div>
