@@ -63,6 +63,8 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  const [isSpeaking, setIsSpeaking] = useState(false);
  const [isMuted, setIsMuted] = useState(false);
  const [isOnHold, setIsOnHold] = useState(false);
+ const [isRingMuted, setIsRingMuted] = useState(false);
+ const [isAppHidden, setIsAppHidden] = useState(false);
  const [liveTranscript, setLiveTranscript] = useState('');
  const [userAudioLevel, setUserAudioLevel] = useState(0);
  const [clientAudioLevel, setClientAudioLevel] = useState(0);
@@ -125,6 +127,57 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
   if ('Notification' in window && Notification.permission === 'default') {
    Notification.requestPermission();
   }
+  // Load ring mute preference
+  try {
+   const savedMute = localStorage.getItem('orbitdesk_ring_muted');
+   if (savedMute === 'true') setIsRingMuted(true);
+  } catch {}
+  // Track app visibility — don't ring when minimized/hidden
+  const handleVisibility = () => {
+   const hidden = document.hidden;
+   setIsAppHidden(hidden);
+   if (hidden) {
+    // App minimized — stop ringing immediately
+    isRingingRef.current = false;
+    try {
+     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
+     }
+     audioContextRef.current = null;
+    } catch {}
+    if ('vibrate' in navigator) navigator.vibrate(0);
+   } else {
+    // App visible again — resume ringing if still incoming and not muted
+    if (incomingRef.current && !isRingMuted) {
+     // small delay to avoid race
+     setTimeout(() => {
+      if (incomingRef.current && !document.hidden) {
+       isRingingRef.current = false;
+       // will trigger play via effect below
+      }
+     }, 100);
+    }
+   }
+  };
+  document.addEventListener('visibilitychange', handleVisibility);
+  // Also handle window blur/focus for extra safety (minimized)
+  const handleBlur = () => {
+   setIsAppHidden(true);
+   isRingingRef.current = false;
+   try {
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+     audioContextRef.current.close();
+    }
+    audioContextRef.current = null;
+   } catch {}
+  };
+  window.addEventListener('blur', handleBlur);
+  window.addEventListener('focus', () => setIsAppHidden(false));
+  return () => {
+   document.removeEventListener('visibilitychange', handleVisibility);
+   window.removeEventListener('blur', handleBlur);
+   window.removeEventListener('focus', () => setIsAppHidden(false));
+  };
  }
  }, []);
 
@@ -159,8 +212,11 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  }, []);
 
  const playRingtone = useCallback(() => {
- // Prevent multiple ringtone loops
+ // Don't ring if muted, app hidden/minimized, or already ringing
  if (isRingingRef.current) return;
+ if (isRingMuted) return;
+ if (typeof document !== 'undefined' && document.hidden) return;
+ if (isAppHidden) return;
  isRingingRef.current = true;
  try {
   const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -169,7 +225,10 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
   audioContextRef.current = ctx;
 
   const playCycle = () => {
+   // Respect mute + minimized on each cycle
    if (!isRingingRef.current || !audioContextRef.current || audioContextRef.current.state === 'closed') return;
+   if (isRingMuted) { isRingingRef.current = false; return; }
+   if (typeof document !== 'undefined' && document.hidden) { isRingingRef.current = false; return; }
    try {
     const osc1 = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
@@ -188,12 +247,12 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
     osc2.start();
     setTimeout(() => {
      try { osc1.stop(); osc2.stop(); } catch {}
-     if (isRingingRef.current) {
+     if (isRingingRef.current && !isRingMuted && !(typeof document !== 'undefined' && document.hidden)) {
       setTimeout(playCycle, 4000);
      }
     }, 2000);
    } catch {
-    if (isRingingRef.current) setTimeout(playCycle, 4000);
+    if (isRingingRef.current && !isRingMuted) setTimeout(playCycle, 4000);
    }
   };
   // Try resume if suspended (needs user gesture, but we try)
@@ -202,16 +261,17 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
   } else {
    playCycle();
   }
-  if ('vibrate' in navigator) {
+  if ('vibrate' in navigator && !isRingMuted && !(typeof document !== 'undefined' && document.hidden)) {
    const vibrateLoop = () => {
-    if (!isRingingRef.current) return;
+    if (!isRingingRef.current || isRingMuted) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
     navigator.vibrate([500, 300, 500, 300, 500]);
     setTimeout(vibrateLoop, 6000);
    };
    vibrateLoop();
   }
  } catch {}
- }, []);
+ }, [isRingMuted, isAppHidden]);
 
  const playRecordingBeep = useCallback(() => {
  try {
@@ -498,10 +558,15 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  console.log('Triggering incoming call', t.id);
  setIncoming(t);
  incomingRef.current = t;
- playRingtone();
+ // Only ring if app visible and not muted — otherwise just notification
+ if (!isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
+  playRingtone();
+ } else {
+  console.log('Ring suppressed — muted:', isRingMuted, 'hidden:', typeof document !== 'undefined' && document.hidden, 'appHidden:', isAppHidden);
+ }
  showBrowserNotification(t);
  setNextCallIn(30 + Math.floor(Math.random()*20));
- }, [createRandomTicket, playRingtone, showBrowserNotification]);
+ }, [createRandomTicket, playRingtone, showBrowserNotification, isRingMuted, isAppHidden]);
 
  // Countdown and auto calls
  useEffect(() => {
@@ -569,68 +634,78 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  };
  }, []);
 
+ // Resume/stop ringing when mute or visibility changes
+ useEffect(() => {
+  if (!incoming) {
+   stopRingtone();
+   return;
+  }
+  if (isRingMuted || isAppHidden || (typeof document !== 'undefined' && document.hidden)) {
+   stopRingtone();
+  } else {
+   // App visible, not muted, incoming exists — ensure ringing
+   if (!isRingingRef.current) {
+    playRingtone();
+   }
+  }
+ }, [incoming, isRingMuted, isAppHidden, playRingtone, stopRingtone]);
+
+ // Persist ring mute preference
+ useEffect(() => {
+  try {
+   localStorage.setItem('orbitdesk_ring_muted', isRingMuted ? 'true' : 'false');
+  } catch {}
+ }, [isRingMuted]);
+
  return (
  <>
  <AnimatePresence>
   {incoming && (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-   <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-[#0a0a0a] rounded-[28px] shadow-2xl max-w-sm w-full overflow-hidden border border-zinc-800" onClick={(e) => e.stopPropagation()}>
-    <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-violet-700 p-8 text-white text-center relative overflow-hidden">
+  <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} className="fixed bottom-6 right-6 z-[100] w-[360px] max-w-[92vw] rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-zinc-800 bg-[#0a0a0a] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+   <motion.div className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    {/* Compact header — Teams-like toast, not full-screen */}
+    <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-violet-700 p-4 text-white relative overflow-hidden">
      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.15),transparent)]" />
-     <div className="relative">
-      <motion.div animate={{ scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 1.2 }} className="w-24 h-24 bg-white/15 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-5 ring-4 ring-white/20 shadow-xl">
-       <span className="text-4xl">📞</span>
+     <div className="relative flex items-center gap-3">
+      <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 1.2 }} className="h-12 w-12 bg-white/15 backdrop-blur rounded-full flex items-center justify-center ring-2 ring-white/20 shadow-lg flex-shrink-0">
+       <span className="text-xl">📞</span>
       </motion.div>
-      <h3 className="font-bold text-[18px] flex items-center justify-center gap-2">
-       <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-       Incoming Voice Call
-      </h3>
-      <p className="text-[14px] opacity-90 mt-1">{incoming.clientName} • {incoming.priority} • {incoming.code}</p>
-      <p className="text-[12px] opacity-70 mt-1 font-mono">{incoming.userEmail}</p>
-      <div className="mt-4 flex flex-col gap-2">
-       <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-1.5 rounded-full text-[11px] font-medium border border-white/10 mx-auto">
-        <span className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
-        🔔 Ringing • 440Hz+480Hz • Vibrate • Notification
-       </div>
-       <div className="text-[10px] opacity-60">Real phone: dual-tone ring, browser notification, vibrate, 2s on 4s off</div>
+      <div className="flex-1 min-w-0">
+       <h3 className="font-bold text-[14px] flex items-center gap-2 truncate">
+        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
+        Incoming Call
+        {isRingMuted ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/30 border border-white/20">🔇 Muted</span> : <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 animate-pulse">🔔 Ringing</span>}
+       </h3>
+       <p className="text-[12px] opacity-90 truncate">{incoming.clientName} • {incoming.priority}</p>
+       <p className="text-[10px] opacity-70 font-mono truncate">{incoming.userEmail}</p>
+      </div>
+      <div className="flex items-center gap-1">
+       <button onClick={() => setIsRingMuted(!isRingMuted)} type="button" className={`h-8 w-8 rounded-full flex items-center justify-center border text-[14px] cursor-pointer transition-colors ${isRingMuted ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-white/15 text-white border-white/20 hover:bg-white/25'}`} title={isRingMuted ? 'Unmute ringing' : 'Mute ringing'}>
+        {isRingMuted ? '🔇' : '🔔'}
+       </button>
+       <button onClick={declineCall} type="button" className="h-8 w-8 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white flex items-center justify-center text-[12px] cursor-pointer">✕</button>
       </div>
      </div>
+     {isAppHidden && (
+      <div className="mt-2 text-[10px] px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-200">App minimized — ringing paused, notification sent</div>
+     )}
     </div>
-    <div className="p-6 bg-[#0a0a0a]">
-     <div className="bg-zinc-900 rounded-2xl p-4 text-[13px] mb-5 border border-zinc-800">
-      <div className="flex items-start gap-3">
-       <img src="/orbitdesk-logo-godmode-polished.png" alt="OrbitDesk" className="h-8 w-8 rounded-full object-cover border border-violet-500/20 flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
-       <div>
-        <p className="text-zinc-200 leading-[1.4]">"{incoming.userMessage}"</p>
-        <p className="text-[11px] text-zinc-500 mt-3 leading-[1.3]">🔊 Real human: You pick → You greet "Hello, how may I help?" with mouth → Caller hears → Caller replies with voice → You hear via ear. No texting, like real phone. Recording beep every 15s, hold music, mute, transfer — tech lead experience.</p>
-       </div>
-      </div>
+    {/* Compact body */}
+    <div className="p-3 bg-[#0a0a0a]">
+     <div className="bg-zinc-900 rounded-xl p-3 text-[12px] mb-3 border border-zinc-800">
+      <p className="text-zinc-200 leading-[1.4] line-clamp-3">"{incoming.userMessage}"</p>
+      <p className="text-[10px] text-zinc-500 mt-2">{incoming.code} • Real human flow: you greet first</p>
      </div>
-     <div className="flex gap-3">
-      <button 
-       onClick={declineCall} 
-       type="button"
-       className="flex-1 h-12 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 border border-zinc-700 text-zinc-300 rounded-full font-medium text-[14px] flex items-center justify-center gap-2 cursor-pointer transition-colors"
-      >
-       ✕ Decline
-      </button>
-      <button 
-       onClick={acceptCall} 
-       type="button"
-       disabled={accepting}
-       className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full font-bold text-[14px] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
-      >
-       {accepting ? (
-        <>⏳ Connecting...</>
-       ) : (
-        <>
-         <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
-         Accept — Speak Now
-        </>
-       )}
+     <div className="flex gap-2">
+      <button onClick={declineCall} type="button" className="flex-1 h-10 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 border border-zinc-700 text-zinc-300 rounded-full font-medium text-[13px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors">✕ Decline</button>
+      <button onClick={acceptCall} type="button" disabled={accepting} className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full font-bold text-[13px] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-1.5 cursor-pointer transition-all">
+       {accepting ? <>⏳ Connecting...</> : <><span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> Accept</>}
       </button>
      </div>
-     <p className="text-[10px] text-zinc-600 mt-3 text-center">📱 Real: Browser notification + vibrate + dual-tone 440/480Hz ring • Like Teams/Slack calls • Fixed pick button</p>
+     <div className="mt-2 flex items-center justify-between text-[9px] text-zinc-600">
+      <span>Teams-like toast • Not full-screen</span>
+      <span className="flex items-center gap-1">{isRingMuted ? '🔇 Ring muted' : '🔔 440Hz+480Hz'} • {isAppHidden ? '⏸️ Paused (minimized)' : '🔊 Live'}</span>
+     </div>
     </div>
    </motion.div>
   </motion.div>
