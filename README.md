@@ -5,10 +5,13 @@
 ![Electron](https://img.shields.io/badge/Electron-32.3.3-47848F?logo=electron)
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa)
 ![License](https://img.shields.io/badge/License-MIT-green)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FNyaenya-Devine%2Forbitdesk)
+
+**Live Demo:** https://orbitdesk-gamma.vercel.app · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app · **Stars welcome ⭐**
 
 Professional training environment for Modern Workplace operations — Entra ID, Intune, Exchange, and Teams troubleshooting with live tickets, voice communication, remote desktop, and team collaboration.
 
-**Live:** https://orbitdesk-gamma.vercel.app · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
+> **For IT Support, MSP Team Leads, and Modern Workplace Engineers** — practice Entra ID Conditional Access, Intune device compliance, Exchange quarantine, and SLA-driven ticket management in a safe, audited simulator.
 
 ---
 
