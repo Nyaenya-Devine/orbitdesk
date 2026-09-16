@@ -351,7 +351,11 @@ export default function HomeV3() {
      </div>
     </div>
     <button onClick={toggleManualPause} className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${isPaused ? 'bg-amber-500 text-zinc-900 border-amber-500' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200'}`} title={isPaused ? 'Resume' : 'Pause'}>{isPaused ? '▶️' : '⏸️'}</button>
-    <button onClick={triggerManualCall} className="h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 flex items-center justify-center transition" title="Simulate client call">📞</button>
+    {/* Client Calls — own space in header, not overlaying (fixed top-[68px] removed) */}
+    <div className="relative">
+      <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} level={progress.level} />
+    </div>
+    <button onClick={triggerManualCall} className="hidden h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 items-center justify-center transition" title="Simulate client call">📞</button>
     {/* Team Calls — own space in header, not overlaying */}
     <ClassCallDock classCode="INFLUX-2026-A" currentUserId="me" currentUserProfile={userProfile} />
     <LanguageSelector />
@@ -483,7 +487,7 @@ export default function HomeV3() {
  </footer>
 
  {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
- <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} level={progress.level} />
+ {/* VoiceCallCenter moved to header own space — not overlaying */}
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
  {levelUp && <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />}
  <LinkedInChatDock ticket={selectedTicket} isPaused={isPaused} />
