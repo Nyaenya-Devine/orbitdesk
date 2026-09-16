@@ -14,7 +14,7 @@
 
 Simulated MSP Team Lead environment for Entra ID, Intune, Exchange, Teams, and Windows troubleshooting — with LinkedIn-style messaging dock, real-time voice calls, remote PC access, per-client policies, audit trails, and Electron auto-update.
 
-**Live:** https://orbitdesk.vercel.app · **GitHub:** https://github.com/Nyaenya-Devine/orbitdesk · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
+**Live:** https://orbitdesk-gamma.vercel.app · **GitHub:** https://github.com/Nyaenya-Devine/orbitdesk · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
 
 ---
 
