@@ -56,7 +56,75 @@ const troubleshooting = {
  ],
 };
 
-export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[], onAccept: (t: any) => void }) {
+function getCallFrequencyForLevel(level: number) {
+ // Beginner-friendly: phone is rare and only critical, scales with level
+ if (level <= 1) {
+  return {
+   initialDelayMs: 5 * 60 * 1000, // 5 min before first call for lvl1
+   countdownIntervalMs: 1000,
+   autoCheckIntervalMs: 120 * 1000, // check every 2 min
+   randomChance: 0, // no random auto-calls at lvl1 — only manual or P1 critical trigger
+   minNextCallSec: 300, // 5 min
+   maxNextCallSec: 600, // 10 min
+   allowNonCritical: false,
+   maxCallsPerHour: 1,
+   description: "Level 1 — No auto calls, focus on tickets. Phone unlocks at Lvl 2. Use Call Now to practice.",
+  };
+ }
+ if (level === 2) {
+  return {
+   initialDelayMs: 3 * 60 * 1000, // 3 min
+   countdownIntervalMs: 1000,
+   autoCheckIntervalMs: 90 * 1000,
+   randomChance: 0.05, // 5% chance every check
+   minNextCallSec: 240, // 4 min
+   maxNextCallSec: 480, // 8 min
+   allowNonCritical: false, // only P1 critical
+   maxCallsPerHour: 2,
+   description: "Level 2 — Rare P1 critical calls only, 1 per 4-8 min max. Learn basics first.",
+  };
+ }
+ if (level === 3) {
+  return {
+   initialDelayMs: 2 * 60 * 1000, // 2 min
+   countdownIntervalMs: 1000,
+   autoCheckIntervalMs: 60 * 1000,
+   randomChance: 0.10,
+   minNextCallSec: 180,
+   maxNextCallSec: 360,
+   allowNonCritical: true, // allow P2 but prefer P1
+   maxCallsPerHour: 3,
+   description: "Level 3 — Occasional calls, P1 priority, 1 per 3-6 min.",
+  };
+ }
+ if (level === 4) {
+  return {
+   initialDelayMs: 90 * 1000,
+   countdownIntervalMs: 1000,
+   autoCheckIntervalMs: 45 * 1000,
+   randomChance: 0.12,
+   minNextCallSec: 120,
+   maxNextCallSec: 300,
+   allowNonCritical: true,
+   maxCallsPerHour: 4,
+   description: "Level 4 — Moderate calls, real MSP pace.",
+  };
+ }
+ // Level 5+
+ return {
+  initialDelayMs: 60 * 1000,
+  countdownIntervalMs: 1000,
+  autoCheckIntervalMs: 30 * 1000,
+  randomChance: 0.15,
+  minNextCallSec: 90,
+  maxNextCallSec: 240,
+  allowNonCritical: true,
+  maxCallsPerHour: 6,
+  description: `Level ${level} — Realistic MSP: calls when P1 critical or SLA breaching, max ${Math.min(8, 4 + level)} per hour.`,
+ };
+}
+
+export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tickets: any[], onAccept: (t: any) => void, level?: number }) {
  const [activeCall, setActiveCall] = useState<Call | null>(null);
  const [incoming, setIncoming] = useState<any | null>(null);
  const [isListening, setIsListening] = useState(false);
@@ -88,7 +156,8 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  const vibrateTimeoutRef = useRef<any>(null);
  const ringOscillatorsRef = useRef<{ osc1?: OscillatorNode, osc2?: OscillatorNode, gain?: GainNode } | null>(null);
 
- const [nextCallIn, setNextCallIn] = useState(12);
+ const freqConfig = getCallFrequencyForLevel(level);
+ const [nextCallIn, setNextCallIn] = useState(freqConfig.minNextCallSec);
  const [missedCalls, setMissedCalls] = useState<any[]>([]);
  const [callHistory, setCallHistory] = useState<any[]>([]);
 
@@ -645,9 +714,10 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  stopMic();
  setIncoming(null);
  incomingRef.current = null;
- setNextCallIn(20);
+ const c = getCallFrequencyForLevel(level);
+ setNextCallIn(c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec)));
  setAccepting(false);
- }, [incoming, stopRingtone, stopMic]);
+ }, [incoming, stopRingtone, stopMic, level]);
  
  const endCall = useCallback(() => { 
  if (activeCallRef.current) {
@@ -665,8 +735,9 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  setActiveCall(null); 
  activeCallRef.current = null;
  setIsOnHold(false);
- setNextCallIn(25); 
- }, [stopRingtone, stopRecordingBeep, stopHoldMusic, stopMic]);
+ const c = getCallFrequencyForLevel(level);
+ setNextCallIn(c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec)));
+ }, [stopRingtone, stopRecordingBeep, stopHoldMusic, stopMic, level]);
 
  const toggleHold = useCallback(() => {
  const call = activeCallRef.current;
@@ -701,25 +772,54 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  }, []);
 
  const createRandomTicket = useCallback(() => {
- if (tickets.length > 0) {
-  return tickets[Math.floor(Math.random() * tickets.length)];
+ // Critical-only for beginners: prefer P1 and breaching tickets
+ const cfg = getCallFrequencyForLevel(level);
+ let pool = tickets;
+ if (cfg.allowNonCritical === false) {
+  // Only P1 or breaching
+  const critical = tickets.filter((t:any) => t.priority === 'P1' || t.slaBreach || t.timeLeftMs < 5*60*1000);
+  if (critical.length > 0) pool = critical;
+  else {
+   // No critical tickets — don't create call at low level (return null to suppress)
+   if (level <= 2) return null;
+  }
  }
+ if (pool.length > 0) {
+  // Prefer P1
+  const p1s = pool.filter((t:any) => t.priority === 'P1');
+  const chosen = p1s.length > 0 && Math.random() < 0.8 ? p1s[Math.floor(Math.random()*p1s.length)] : pool[Math.floor(Math.random()*pool.length)];
+  return chosen;
+ }
+ // Fallback only if level allows non-critical
+ if (!cfg.allowNonCritical && level <= 2) return null;
  return {
   id: `call-${Date.now()}`,
   clientId: ['client-a', 'client-b', 'client-c'][Math.floor(Math.random()*3)],
   clientName: ['NovaTech Financial', 'Bloom Studio', 'Apex Financial'][Math.floor(Math.random()*3)],
-  priority: Math.random() < 0.3 ? 'P1' : 'P2',
+  priority: cfg.allowNonCritical ? (Math.random() < 0.4 ? 'P1' : 'P2') : 'P1',
   userEmail: ['sarah.finance@novatech.com', 'emma@bloomco.studio', 'risk@apexfin.com'][Math.floor(Math.random()*3)],
-  userMessage: "Hello? Is this IT support? Need help with my account.",
+  userMessage: level <=2 ? "P1 CRITICAL: Can't access Outlook, device not compliant. Need payroll email! Correlation ID urgent — please help!" : "Hello? Is this IT support? Need help with my account.",
   code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
-  title: 'Live Call - Need Assistance',
+  title: level <=2 ? 'P1 Critical Call - Needs Immediate Help' : 'Live Call - Need Assistance',
  };
- }, [tickets]);
+ }, [tickets, level]);
 
  const triggerCall = useCallback((ticket?: any) => {
  if (activeCallRef.current || incomingRef.current) return;
+ const cfg = getCallFrequencyForLevel(level);
+ // For beginners lvl1, no auto calls unless explicitly triggered with ticket
+ if (!ticket && level <=1) {
+  console.log('Lvl1 — auto calls disabled, use Call Now button to practice');
+  return;
+ }
  const t = ticket || createRandomTicket();
- console.log('Triggering incoming call', t.id);
+ if (!t) {
+  console.log('No critical ticket available for call at this level — suppressing');
+  // Reschedule next check longer
+  setNextCallIn(cfg.minNextCallSec + Math.floor(Math.random()*(cfg.maxNextCallSec - cfg.minNextCallSec)));
+  return;
+ }
+ console.log(`Triggering incoming call [Lvl ${level} — ${cfg.description}]`, t.id);
  setIncoming(t);
  incomingRef.current = t;
  if (!isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
@@ -728,37 +828,65 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
   console.log('Ring suppressed — muted:', isRingMuted, 'hidden:', typeof document !== 'undefined' && document.hidden, 'appHidden:', isAppHidden);
  }
  showBrowserNotification(t);
- setNextCallIn(30 + Math.floor(Math.random()*20));
- }, [createRandomTicket, playRingtone, showBrowserNotification, isRingMuted, isAppHidden]);
+ const nextSec = cfg.minNextCallSec + Math.floor(Math.random()*(cfg.maxNextCallSec - cfg.minNextCallSec));
+ setNextCallIn(nextSec);
+ }, [createRandomTicket, playRingtone, showBrowserNotification, isRingMuted, isAppHidden, level]);
 
  useEffect(() => {
+ const cfg = getCallFrequencyForLevel(level);
+ console.log(`[OrbitDesk Phone] Lvl ${level} config:`, cfg.description);
+ // Initial delay based on level
  const initialTimer = setTimeout(() => {
   if (!activeCallRef.current && !incomingRef.current) {
-   triggerCall();
+   // Only auto-trigger if level >=2, lvl1 needs manual
+   if (level >= 2) {
+    triggerCall();
+   }
   }
- }, 12000);
+ }, cfg.initialDelayMs);
 
  const countdown = setInterval(() => {
   setNextCallIn(prev => {
    if (prev <= 1) {
     if (!activeCallRef.current && !incomingRef.current) {
-     triggerCall();
+     // Only trigger if level allows and critical exists
+     if (level >= 2) {
+      triggerCall();
+     }
     }
-    return 30 + Math.floor(Math.random()*20);
+    const c = getCallFrequencyForLevel(level);
+    return c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec));
    }
    return prev - 1;
   });
- }, 1000);
+ }, cfg.countdownIntervalMs);
 
  const interval = setInterval(() => {
-  if (!activeCallRef.current && !incomingRef.current && Math.random() < 0.18) {
-   triggerCall();
+  if (!activeCallRef.current && !incomingRef.current) {
+   const c = getCallFrequencyForLevel(level);
+   if (Math.random() < c.randomChance) {
+    triggerCall();
+   }
   }
- }, 6000);
+ }, cfg.autoCheckIntervalMs);
 
- (window as any).triggerIncomingCall = () => {
-  console.log('Manual trigger call clicked');
-  triggerCall();
+ (window as any).triggerIncomingCall = (ticket?: any) => {
+  console.log('Manual trigger call clicked — always allowed');
+  if (ticket) triggerCall(ticket);
+  else {
+   // For manual, bypass level check and force create
+   const t = createRandomTicket() || {
+    id: `call-${Date.now()}`,
+    clientId: 'client-a',
+    clientName: 'NovaTech Financial',
+    priority: 'P1',
+    userEmail: 'sarah.finance@novatech.com',
+    userMessage: "P1: Can't access Outlook, device not compliant. Need payroll email! Correlation ID urgent!",
+    code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
+    title: 'Manual Call - Practice',
+   };
+   triggerCall(t);
+  }
  };
 
  return () => {
@@ -767,7 +895,7 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
   clearInterval(interval);
   isRingingRef.current = false;
  };
- }, [triggerCall]);
+ }, [triggerCall, level, createRandomTicket]);
 
  useEffect(() => {
  if (!activeCall || activeCall.status !== 'active') return;
@@ -825,7 +953,7 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  <>
  <AnimatePresence>
   {incoming && (
-  <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} className="fixed bottom-6 right-6 z-[100] w-[360px] max-w-[92vw] rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-zinc-800 bg-[#0a0a0a] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+  <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} className="fixed bottom-6 right-[360px] lg:right-[720px] z-[100] w-[360px] max-w-[92vw] rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-zinc-800 bg-[#0a0a0a] overflow-hidden" onClick={(e) => e.stopPropagation()}>
    <motion.div className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
     <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-violet-700 p-4 text-white relative overflow-hidden">
      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.15),transparent)]" />
@@ -875,17 +1003,22 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  </AnimatePresence>
 
  {!activeCall && !incoming && (
-  <div className="fixed bottom-4 right-4 z-30 flex flex-col gap-2">
-   <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-zinc-800 rounded-full px-4 py-2 flex items-center gap-3 shadow-2xl">
-    <Logo variant="icon" size={20} animated />
+  <div className="fixed top-[68px] right-4 z-30 flex flex-col gap-2 items-end max-w-[360px]">
+   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-full px-4 py-2 flex items-center gap-3 shadow-2xl">
+    <Logo variant="icon" size={18} animated />
     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-    <span className="text-[11px] text-zinc-400">Next call in {nextCallIn}s • Live • No leaks</span>
+    <span className="text-[11px] text-zinc-300">Lvl {level} • {level <=1 ? '📵 No auto calls — focus tickets' : level ===2 ? `📞 P1 only • Next ${nextCallIn}s` : `Next ${nextCallIn}s • ${freqConfig.maxCallsPerHour}/hr`}</span>
     <button onClick={() => (window as any).triggerIncomingCall?.()} type="button" className="h-7 px-3 rounded-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white text-[11px] font-bold cursor-pointer transition-colors">📞 Call Now</button>
-    <button onClick={() => setShowCallHistory(!showCallHistory)} type="button" className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] cursor-pointer">📋 History</button>
+    <button onClick={() => setShowCallHistory(!showCallHistory)} type="button" className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] cursor-pointer">📋</button>
    </div>
+   {level <=1 && (
+    <div className="bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 rounded-xl px-3 py-2 text-[10px] text-amber-200 max-w-[320px]">
+     💡 Phone training unlocks at Level 2 — focus on tickets first. Use Call Now to practice P1 critical calls manually. No spam.
+    </div>
+   )}
    {missedCalls.length > 0 && (
-   <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl max-w-[320px]">
-    <p className="text-[11px] font-bold text-zinc-300 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Missed Calls ({missedCalls.length})</p>
+   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl w-[320px]">
+    <p className="text-[11px] font-bold text-zinc-300 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Missed Calls ({missedCalls.length}) • Lvl {level} only critical</p>
     <div className="mt-2 space-y-1.5">
      {missedCalls.slice(0,3).map((c, i) => (
      <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800">
@@ -901,13 +1034,13 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
    </div>
    )}
    {showCallHistory && (
-   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl max-w-[360px] max-h-[400px] overflow-y-auto">
+   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl w-[360px] max-h-[400px] overflow-y-auto">
     <div className="flex items-center justify-between">
-     <p className="text-[11px] font-bold text-zinc-300">Call History — No leaks</p>
+     <p className="text-[11px] font-bold text-zinc-300">Call History — Lvl {level} • {freqConfig.description}</p>
      <button onClick={() => setShowCallHistory(false)} type="button" className="h-6 w-6 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 cursor-pointer">✕</button>
     </div>
     <div className="mt-3 space-y-2">
-     {callHistory.length === 0 ? <p className="text-[11px] text-zinc-500">No calls yet — first call in {nextCallIn}s</p> : callHistory.map((c, i) => (
+     {callHistory.length === 0 ? <p className="text-[11px] text-zinc-500">{level <=1 ? 'Lvl1 — No auto calls. Phone unlocks at Lvl2. Use Call Now for P1 practice.' : `No calls yet — ${freqConfig.description} Next in ${nextCallIn}s`}</p> : callHistory.map((c, i) => (
      <div key={i} className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
       <div className="flex items-center gap-2">
        <span className={`h-2 w-2 rounded-full ${c.status === 'missed' ? 'bg-red-500' : 'bg-emerald-500'}`} />
@@ -924,7 +1057,7 @@ export default function VoiceCallCenter({ tickets, onAccept }: { tickets: any[],
  )}
 
  {activeCall && (activeCall.status === 'active' || activeCall.status === 'on-hold') && (
-  <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[96%] max-w-6xl bg-[#0a0a0a] rounded-[24px] shadow-2xl border border-zinc-800 overflow-hidden flex flex-col max-h-[88vh]">
+  <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] w-[96%] max-w-6xl bg-[#0a0a0a] rounded-[24px] shadow-2xl border border-zinc-800 overflow-hidden flex flex-col max-h-[88vh]">
    <div className="h-14 px-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
     <div className="flex items-center gap-3">
      <Logo variant="icon" size={32} animated />
