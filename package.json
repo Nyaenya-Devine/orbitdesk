@@ -54,96 +54,38 @@
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
     "copyright": "© 2026 OrbitDesk — Educational Simulator — MIT — Devine Nyaenya",
-    "directories": {
-      "output": "dist",
-      "buildResources": "public"
-    },
-    "files": [
-      "electron.js",
-      "preload.js",
-      "out/**/*",
-      "public/**/*",
-      "!public/audio/*.wav",
-      "!**/*.map"
-    ],
-    "extraResources": [
-      {
-        "from": "public/audio",
-        "to": "audio",
-        "filter": ["**/*"]
-      }
-    ],
+    "directories": { "output": "dist", "buildResources": "public" },
+    "files": ["electron.js", "preload.js", "out/**/*", "public/**/*", "!public/audio/*.wav", "!**/*.map"],
+    "extraResources": [{ "from": "public/audio", "to": "audio", "filter": ["**/*"] }],
     "asar": true,
     "asarUnpack": ["**/*.node"],
     "mac": {
       "category": "public.app-category.business",
-      "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] },
-        { "target": "zip", "arch": ["x64", "arm64"] }
-      ],
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }, { "target": "zip", "arch": ["x64", "arm64"] }],
       "icon": "public/icon-512.png",
       "darkModeSupport": true,
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
+      "gatekeeperAssess": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
-      "target": [
-        { "target": "nsis", "arch": ["x64", "ia32"] },
-        { "target": "portable", "arch": ["x64"] }
-      ],
+      "target": [{ "target": "nsis", "arch": ["x64", "ia32"] }, { "target": "portable", "arch": ["x64"] }],
       "icon": "public/icon-512.png",
       "publisherName": "Devine Nyaenya",
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": true
     },
     "linux": {
-      "target": [
-        { "target": "AppImage", "arch": ["x64"] },
-        { "target": "deb", "arch": ["x64"] }
-      ],
+      "target": [{ "target": "AppImage", "arch": ["x64"] }, { "target": "deb", "arch": ["x64"] }],
       "icon": "public/icon-512.png",
       "category": "Office"
     },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "OrbitDesk Lab",
-      "artifactName": "OrbitDesk-Setup-${version}.${ext}"
-    },
-    "dmg": {
-      "sign": false,
-      "artifactName": "OrbitDesk-${version}-${arch}.${ext}"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "Nyaenya-Devine",
-      "repo": "orbitdesk",
-      "private": false,
-      "releaseType": "release"
-    }
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "OrbitDesk Lab", "artifactName": "OrbitDesk-Setup-${version}.${ext}" },
+    "dmg": { "sign": false, "artifactName": "OrbitDesk-${version}-${arch}.${ext}" },
+    "publish": { "provider": "github", "owner": "Nyaenya-Devine", "repo": "orbitdesk", "private": false, "releaseType": "release" }
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": ["eslint --fix"],
     "*.{json,md,yml,yaml}": ["prettier --write || true"]
   },
-  "keywords": [
-    "msp",
-    "modern-workplace",
-    "team-lead",
-    "entra-id",
-    "intune",
-    "voice-calls",
-    "remote-pc",
-    "pwa",
-    "electron",
-    "desktop-app",
-    "simulator",
-    "cybersecurity",
-    "zero-trust",
-    "conditional-access",
-    "security-hardening"
-  ]
+  "keywords": ["msp", "modern-workplace", "team-lead", "entra-id", "intune", "voice-calls", "remote-pc", "pwa", "electron", "desktop-app", "simulator", "cybersecurity", "zero-trust", "conditional-access", "security-hardening"]
 }
