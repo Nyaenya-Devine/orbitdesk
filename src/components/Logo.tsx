@@ -75,22 +75,19 @@ export default function Logo({ variant = 'full', size = 32, animated = false, cl
   <div className="flex items-baseline gap-1">
    <span className="font-bold tracking-[-0.03em] text-zinc-100" style={{ fontSize: size * 0.55 }}>Orbit</span>
    <span className="font-medium tracking-[-0.02em] text-zinc-400" style={{ fontSize: size * 0.55 }}>Desk</span>
-   <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20 font-bold">v6.1 • Real</span>
   </div>
-  <span className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase -mt-1 flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />Lab • Real Voice • Human • Secure</span>
+  <span className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase -mt-1 flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />Modern Workplace Operations</span>
   </div>
  </div>
  );
  }
 
- // Full logo — RESTORED rotating orbit animation v6.1
  return (
  <div className={`flex items-center gap-2.5 ${className}`}>
   <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
    <PolishedLogo size={size} />
    {animated && (
     <>
-     {/* Orbit rings */}
      <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 pointer-events-none" style={{ width: size, height: size }}>
       <div className="absolute w-[3px] h-[3px] bg-violet-500 rounded-full shadow-[0_0_6px_rgba(124,58,237,0.8)]" style={{ top: '6%', left: '50%', transform: 'translateX(-50%)' }} />
       <div className="absolute w-[2px] h-[2px] bg-emerald-400 rounded-full" style={{ bottom: '10%', right: '18%' }} />
@@ -108,7 +105,7 @@ export default function Logo({ variant = 'full', size = 32, animated = false, cl
     {animated && <span className="ml-1 h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />}
    </div>
    <span className="text-[9px] font-medium tracking-widest text-zinc-500 uppercase -mt-0.5 flex items-center gap-1">
-    <span>Lab • v6.1 • Real Voice • Human</span>
+    <span>Operations Lab</span>
     {animated && <motion.span animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="inline-block text-[8px]">◍</motion.span>}
    </span>
   </div>

@@ -20,17 +20,16 @@ import Logo from '@/components/Logo';
 import RemoteDesktopV2 from '@/components/RemoteDesktopV2';
 import StudentModeGuide from '@/components/StudentModeGuide';
 import LiveryBackground from '@/components/LiveryBackground';
-import ThreadHumor from '@/components/ThreadHumor';
+import FieldNotes from '@/components/FieldNotes';
 import AuthGate from '@/components/AuthGate';
 import ClassCommandCenter from '@/components/ClassCommandCenter';
-import GrowthStrategy from '@/components/GrowthStrategy';
 import LevelUpCelebration from '@/components/LevelUpCelebration';
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt';
 import OrbitPauseOverlay, { AwayWelcomeBack } from '@/components/OrbitPauseOverlay';
 import ShiftStatus from '@/components/ShiftStatus';
 import LinkedInChatDock from '@/components/LinkedInChatDock';
 
-type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'growth' | 'assessment';
+type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'assessment';
 
 export default function HomeV3() {
  const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -273,7 +272,6 @@ export default function HomeV3() {
  { id: 'comms', label: 'Comms', icon: '◑' },
  { id: 'clients', label: 'Clients', icon: '◒' },
  { id: 'class', label: 'Class', icon: '👥' },
- { id: 'growth', label: 'Growth', icon: '🚀' },
  { id: 'assessment', label: 'Report', icon: '📊', badge: progress.ticketsResolved },
  ];
 
@@ -339,7 +337,7 @@ export default function HomeV3() {
      <ShiftStatus isPaused={isPaused} isManual={isManualPaused} ticketsResolved={progress.ticketsResolved} level={progress.level} xp={progress.xp} pendingCount={pendingCount} awayMinutes={awayMinutes} onTogglePause={toggleManualPause} />
      <DashboardMetrics tickets={tickets} />
      <div className="grid grid-cols-12 gap-4">
-      <div className="col-span-12 lg:col-span-8 space-y-4"><VoiceCallDemo /><ThreadHumor /></div>
+      <div className="col-span-12 lg:col-span-8 space-y-4"><VoiceCallDemo /><FieldNotes /></div>
       <div className="col-span-12 lg:col-span-4 space-y-4">
        <DesktopDownloadV2 />
        <div className="p-4 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur border border-zinc-800/60">
@@ -415,7 +413,6 @@ export default function HomeV3() {
    {activeTab === 'comms' && <motion.div key="comms" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><CommunicationChannel /></motion.div>}
    {activeTab === 'clients' && <motion.div key="clients" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 grid lg:grid-cols-2 gap-4"><PolicyCenter selectedClientId={selectedClientForPolicies} onSelectClient={setSelectedClientForPolicies} /><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></motion.div>}
    {activeTab === 'class' && <motion.div key="class" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><ClassCommandCenter myProgress={progress} userProfile={userProfile} /></motion.div>}
-   {activeTab === 'growth' && <motion.div key="growth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto"><GrowthStrategy /></motion.div>}
    {activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto"><AssessmentReport progress={progress} onReset={handleResetProgress} /></motion.div>}
   </AnimatePresence>
  </main>

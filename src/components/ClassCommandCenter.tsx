@@ -362,7 +362,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-2">
    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
    <span className="text-[11px] font-bold text-emerald-300">Live Activity Feed — Real-time • Like Slack/Teams</span>
-   <span className="ml-auto text-[10px] text-zinc-500">{onlineCount} online • Updates every 3s • Human</span>
+   <span className="ml-auto text-[10px] text-zinc-500">{onlineCount} online • Updates every 3s</span>
   </div>
   {[
    { time: '2m ago', user: 'Aisha Kamau', action: 'Resolved ENTRA-53000 — CSAT 5 ⭐ QA 92% — BitLocker fix, Company Portal Sync', color: 'emerald' },
@@ -527,7 +527,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    <ul className="mt-2 space-y-1 text-[11px] text-violet-200/70">
     <li>• Class code like {classCode} — shareable link orbitdesk.app/join/{classCode}</li>
     <li>• Live dashboard: who is online, who is in call, who needs help — Teams/Slack style presence</li>
-    <li>• Leaderboard, streaks, badges, AI insights — gamified, human, not robotic</li>
+    <li>• Leaderboard, streaks, badges, AI insights — structured learning experience</li>
     <li>• Export CSV/JSON/Google Sheets, Discord webhook, LMS LTI </li>
    </ul>
    </div>
