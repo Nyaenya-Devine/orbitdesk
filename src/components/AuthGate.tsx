@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
+import { detectLanguage, getTranslation, Language, translations } from '@/lib/i18n';
 
 interface UserProfile {
   name: string;
@@ -18,39 +19,21 @@ interface Props {
 
 type Step = 1 | 2 | 3;
 
-const roles = [
-  { id: 'student', label: 'Student', desc: 'Learning IT support', icon: '🎓', level: 'Start here' },
-  { id: 'junior', label: 'Junior Support', desc: '0-1 year experience', icon: '💻', level: 'Foundations' },
-  { id: 'senior', label: 'Senior Support', desc: '1-2 years experience', icon: '🚀', level: 'Advanced' },
-  { id: 'team-lead', label: 'Team Lead', desc: 'Leading a team', icon: '◍', level: 'Expert' },
-] as const;
-
-const experiences = [
-  { id: 'never', label: 'New to IT support', desc: 'No professional experience yet' },
-  { id: '0-1', label: '0-1 year', desc: 'Early career, building fundamentals' },
-  { id: '1-2', label: '1-2 years', desc: 'Experienced, handling complex tickets' },
-  { id: '2+', label: '2+ years', desc: 'Seasoned, mentoring others' },
-] as const;
-
-const goals = [
-  'Interview preparation — show real work',
-  'Learn Modern Workplace operations',
-  'Practice Entra ID & Intune troubleshooting',
-  'Build team lead skills',
-];
-
 export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
   const [show, setShow] = useState(false);
   const [step, setStep] = useState<Step>(1);
+  const [lang, setLang] = useState<Language>('en');
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     role: 'student',
     experience: 'never',
-    goal: goals[0],
+    goal: 'Interview preparation — show real work',
     joinedAt: Date.now(),
   });
 
   useEffect(() => {
+    const detected = detectLanguage();
+    setLang(detected);
     const saved = localStorage.getItem('orbitdesk_user_profile');
     if (saved) {
       try {
@@ -62,6 +45,36 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
     const t = setTimeout(() => setShow(true), 600);
     return () => clearTimeout(t);
   }, [onAuthenticated]);
+
+  useEffect(() => {
+    const handler = (e: any) => setLang(e.detail as Language);
+    window.addEventListener('orbitdesk-language-change', handler);
+    return () => window.removeEventListener('orbitdesk-language-change', handler);
+  }, []);
+
+  const t = (key: string) => getTranslation(lang, key);
+
+  // Dynamic roles with translations
+  const roles = [
+    { id: 'student', label: t('auth.role.student'), desc: t('auth.role.student.desc'), icon: '🎓', level: lang === 'sw' ? 'Anza hapa' : 'Start here' },
+    { id: 'junior', label: t('auth.role.junior'), desc: t('auth.role.junior.desc'), icon: '💻', level: lang === 'sw' ? 'Misingi' : 'Foundations' },
+    { id: 'senior', label: t('auth.role.senior'), desc: t('auth.role.senior.desc'), icon: '🚀', level: lang === 'sw' ? 'Juu' : 'Advanced' },
+    { id: 'team-lead', label: t('auth.role.teamLead'), desc: t('auth.role.teamLead.desc'), icon: '◍', level: 'Expert' },
+  ] as const;
+
+  const experiences = [
+    { id: 'never', label: t('auth.experience.never'), desc: lang === 'sw' ? 'Hakuna uzoefu bado' : lang === 'es' ? 'Sin experiencia aún' : 'No professional experience yet' },
+    { id: '0-1', label: t('auth.experience.0-1'), desc: lang === 'sw' ? 'Kazi ya mapema' : 'Early career' },
+    { id: '1-2', label: t('auth.experience.1-2'), desc: lang === 'sw' ? 'Uzoefu, tiketi ngumu' : 'Experienced' },
+    { id: '2+', label: t('auth.experience.2+'), desc: lang === 'sw' ? 'Mzoefu, kufundisha wengine' : 'Seasoned, mentoring' },
+  ] as const;
+
+  const goals = [
+    t('auth.goal.interview'),
+    t('auth.goal.learn'),
+    t('auth.goal.practice'),
+    t('auth.goal.lead'),
+  ];
 
   const handleContinue = () => {
     if (step === 1) {
@@ -101,7 +114,6 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -117,7 +129,6 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative w-full max-w-[520px] rounded-[24px] border border-zinc-800/80 bg-[#0a0a0a] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden"
       >
-        {/* Header */}
         <div className="px-8 pt-8 pb-6 border-b border-zinc-800/60">
           <div className="flex items-center justify-between">
             <Logo variant="full" size={36} animated />
@@ -144,20 +155,20 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
               >
                 {step === 1 && (
                   <>
-                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-zinc-100">Welcome to OrbitDesk</h1>
-                    <p className="text-[14px] leading-[1.5] text-zinc-400 mt-2">Choose your current role to personalize training difficulty and coaching.</p>
+                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-zinc-100">{t('auth.welcome')}</h1>
+                    <p className="text-[14px] leading-[1.5] text-zinc-400 mt-2">{t('auth.subtitle')}</p>
                   </>
                 )}
                 {step === 2 && (
                   <>
-                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-zinc-100">Experience & goal</h1>
-                    <p className="text-[14px] leading-[1.5] text-zinc-400 mt-2">This shapes ticket complexity and interview report.</p>
+                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-zinc-100">{t('auth.experienceTitle')}</h1>
+                    <p className="text-[14px] leading-[1.5] text-zinc-400 mt-2">{t('auth.experienceSubtitle')}</p>
                   </>
                 )}
                 {step === 3 && (
                   <>
-                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-zinc-100">Almost ready</h1>
-                    <p className="text-[14px] leading-[1.5] text-zinc-400 mt-2">Your progress saves locally — for interview stats and continuity.</p>
+                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-zinc-100">{t('auth.almostReady')}</h1>
+                    <p className="text-[14px] leading-[1.5] text-zinc-400 mt-2">{t('auth.almostReadySubtitle')}</p>
                   </>
                 )}
               </motion.div>
@@ -165,7 +176,6 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
           </div>
         </div>
 
-        {/* Content */}
         <div className="px-8 py-6">
           <AnimatePresence mode="wait">
             {step === 1 && (
@@ -212,7 +222,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
                 className="space-y-5"
               >
                 <div>
-                  <label className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">Experience</label>
+                  <label className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">{t('common.language') === 'Lugha' ? 'Uzoefu' : t('common.language') === 'Idioma' ? 'Experiencia' : 'Experience'}</label>
                   <div className="mt-3 grid gap-2">
                     {experiences.map(e => (
                       <button
@@ -237,7 +247,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">Primary goal</label>
+                  <label className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">{lang === 'sw' ? 'Lengo kuu' : lang === 'es' ? 'Objetivo principal' : lang === 'fr' ? 'Objectif principal' : lang === 'de' ? 'Hauptziel' : 'Primary goal'}</label>
                   <div className="mt-3 grid gap-2">
                     {goals.map(g => (
                       <button
@@ -267,16 +277,16 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
                 className="space-y-5"
               >
                 <div>
-                  <label className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">Your name</label>
+                  <label className="text-[11px] font-medium tracking-widest text-zinc-500 uppercase">{t('auth.name.label')}</label>
                   <input
                     autoFocus
                     value={profile.name}
                     onChange={e => setProfile({ ...profile, name: e.target.value })}
                     onKeyDown={e => e.key === 'Enter' && canContinue() && handleContinue()}
-                    placeholder="Devine Nyaenya"
+                    placeholder={t('auth.name.placeholder')}
                     className="mt-3 w-full h-12 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 text-[14px] focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition"
                   />
-                  <p className="text-[11px] text-zinc-500 mt-2">Used for interview assessment report. Saved locally, never sent.</p>
+                  <p className="text-[11px] text-zinc-500 mt-2">{t('auth.name.hint')}</p>
                 </div>
 
                 {existingProgress && existingProgress.ticketsResolved > 0 && (
@@ -295,8 +305,8 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
                   <div className="flex gap-3">
                     <div className="h-8 w-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 text-[14px]">◍</div>
                     <div>
-                      <p className="text-[12px] font-medium text-zinc-200">Local-first & private</p>
-                      <p className="text-[11px] leading-[1.4] text-zinc-500 mt-1">Runs 100% in browser. No backend, no tracking, no real credentials. Export your stats as PDF/JSON for interviews.</p>
+                      <p className="text-[12px] font-medium text-zinc-200">{t('auth.localFirst')}</p>
+                      <p className="text-[11px] leading-[1.4] text-zinc-500 mt-1">{t('auth.localFirst.desc')}</p>
                     </div>
                   </div>
                 </div>
@@ -305,13 +315,12 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
           </AnimatePresence>
         </div>
 
-        {/* Footer */}
         <div className="px-8 py-5 bg-zinc-900/50 border-t border-zinc-800/60 flex items-center justify-between">
           <button
             onClick={handleGuest}
             className="text-[13px] text-zinc-500 hover:text-zinc-300 transition"
           >
-            Continue as guest
+            {t('auth.guest')}
           </button>
 
           <div className="flex items-center gap-3">
@@ -320,7 +329,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
                 onClick={() => setStep((step - 1) as Step)}
                 className="h-10 px-5 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[13px] font-medium transition"
               >
-                Back
+                {t('auth.back')}
               </button>
             )}
             <button
@@ -328,7 +337,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
               disabled={!canContinue()}
               className="h-10 px-6 rounded-full bg-white hover:bg-zinc-100 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-900 font-semibold text-[13px] shadow-sm transition flex items-center gap-2"
             >
-              {step === 3 ? 'Start Lab' : 'Continue'}
+              {step === 3 ? t('auth.startLab') : t('auth.continue')}
               <span>→</span>
             </button>
           </div>
@@ -336,7 +345,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
 
         <div className="px-8 py-3 bg-[#050507] border-t border-zinc-800/40 flex items-center justify-between text-[10px] text-zinc-600">
           <span>© 2026 OrbitDesk — Educational simulator • Not affiliated with Microsoft</span>
-          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-emerald-500" />Secure • Local-only</span>
+          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-emerald-500" />Secure • Local-only • {lang.toUpperCase()}</span>
         </div>
       </motion.div>
     </div>

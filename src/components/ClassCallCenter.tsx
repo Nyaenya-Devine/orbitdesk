@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { classCallEngine, ClassCall, CallType } from '@/lib/classCallEngine';
+import { detectLanguage, getTranslation, Language } from '@/lib/i18n';
 
 interface Student {
   id: string;
@@ -26,6 +27,17 @@ export default function ClassCallCenter({ classCode, students, currentUserId, cu
   const [activeCall, setActiveCall] = useState<ClassCall | null>(null);
   const [callDuration, setCallDuration] = useState(0);
   const [selectedType, setSelectedType] = useState<CallType>('team-internal');
+  const [lang, setLang] = useState<Language>('en');
+
+  useEffect(() => {
+    const detected = detectLanguage();
+    setLang(detected);
+    const handler = (e: any) => setLang(e.detail as Language);
+    window.addEventListener('orbitdesk-language-change', handler);
+    return () => window.removeEventListener('orbitdesk-language-change', handler);
+  }, []);
+
+  const t = (key: string) => getTranslation(lang, key);
 
   useEffect(() => {
     classCallEngine.setClassCode(classCode);
@@ -100,10 +112,10 @@ export default function ClassCallCenter({ classCode, students, currentUserId, cu
           <div>
             <h3 className="text-[14px] font-semibold text-zinc-100 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Class Calls — Team Lead ↔ Agents
+              {t('classCalls.title')}
             </h3>
             <p className="text-[11px] text-zinc-500 mt-1">
-              {classCode} • {onlineStudents.length} online • WebRTC peer-to-peer • Same class only
+              {classCode} • {onlineStudents.length} {t('common.online').toLowerCase()} • WebRTC peer-to-peer • {t('classCalls.subtitle').split('•').pop()}
             </p>
           </div>
           <div className="flex items-center gap-2">

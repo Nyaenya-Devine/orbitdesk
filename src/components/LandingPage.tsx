@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
 import LiveryBackground from './LiveryBackground';
+import LanguageSelector from './LanguageSelector';
 
 interface Props {
  onEnterLab: () => void;
@@ -51,6 +52,7 @@ export default function LandingPage({ onEnterLab }: Props) {
    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
    Live Training Environment
   </span>
+  <LanguageSelector />
   <button onClick={onEnterLab} className="h-9 px-5 rounded-full bg-white text-zinc-900 text-[13px] font-semibold hover:bg-zinc-100 transition">
    Launch Lab
   </button>

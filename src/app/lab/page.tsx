@@ -30,7 +30,9 @@ import ShiftStatus from '@/components/ShiftStatus';
 import LinkedInChatDock from '@/components/LinkedInChatDock';
 import ProfileMenu from '@/components/ProfileMenu';
 import ShortcutsHelp from '@/components/ShortcutsHelp';
-import ClassCallOverlay from '@/components/ClassCallOverlay';
+import ClassCallDock from '@/components/ClassCallDock';
+import LanguageSelector from '@/components/LanguageSelector';
+import { detectLanguage, getTranslation, Language } from '@/lib/i18n';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'assessment';
 
@@ -40,7 +42,18 @@ export default function HomeV3() {
  const [tickets, setTickets] = useState<Ticket[]>([]);
  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
  const [activeTab, setActiveTab] = useState<Tab>('queue');
+ const [lang, setLang] = useState<Language>('en');
  const [agents, setAgents] = useState(initialAgents);
+
+ useEffect(() => {
+  const detected = detectLanguage();
+  setLang(detected);
+  const handler = (e: any) => setLang(e.detail as Language);
+  window.addEventListener('orbitdesk-language-change', handler);
+  return () => window.removeEventListener('orbitdesk-language-change', handler);
+ }, []);
+
+ const t = (key: string) => getTranslation(lang, key);
  const [showRemotePC, setShowRemotePC] = useState(false);
  const [selectedClientForPolicies, setSelectedClientForPolicies] = useState('client-a');
  const [toasts, setToasts] = useState<Toast[]>([]);
@@ -295,12 +308,12 @@ export default function HomeV3() {
  }
 
  const tabs: any[] = [
- { id: 'overview', label: 'Overview', icon: '◍' },
- { id: 'queue', label: 'Queue', icon: '◐', badge: pendingCount },
- { id: 'comms', label: 'Comms', icon: '◑' },
- { id: 'clients', label: 'Clients', icon: '◒' },
- { id: 'class', label: 'Class', icon: '👥' },
- { id: 'assessment', label: 'Report', icon: '📊', badge: progress.ticketsResolved },
+ { id: 'overview', label: t('header.overview'), icon: '◍' },
+ { id: 'queue', label: t('header.queue'), icon: '◐', badge: pendingCount },
+ { id: 'comms', label: t('header.comms'), icon: '◑' },
+ { id: 'clients', label: t('header.clients'), icon: '◒' },
+ { id: 'class', label: t('header.class'), icon: '👥' },
+ { id: 'assessment', label: t('header.report'), icon: '📊', badge: progress.ticketsResolved },
  ];
 
  return (
@@ -338,7 +351,10 @@ export default function HomeV3() {
      </div>
     </div>
     <button onClick={toggleManualPause} className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${isPaused ? 'bg-amber-500 text-zinc-900 border-amber-500' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200'}`} title={isPaused ? 'Resume' : 'Pause'}>{isPaused ? '▶️' : '⏸️'}</button>
-    <button onClick={triggerManualCall} className="h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 flex items-center justify-center transition" title="Simulate Call">📞</button>
+    <button onClick={triggerManualCall} className="h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 flex items-center justify-center transition" title="Simulate client call">📞</button>
+    {/* Team Calls — own space in header, not overlaying */}
+    <ClassCallDock classCode="INFLUX-2026-A" currentUserId="me" currentUserProfile={userProfile} />
+    <LanguageSelector />
     <ShortcutsHelp />
     <div className="h-8 w-px bg-zinc-800 mx-1 hidden md:block" />
     <ProfileMenu
@@ -467,7 +483,6 @@ export default function HomeV3() {
 
  {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
  <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} level={progress.level} />
- <ClassCallOverlay classCode="INFLUX-2026-A" currentUserId="me" currentUserProfile={userProfile} />
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
  {levelUp && <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />}
  <LinkedInChatDock ticket={selectedTicket} isPaused={isPaused} />
