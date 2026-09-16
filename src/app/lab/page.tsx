@@ -438,7 +438,7 @@ export default function HomeV3() {
  </footer>
 
  {showGuide && <StudentModeGuide onClose={() => setShowGuide(false)} />}
- <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} />
+ <VoiceCallCenter tickets={tickets} onAccept={handleSelectTicket} level={progress.level} />
  <RemoteDesktopV2 ticket={selectedTicket} isOpen={showRemotePC} onClose={() => setShowRemotePC(false)} onAction={handlePortalAction} bitLockerFixed={bitLockerFixed} syncDone={syncDone} />
  {levelUp && <LevelUpCelebration oldLevel={levelUp.oldLevel} newLevel={levelUp.newLevel} xp={progress.xp} ticketsResolved={progress.ticketsResolved} onClose={() => setLevelUp(null)} />}
  <LinkedInChatDock ticket={selectedTicket} isPaused={isPaused} />
