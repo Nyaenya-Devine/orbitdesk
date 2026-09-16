@@ -247,7 +247,7 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
     <button onClick={() => setIsOpen(!isOpen)} className="w-full h-12 px-3 bg-white hover:bg-zinc-50 flex items-center justify-between border-b border-zinc-200 transition">
      <div className="flex items-center gap-2.5">
       <div className="relative">
-       <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-8 w-8 rounded-full object-cover" />
+       <img src="/icon-512.png" alt="" className="h-8 w-8 rounded-full object-cover" />
        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-emerald-500 rounded-full border-2 border-white" />
       </div>
       <span className="text-[14px] font-semibold text-zinc-900">Messaging</span>

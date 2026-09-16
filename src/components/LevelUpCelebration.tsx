@@ -174,7 +174,7 @@ export default function LevelUpCelebration({ oldLevel, newLevel, xp, ticketsReso
          className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2"
         >
          <div className="w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-white/20">
-          <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="w-8 h-8 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          <img src="/icon-512.png" alt="" className="w-8 h-8 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
           <span className="absolute text-[10px]">◍</span>
          </div>
         </motion.div>

@@ -312,7 +312,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
   try {
    new Notification(`📞 Incoming Call — ${ticket.clientName}`, {
     body: `${ticket.userEmail} • ${ticket.priority} • ${ticket.title}\n"${ticket.userMessage.substring(0,60)}..."`,
-    icon: '/orbitdesk-logo-godmode-polished.png',
+    icon: '/icon-512.png',
     tag: 'orbitdesk-call',
     requireInteraction: true,
    });
@@ -1022,7 +1022,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
     <div className="mt-2 space-y-1.5">
      {missedCalls.slice(0,3).map((c, i) => (
      <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800">
-      <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-6 w-6 rounded-full object-cover flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
+      <img src="/icon-512.png" alt="" className="h-6 w-6 rounded-full object-cover flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
       <div className="flex-1 min-w-0">
        <p className="text-[11px] text-zinc-300 truncate">{c.clientName} • {c.priority}</p>
        <p className="text-[10px] text-zinc-500 truncate">{c.userEmail}</p>

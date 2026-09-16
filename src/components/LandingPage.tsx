@@ -63,20 +63,20 @@ export default function LandingPage({ onEnterLab }: Props) {
   <div className="col-span-12 lg:col-span-6">
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
    <div className="inline-flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 mb-6">
-   <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-4 w-4 rounded-full object-cover" />
-   Modern Workplace • Microsoft 365 Training
+   <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
+   Modern Workplace • Microsoft 365 Training • Live Lab
    </div>
    
    <h1 className="text-[48px] md:text-[60px] font-bold tracking-[-0.04em] leading-[0.9] text-white">
-   Real helpdesk
+   Modern Workplace
    <br />
-   <span className="text-zinc-500">training,</span>
+   <span className="text-zinc-500">Operations</span>
    <br />
-   not simulations.
+   Lab.
    </h1>
    
    <p className="text-[18px] leading-[1.5] text-zinc-400 mt-6 max-w-[480px]">
-   Practice Entra ID, Intune, Exchange, and Teams troubleshooting with live tickets, voice calls, and remote desktop. Designed for IT support professionals.
+   Practice Entra ID Conditional Access, Intune compliance, Exchange and Teams troubleshooting with live tickets, voice calls, and remote desktop. Built for IT support professionals and team leads.
    </p>
 
    <div className="flex gap-3 mt-8">
@@ -101,7 +101,9 @@ export default function LandingPage({ onEnterLab }: Props) {
    <div className="rounded-[24px] border border-zinc-800 bg-[#0a0a0a] shadow-2xl overflow-hidden">
    <div className="h-11 px-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
    <div className="flex items-center gap-2">
-    <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-6 w-6 rounded-full object-cover" />
+    <div className="h-6 w-6 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+     <div className="h-2 w-2 rounded-full bg-violet-500" />
+    </div>
     <span className="text-[13px] font-semibold text-white">OrbitDesk</span>
     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
    </div>
@@ -168,7 +170,9 @@ export default function LandingPage({ onEnterLab }: Props) {
  <section className="max-w-[1200px] mx-auto px-6 py-16 border-t border-zinc-800/60">
   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 rounded-[24px] bg-zinc-900 border border-zinc-800">
   <div className="flex items-center gap-4">
-  <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-12 w-12 rounded-full object-cover border border-zinc-700" />
+  <div className="h-12 w-12 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+   <div className="h-3 w-3 rounded-full bg-violet-500" />
+  </div>
   <div>
    <h3 className="font-semibold text-[18px] text-white">Available everywhere</h3>
    <p className="text-[14px] text-zinc-400 mt-1">Use in browser or install as native app — Windows, macOS, Linux, Android</p>
@@ -186,7 +190,9 @@ export default function LandingPage({ onEnterLab }: Props) {
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
   <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-zinc-900 rounded-[20px] border border-zinc-800 shadow-2xl max-w-md w-full p-6">
    <div className="flex items-center gap-3">
-   <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-10 w-10 rounded-full object-cover" />
+   <div className="h-10 w-10 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+    <div className="h-2.5 w-2.5 rounded-full bg-violet-500" />
+   </div>
    <div>
    <h3 className="font-semibold text-[16px] text-white">Install OrbitDesk</h3>
    <p className="text-[12px] text-zinc-500">Native app experience</p>
@@ -217,7 +223,9 @@ export default function LandingPage({ onEnterLab }: Props) {
  <footer className="border-t border-zinc-800/60">
   <div className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-between text-[12px] text-zinc-500">
   <div className="flex items-center gap-3">
-  <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-6 w-6 rounded-full object-cover" />
+  <div className="h-6 w-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+   <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+  </div>
   <span>OrbitDesk — Modern Workplace Operations Lab</span>
   </div>
   <span>© 2026 • Educational • Not affiliated with Microsoft</span>

@@ -28,6 +28,8 @@ import PWAUpdatePrompt from '@/components/PWAUpdatePrompt';
 import OrbitPauseOverlay, { AwayWelcomeBack } from '@/components/OrbitPauseOverlay';
 import ShiftStatus from '@/components/ShiftStatus';
 import LinkedInChatDock from '@/components/LinkedInChatDock';
+import ProfileMenu from '@/components/ProfileMenu';
+import ShortcutsHelp from '@/components/ShortcutsHelp';
 
 type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'assessment';
 
@@ -70,6 +72,31 @@ export default function HomeV3() {
  }, [studentMode, isAuthenticated]);
 
  useEffect(() => { saveProgress(progress); }, [progress]);
+
+  useEffect(() => {
+    const handleKeys = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (e.key >= '1' && e.key <= '6') {
+        const tabs = ['overview', 'queue', 'comms', 'clients', 'class', 'assessment'];
+        const idx = parseInt(e.key) - 1;
+        if (tabs[idx]) setActiveTab(tabs[idx] as any);
+      }
+      if (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        toggleManualPause();
+      }
+      if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        triggerManualCall();
+      }
+      if (e.key === 'Escape') {
+        setSelectedTicket(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeys);
+    return () => window.removeEventListener('keydown', handleKeys);
+  }, [isPaused, isManualPaused]);
 
  useEffect(() => {
  if (isPaused) return;
@@ -311,13 +338,16 @@ export default function HomeV3() {
     </div>
     <button onClick={toggleManualPause} className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${isPaused ? 'bg-amber-500 text-zinc-900 border-amber-500' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200'}`} title={isPaused ? 'Resume' : 'Pause'}>{isPaused ? '▶️' : '⏸️'}</button>
     <button onClick={triggerManualCall} className="h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 flex items-center justify-center transition" title="Simulate Call">📞</button>
+    <ShortcutsHelp />
     <div className="h-8 w-px bg-zinc-800 mx-1 hidden md:block" />
-    <button onClick={() => setStudentMode(!studentMode)} className={`hidden md:flex h-8 px-3 rounded-full text-[11px] font-medium border transition ${studentMode ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>{studentMode ? 'Student' : 'Expert'}</button>
-    <div className="flex items-center gap-2 h-8 pl-2 pr-1 rounded-full bg-zinc-900 border border-zinc-800">
-     <span className="h-6 w-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-[11px] font-bold">{userProfile?.name?.[0] || 'U'}</span>
-     <span className="hidden md:block text-[11px] text-zinc-300 max-w-[80px] truncate">{userProfile?.name}</span>
-     <button onClick={handleLogout} className="h-6 w-6 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-500">↪</button>
-    </div>
+    <ProfileMenu
+      profile={userProfile}
+      progress={progress}
+      onLogout={handleLogout}
+      onUpdateProfile={(p: any) => setUserProfile(p)}
+      studentMode={studentMode}
+      onToggleStudentMode={() => setStudentMode(!studentMode)}
+    />
    </div>
   </div>
 
@@ -341,7 +371,7 @@ export default function HomeV3() {
       <div className="col-span-12 lg:col-span-4 space-y-4">
        <DesktopDownloadV2 />
        <div className="p-4 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur border border-zinc-800/60">
-        <div className="flex items-center gap-3"><img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-8 w-8 rounded-full object-cover" /><div><h4 className="text-[13px] font-semibold text-zinc-100">Progress — Interview Ready</h4><p className="text-[11px] text-zinc-500">Tickets, calls, metrics</p></div></div>
+        <div className="flex items-center gap-3"><img src="/icon-512.png" alt="" className="h-8 w-8 rounded-full object-cover" /><div><h4 className="text-[13px] font-semibold text-zinc-100">Progress — Interview Ready</h4><p className="text-[11px] text-zinc-500">Tickets, calls, metrics</p></div></div>
         <div className="mt-4 grid grid-cols-2 gap-3">
          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Resolved</p><p className="text-[20px] font-bold text-white">{progress.ticketsResolved}</p><p className="text-[10px] text-zinc-500">CSAT {progress.avgCSAT.toFixed(1)} • QA {progress.avgQA}%</p></div>
          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Calls</p><p className="text-[20px] font-bold text-white">{progress.callsHandled}</p><p className="text-[10px] text-zinc-500">Lvl {progress.level} • {progress.xp} XP</p></div>

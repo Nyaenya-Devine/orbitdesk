@@ -15,7 +15,7 @@ export default function DesktopDownloadV2() {
  <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
  <div className="p-5">
   <div className="flex items-start gap-3">
-  <Logo variant="polished" size={36} />
+  <Logo variant="icon" size={36} />
   <div>
   <h3 className="font-semibold text-[14px] text-white">Install as App</h3>
   <p className="text-[12px] text-zinc-500 mt-1">Works offline with native notifications. Available for Windows, macOS, Linux, and Android.</p>
