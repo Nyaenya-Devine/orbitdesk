@@ -61,7 +61,7 @@ export const initialProgress: StudentProgress = {
 };
 
 // Advanced language understanding — no external AI, pure client-side heuristics
-// Inspired by Gong.io, Chorus.ai, Grammarly, and real MSP QA rubrics
+// Communication scoring based on MSP quality assurance rubrics
 
 const EMPATHY_PATTERNS = {
  apology: [
