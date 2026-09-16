@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Watermark from "@/components/Watermark";
 
 const geistSans = Geist({
  variable: "--font-geist-sans",
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   <link rel="icon" href="/icon-512.png" />
  </head>
  <body className="min-h-full flex flex-col bg-[#050507] text-zinc-100">
+  <Watermark />
   {children}
   <script
   dangerouslySetInnerHTML={{

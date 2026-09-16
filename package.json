@@ -1,8 +1,8 @@
 {
   "name": "orbitdesk",
-  "version": "6.10.0",
+  "version": "6.11.0",
   "private": true,
-  "description": "Modern Workplace Operations Lab \u2014 MSP Team Lead Simulator with real voice calls, remote PC access, tech experts conference, desktop installable",
+  "description": "OrbitDesk \u2014 Modern Workplace Operations Lab \u2014 Source-available Noncommercial \u2014 Proprietary flagship by Devine Nyaenya",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
@@ -185,5 +185,6 @@
     "zero-trust",
     "conditional-access",
     "security-hardening"
-  ]
+  ],
+  "license": "SEE LICENSE IN LICENSE"
 }

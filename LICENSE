@@ -1,55 +1,34 @@
-MIT License
+OrbitDesk — Source-Available Noncommercial License
+Copyright (c) 2026 Devine Nyaenya Ngorwe — OrbitDesk
 
-Copyright (c) 2026 OrbitDesk — Devine Nyaenya
+This is a source-available license, not open source. The MIT license no longer applies as of v6.10.0.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+You may:
+- View, clone for personal learning and portfolio review
+- Run locally for non-commercial evaluation
+- Submit bug reports and suggestions via GitHub Issues
+- Reference in your portfolio as "Inspired by OrbitDesk" with link
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+You may NOT, without prior written permission from Devine Nyaenya:
+- Use this software or derivative for commercial purposes
+- Offer OrbitDesk or derivative as a hosted service, SaaS, training platform, or competing product
+- Use the name "OrbitDesk", logo, or branding for any derivative or competing work
+- Remove copyright notices, watermarks, or attribution
+- Redistribute substantial portions of code, ticket templates, or training content
+- Use for commercial training, MSP operations, or enterprise deployment
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Commercial licensing: Contact devinenyaenya@gmail.com — https://devine-nyaenya-portfolio.vercel.app
 
----
+Trademarks:
+"OrbitDesk" name, logo, and "Modern Workplace Operations Lab" are trademarks of Devine Nyaenya. You may not use them without permission, even if code is otherwise permitted.
 
-Educational Disclaimer:
-OrbitDesk is an independent educational training simulator. NOT affiliated with,
-endorsed by, or connected to Influx, Microsoft, or any client. All clients
-(NovaTech Enterprises, Bloom & Co Studio, Apex Financial Group) and agents
-(Alex, Priya, Jamal, Lisa, David) are fictional personas. All tickets, logs,
-policies, voice calls are simulated. Error codes (53000, 0x80180024, etc.) are
-real Microsoft codes used under fair use for education. Voice samples are
-synthetic (Web Speech API + generated MP3) for training purposes. No real
-remote access, no real calls, no real tenant data. Runs 100% in browser
-(LocalStorage), no tracking, no real data collection. All trademarks belong
-to their respective owners.
+Training Content:
+All ticket scenarios, client personas, coaching logic, assessment scoring, and training materials are proprietary and may not be extracted or reused for other training products.
 
-Security:
-- No hardcoded secrets, PATs, or API keys in code
-- All simulated data, no real Microsoft connections
-- Security headers: CSP, HSTS, X-Frame-Options
-- Audit logs, RBAC, Break Glass, Zero Trust, Compliance per-client
-- See SECURITY.md and THREAT_MODEL.md for full security policy
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE.
 
-Desktop:
-- PWA manifest + Service Worker for installable offline app
-- Electron 28 wrapper for native desktop app (Windows .exe, macOS .dmg, Linux .AppImage)
-- Build: npm run desktop:dist — Output in dist/ folder
-- PWA install: Click Install in browser — No build needed, feels native
+This license does not grant patent rights. For full terms, see https://polyformproject.org/licenses/noncommercial/1.0.0/ which this license is based on, with additional trademark and training content restrictions above.
 
-Voices:
-- 5 balanced voices (men & women) with different personas
-- Web Speech API speechSynthesis + speechRecognition + 9 MP3 pre-recorded samples
-- Different voice per client: NovaTech male formal, Bloom female friendly, Apex male deep
-- Tech experts: Alex male formal, Priya female friendly, David male deep
-- Flowing conversations: Client talks, you respond, client does action, asks question, expert joins
+Previous versions under MIT (up to v6.9.0) remain under MIT for that version only. Current and future versions (v6.10.0+) are under this license.
+
+© 2026 Devine Nyaenya — All rights reserved — OrbitDesk is proprietary flagship

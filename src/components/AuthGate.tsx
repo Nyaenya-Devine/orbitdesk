@@ -1,3 +1,9 @@
+/**
+ * © 2026 Devine Nyaenya Ngorwe — OrbitDesk Proprietary Flagship
+ * Source-available Noncommercial — No competing use — See LICENSE
+ * Trademark: OrbitDesk name and logo are trademarks of Devine Nyaenya
+ * Commercial licensing: devinenyaenya@gmail.com
+ */
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
