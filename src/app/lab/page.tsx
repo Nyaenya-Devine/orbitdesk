@@ -15,7 +15,7 @@ import DesktopDownloadV2 from '@/components/DesktopDownloadV2';
 import ToastSystem, { Toast } from '@/components/ToastSystem';
 import AssessmentReport from '@/components/AssessmentReport';
 import { agents as initialAgents } from '@/data/agents';
-import { StudentProgress, loadProgress, saveProgress, calculateLevel, getBadges, initialProgress, getLevelInfo } from '@/lib/progressEngine';
+import { StudentProgress, loadProgress, saveProgress, calculateLevel, getBadges, initialProgress, getLevelInfo, calculateCommunicationScore } from '@/lib/progressEngine';
 import Logo from '@/components/Logo';
 import RemoteDesktopV2 from '@/components/RemoteDesktopV2';
 import StudentModeGuide from '@/components/StudentModeGuide';
@@ -162,24 +162,78 @@ export default function HomeV3() {
  if (!checklist.tool) { addToast('Use correct tool — Intune/Exchange', 'error', 4000, 'check-tool'); return; }
  const actions = { checkedLogsFirst: checklist.logs, usedCorrectTool: checklist.tool, usedClientLanguage: checklist.lang, confirmedResolution: checklist.confirm, documentedKB: false };
  const csat = calculateCSAT(selectedTicket, actions);
- const qa = checklist.logs && checklist.tool ? (checklist.lang ? 92 : 75) : 55;
+ // Advanced: build synthetic agent message from checklist + portal actions for language analysis
+ // In real MSP, agent would write resolution notes — we simulate based on quality of work
+ const clientPersona = selectedTicket.clientId === 'client-b' ? 'smb' as const : selectedTicket.clientId === 'client-c' ? 'regulated' as const : 'enterprise' as const;
+ let syntheticMessage = '';
+ if (clientPersona === 'smb') {
+  syntheticMessage = checklist.lang 
+   ? `Hi! I understand this is frustrating 😅 — sorry about that! Thanks for checking. Simple steps: 1. Open Company Portal 2. Click Check Status 3. Wait 2 mins then sync. Let me know if it works — happy to help! Thanks!`
+   : `Checked logs. Fixed. Try Company Portal Check Status.`;
+ } else if (clientPersona === 'regulated') {
+  syntheticMessage = checklist.lang
+   ? `Per SEC-2024-07, I checked Sign-in logs CA tab — DeviceNotCompliant 53000, audit trail verified. RCA: policy pushed without Report-Only by john.admin. Remediation: reverted to Report-Only, What If shows safe with 15min expiry. Please confirm resolution and key escrow. Thank you.`
+   : `Checked Sign-in logs. Fixed policy.`;
+ } else {
+  syntheticMessage = checklist.lang
+   ? `I understand this is blocking payroll — sorry about that. I checked Sign-in logs CA tab, correlation ID ${selectedTicket.code}, DeviceNotCompliant 53000. RCA: CA policy Require compliant device without Report-Only. What If simulation shows safe to revert. Fixed via Intune compliance sync. Please confirm — appreciate your patience!`
+   : `Checked Sign-in logs CA tab. Fixed.`;
+ }
+ // Include portal action log for richer context
+ if (portalActionLog.length > 0) {
+  syntheticMessage += ` Actions: ${portalActionLog.slice(0,3).join('; ')}`;
+ }
+ const advancedScores = calculateCommunicationScore(syntheticMessage, clientPersona, {
+  usedClientLanguage: checklist.lang,
+  checkedLogs: checklist.logs,
+  usedCorrectTool: checklist.tool,
+ });
+ const qa = Math.round((advancedScores.technicalAccuracy * 0.4 + advancedScores.clarity * 0.25 + advancedScores.empathy * 0.15 + advancedScores.fluency * 0.1 + advancedScores.clientLanguage * 0.1));
  const isBreached = selectedTicket.slaBreach;
+ const difficultyXp = selectedTicket.difficulty === 'beginner' ? 10 : selectedTicket.difficulty === 'intermediate' ? 20 : selectedTicket.difficulty === 'advanced' ? 30 : 50;
+ const baseXp = isBreached ? 5 : qa >= 85 ? difficultyXp + 15 : qa >= 70 ? difficultyXp + 5 : Math.floor(difficultyXp/2);
+ const xpGainOuter = baseXp + (checklist.lang ? 10 : 0) + (advancedScores.empathy >= 70 ? 5 : 0);
  setTickets(prev => prev.map(t => t.id === selectedTicket.id ? { ...t, status: 'resolved' as const, csat, qaScore: qa } : t));
  setProgress(prev => {
  const newResolved = prev.ticketsResolved + 1;
  const newBreached = isBreached ? prev.ticketsBreached + 1 : prev.ticketsBreached;
  const newAvgCSAT = ((prev.avgCSAT * prev.ticketsResolved) + csat) / newResolved;
  const newAvgQA = ((prev.avgQA * prev.ticketsResolved) + qa) / newResolved;
- const difficultyXp = selectedTicket.difficulty === 'beginner' ? 10 : selectedTicket.difficulty === 'intermediate' ? 20 : selectedTicket.difficulty === 'advanced' ? 30 : 50;
- const baseXp = isBreached ? 5 : qa >= 90 ? difficultyXp + 10 : qa >= 75 ? difficultyXp : Math.floor(difficultyXp/2);
- const xpGain = baseXp + (checklist.lang ? 10 : 0);
+ const baseXpInner = isBreached ? 5 : qa >= 85 ? difficultyXp + 15 : qa >= 70 ? difficultyXp + 5 : Math.floor(difficultyXp/2);
+ const xpGain = baseXpInner + (checklist.lang ? 10 : 0) + (advancedScores.empathy >= 70 ? 5 : 0);
  const newXp = prev.xp + xpGain;
  const oldLevel = prev.level;
  const newLevel = calculateLevel(newXp);
  if (newLevel > oldLevel) { setTimeout(() => setLevelUp({ oldLevel, newLevel }), 800); addToast(`🚀 LEVEL UP! ${oldLevel} → ${newLevel} — ${getLevelInfo(newLevel).title}`, 'success', 6000, `levelup-${newLevel}`); }
- return { ...prev, ticketsResolved: newResolved, ticketsBreached: newBreached, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp, level: newLevel, slaCompliance: Math.round((newResolved / (newResolved + newBreached)) * 100) || 100, communicationScores: { ...prev.communicationScores, technicalAccuracy: Math.round((prev.communicationScores.technicalAccuracy * prev.ticketsResolved + qa) / newResolved), clientLanguage: checklist.lang ? Math.min(100, prev.communicationScores.clientLanguage + 10) : prev.communicationScores.clientLanguage }, badges: getBadges({ ...prev, ticketsResolved: newResolved, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp } as any), history: [...prev.history, { timestamp: Date.now(), action: `Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] +${xpGain} XP`, ticketCode: selectedTicket.code, score: Math.round((csat * 20 + qa) / 2) }].slice(-50) };
+ // Advanced averaging for all 5 scores — weighted by experience
+ const avg = (prevScore: number, newScore: number) => Math.round((prevScore * prev.ticketsResolved + newScore) / newResolved);
+ return { 
+  ...prev, 
+  ticketsResolved: newResolved, 
+  ticketsBreached: newBreached, 
+  avgCSAT: newAvgCSAT, 
+  avgQA: newAvgQA, 
+  xp: newXp, 
+  level: newLevel, 
+  slaCompliance: Math.round((newResolved / (newResolved + newBreached)) * 100) || 100, 
+  communicationScores: { 
+   empathy: avg(prev.communicationScores.empathy, advancedScores.empathy),
+   clarity: avg(prev.communicationScores.clarity, advancedScores.clarity),
+   technicalAccuracy: avg(prev.communicationScores.technicalAccuracy, advancedScores.technicalAccuracy),
+   fluency: avg(prev.communicationScores.fluency, advancedScores.fluency),
+   clientLanguage: avg(prev.communicationScores.clientLanguage, advancedScores.clientLanguage),
+  }, 
+  badges: getBadges({ ...prev, ticketsResolved: newResolved, avgCSAT: newAvgCSAT, avgQA: newAvgQA, xp: newXp, communicationScores: {
+   empathy: avg(prev.communicationScores.empathy, advancedScores.empathy),
+   clarity: avg(prev.communicationScores.clarity, advancedScores.clarity),
+   technicalAccuracy: avg(prev.communicationScores.technicalAccuracy, advancedScores.technicalAccuracy),
+   fluency: avg(prev.communicationScores.fluency, advancedScores.fluency),
+   clientLanguage: avg(prev.communicationScores.clientLanguage, advancedScores.clientLanguage),
+  } } as any), 
+  history: [...prev.history, { timestamp: Date.now(), action: `Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] +${xpGain} XP • Emp ${advancedScores.empathy} Clar ${advancedScores.clarity} Tech ${advancedScores.technicalAccuracy} Flu ${advancedScores.fluency} Lang ${advancedScores.clientLanguage}`, ticketCode: selectedTicket.code, score: Math.round((csat * 20 + qa) / 2) }].slice(-50) 
+ };
  });
- addToast(`Resolved ${selectedTicket.code} [${selectedTicket.difficulty}] +${selectedTicket.difficulty === 'expert' ? 50 : selectedTicket.difficulty === 'advanced' ? 30 : selectedTicket.difficulty === 'intermediate' ? 20 : 10} XP`, isBreached ? 'warning' : 'success', 5000, `resolve-${selectedTicket.code}`);
+ addToast(`Resolved ${selectedTicket.code} • QA ${qa}% (Emp ${advancedScores.empathy} • Clar ${advancedScores.clarity} • Tech ${advancedScores.technicalAccuracy}) +${xpGainOuter} XP`, isBreached ? 'warning' : 'success', 6000, `resolve-${selectedTicket.code}`);
  setTimeout(() => { setTickets(prev => prev.filter(t => t.id !== selectedTicket.id)); setSelectedTicket(null); setChecklist({ logs: false, tool: false, lang: false, confirm: false }); }, 1200);
  };
  const handlePortalAction = (action: string) => {

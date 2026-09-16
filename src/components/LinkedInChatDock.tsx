@@ -1,6 +1,23 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { calculateCommunicationScore } from '@/lib/progressEngine';
+
+function getIntelligentReplyDock(userMessage: string, chatId: string): string {
+ const lower = userMessage.toLowerCase();
+ if (chatId.includes('sarah') || chatId.includes('live-') && lower.includes('payroll') || lower.includes('outlook')) {
+  if (lower.includes('dsregcmd')) return "Perfect — dsregcmd shows AzureADJoined YES but Compliant NO. Next: Open Company Portal (blue shopping bag) → Check Status → Wait 2 mins → Sync. Then dsregcmd again. Payroll unblocked in 3 mins. Thanks for checking!";
+  if (lower.includes('company portal') || lower.includes('sync')) return "Company Portal syncing — last sync just now is good! Device compliance takes 2-3 mins after sync. Check Intune → Devices → Compliance — should show YES soon. Correlation ID will clear. You're doing great!";
+  if (lower.includes('simple') || lower.includes('sorry') || lower.includes('understand')) return "Thanks! That explanation is much clearer — I appreciate you saying you understand payroll is urgent. Checking Sign-in logs CA tab now with empathy really helps. Five stars! ⭐⭐⭐⭐⭐";
+  return "Thanks! I checked Company Portal — device not compliant, clicked Check Status. Still blocked, Correlation ID c4f2a9b1. Service Health green. Need payroll in 30 mins, P1! Your clear technical steps help a lot.";
+ }
+ if (chatId.includes('emma') || chatId.includes('bloom')) {
+  if (lower.includes('simple') || lower.includes('click') || lower.includes('😅') || lower.includes('thanks')) return "Yes! It works now! Thank you! You explained in simple steps, no jargon, with emojis — perfect! I love that you used 😅 and simple clicks. ⭐⭐⭐⭐⭐ You really understand Bloom style!";
+  if (lower.includes('outlook') || lower.includes('shared mailbox')) return "Shared mailbox not showing in Outlook but shows in webmail — that's normal! Webmail shows all automatically, Outlook needs manual add. Simple steps please? No jargon like DeviceNotCompliant? 😅";
+  return "It works now! Thank you so much — simple steps really helped! No jargon, just clicks. Perfect for Bloom! 🙏⭐⭐⭐⭐⭐";
+ }
+ return "Got it! Trying now — shared my screen? Can you see Company Portal? I clicked Check Status — now says Syncing... what next? Thanks for simple steps! 🙏";
+}
 
 interface Message {
  id: string;
@@ -188,17 +205,25 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
  };
 
  const handleSend = (chatId: string, text: string) => {
+ // Advanced scoring for dock messages too
+ const persona = chatId.includes('emma') || chatId.includes('bloom') ? 'smb' as const : chatId.includes('apex') ? 'regulated' as const : 'enterprise' as const;
+ const scores = calculateCommunicationScore(text, persona, {
+  usedClientLanguage: /simple|correlation|sec-2024-07|😅|🥺|🙏/i.test(text),
+  checkedLogs: /sign-in logs|audit logs|service health|dsregcmd|company portal/i.test(text),
+  usedCorrectTool: /entra|intune|company portal|what if|bitlocker/i.test(text),
+ });
+ console.log(`[OrbitDesk Advanced] Chat ${chatId} — Emp ${scores.empathy} Clar ${scores.clarity} Tech ${scores.technicalAccuracy} Flu ${scores.fluency} Lang ${scores.clientLanguage}`);
+
  const newMsg: Message = { id: Date.now().toString(), author: 'You', avatar: 'Y', text, time: 'Now', isYou: true };
  setOpenChats(prev => prev.map(c => c.id === chatId ? { ...c, messages: [...c.messages, newMsg] } : c));
- // Simulate reply
  setTimeout(() => {
   setOpenChats(prev => prev.map(c => c.id === chatId ? { ...c, isTyping: true } : c));
   setTimeout(() => {
-   const replies = ["Got it! Trying now — shared my screen?", "Yes! It works now, thank you! ⭐⭐⭐⭐⭐", "Quick question — will this happen again?"];
-   const reply: Message = { id: (Date.now()+1).toString(), author: openChats.find(c=>c.id===chatId)?.name || 'Client', avatar: openChats.find(c=>c.id===chatId)?.avatar || 'C', text: replies[Math.floor(Math.random()*replies.length)], time: 'Now', isYou: false };
+   const intelligentReply = getIntelligentReplyDock(text, chatId);
+   const reply: Message = { id: (Date.now()+1).toString(), author: openChats.find(c=>c.id===chatId)?.name || 'Client', avatar: openChats.find(c=>c.id===chatId)?.avatar || 'C', text: intelligentReply, time: 'Now', isYou: false };
    setOpenChats(prev => prev.map(c => c.id === chatId ? { ...c, messages: [...c.messages, reply], isTyping: false } : c));
-  }, 1000);
- }, 300);
+  }, 900);
+ }, 200);
  };
 
  const totalUnread = chats.reduce((a,b) => a + (b.unread || 0), 0);
