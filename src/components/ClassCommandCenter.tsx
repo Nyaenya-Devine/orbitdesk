@@ -206,7 +206,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  <div className="p-4 border-b border-zinc-800 bg-gradient-to-r from-violet-500/10 via-indigo-500/10 to-violet-500/10">
   <div className="flex items-center justify-between gap-4">
   <div className="flex items-center gap-3">
-  <Logo variant="polished" size={40} />
+  <Logo variant="icon" size={40} />
   <div>
    <h3 className="font-bold text-[16px] text-white flex items-center gap-2">
    Class Command Center
@@ -511,7 +511,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[150] flex items-center justify-center p-4">
   <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-[#0a0a0a] rounded-[20px] border border-zinc-800 max-w-[440px] w-full p-6">
    <div className="flex items-center gap-3">
-   <Logo variant="polished" size={36} />
+   <Logo variant="icon" size={36} />
    <div>
    <h3 className="font-bold text-[16px] text-white">Create New Class</h3>
    <p className="text-[11px] text-zinc-500">For Influx trainers — group students, monitor live, export</p>

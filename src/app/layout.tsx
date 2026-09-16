@@ -34,7 +34,7 @@ export const metadata: Metadata = {
  type: "website",
  locale: "en_US",
  images: [
- { url: "/orbitdesk-logo-godmode-polished.png", width: 1024, height: 1024, alt: "OrbitDesk Logo" },
+ { url: "/icon-512.png", width: 1024, height: 1024, alt: "OrbitDesk Logo" },
  { url: "/orbitdesk-dashboard-8k.png", width: 1200, height: 630, alt: "OrbitDesk Dashboard" },
  ],
  },
@@ -42,16 +42,16 @@ export const metadata: Metadata = {
  card: "summary_large_image",
  title: "OrbitDesk — Modern Workplace Operations Lab",
  description: "Professional helpdesk simulator for Microsoft 365 training",
- images: ["/orbitdesk-logo-godmode-polished.png"],
+ images: ["/icon-512.png"],
  },
  manifest: "/manifest.json",
  icons: {
  icon: [
- { url: "/orbitdesk-logo-godmode-polished.png", sizes: "512x512", type: "image/png" },
+ { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
  { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
  { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
  ],
- apple: [{ url: "/orbitdesk-logo-godmode-polished.png", sizes: "512x512" }],
+ apple: [{ url: "/icon-512.png", sizes: "512x512" }],
  },
  appleWebApp: {
  capable: true,
@@ -83,9 +83,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="OrbitDesk" />
-  <link rel="apple-touch-icon" href="/orbitdesk-logo-godmode-polished.png" />
+  <link rel="apple-touch-icon" href="/icon-512.png" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <link rel="icon" href="/orbitdesk-logo-godmode-polished.png" />
+  <link rel="icon" href="/icon-512.png" />
  </head>
  <body className="min-h-full flex flex-col bg-[#050507] text-zinc-100">
   {children}

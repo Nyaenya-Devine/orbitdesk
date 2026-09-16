@@ -61,7 +61,7 @@ export default function InstallPromptV2() {
   exit={{ opacity: 0, y: -10 }}
   className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow-xl flex items-center gap-3 max-w-[320px]"
   >
-  <img src="/orbitdesk-logo-godmode-polished.png" alt="" className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
+  <img src="/icon-512.png" alt="" className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
   <div className="flex-1 min-w-0">
    <p className="font-medium text-[12px] text-white">Install OrbitDesk</p>
    <p className="text-[11px] text-zinc-500">Works offline, native notifications</p>
