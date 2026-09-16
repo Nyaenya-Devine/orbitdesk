@@ -114,11 +114,41 @@ export default function AssessmentReport({ progress, onReset }: Props) {
    <h3 className="text-[13px] font-semibold text-zinc-200 mb-3">📈 Communication Breakdown — Influx Assessment</h3>
    <div className="space-y-3">
    {[
-   { label: 'Empathy', value: progress.communicationScores.empathy, desc: 'Sorry, understand, thank you, appreciate — critical for Influx CSAT', tip: 'Always say: I understand, Sorry about that, Thank you for checking' },
-   { label: 'Clarity', value: progress.communicationScores.clarity, desc: 'Simple for Bloom SMB, technical for NovaTech Enterprise', tip: 'Bloom: Click Start → Settings, no jargon. NovaTech: Correlation ID, Sign-in logs CA tab, What If' },
-   { label: 'Technical Accuracy', value: progress.communicationScores.technicalAccuracy, desc: 'Checked logs first, used correct tool, RCA', tip: 'Always check Sign-in logs CA tab first, then Intune compliance, then fix' },
-   { label: 'Fluency', value: progress.communicationScores.fluency, desc: 'No um/uh, good pace, confident', tip: 'Avoid filler words, speak clearly, use 🎙️ mic to practice live talking' },
-   { label: 'Client Language', value: progress.communicationScores.clientLanguage, desc: 'Bloom simple + emojis, Apex SEC-2024-07, NovaTech technical', tip: 'Bloom: 😅 simple steps. Apex: Per SEC-2024-07, audit trail. NovaTech: Correlation ID, Service Health' },
+   { 
+    label: 'Empathy', 
+    value: progress.communicationScores.empathy, 
+    desc: 'Advanced sentiment: apology + acknowledgment + reassurance + personalization', 
+    tip: progress.communicationScores.empathy >= 80 ? '✅ Excellent empathy — you used apology, acknowledgment, reassurance naturally like human agent' : progress.communicationScores.empathy >= 50 ? '⚠️ Good start — add personalization: "I understand payroll is urgent for your team" + reassurance "I’ll take care of this"' : '❌ Missing empathy — always start with: "I understand this is frustrating, sorry about that! Thanks for checking..." + personalize client impact',
+    detail: `Scored via NLP: detects sorry/apologize, I understand/I hear you, I'll help/rest assured, gratitude, personalization (your payroll/presentation). ${progress.communicationScores.empathy < 50 ? 'Your messages were too short or lacked acknowledgment.' : 'You show human understanding.'}`
+   },
+   { 
+    label: 'Clarity', 
+    value: progress.communicationScores.clarity, 
+    desc: 'Structure, readability, jargon appropriateness per persona (SMB simple vs Enterprise technical)', 
+    tip: progress.communicationScores.clarity >= 80 ? '✅ Crystal clear — structured steps, ideal sentence length 8-20 words, jargon matched to persona' : progress.communicationScores.clarity >= 50 ? '⚠️ Add structure: Use numbered steps "1. Open... 2. Click..." + avoid jargon for Bloom SMB, add Correlation ID for NovaTech' : '❌ Unclear — for Bloom: "Simple steps: Click Start → Settings..." no jargon + emoji 😅. For NovaTech: include Correlation ID, Sign-in logs CA tab, What If simulation.',
+    detail: `NLP checks: list format (1., -, •), simple language (click/open), technical precision (correlation ID, CA tab), regulated formal (SEC-2024-07, audit trail), conciseness (SMB 10-40 words ideal), readability (8-20 words/sentence).`
+   },
+   { 
+    label: 'Technical Accuracy', 
+    value: progress.communicationScores.technicalAccuracy, 
+    desc: 'Logs first, correct tool, RCA, remediation — real MSP QA rubric', 
+    tip: progress.communicationScores.technicalAccuracy >= 80 ? '✅ Expert-level technical — checked logs first, correct tool, RCA with policy without Report-Only, remediation steps' : progress.communicationScores.technicalAccuracy >= 50 ? '⚠️ Include RCA: "Because policy pushed without Report-Only by john.admin" + remediation "Revert to Report-Only, What If shows safe"' : '❌ Technical gap — always: 1. Sign-in logs CA tab 2. Intune compliance 3. Company Portal Sync 4. dsregcmd /status 5. RCA + fix',
+    detail: `Detects: diagnostics (sign-in logs, audit logs, dsregcmd, BitLocker), tool usage (Entra/Intune/Exchange admin), RCA (because, due to, root cause), remediation (fix by, revert Report-Only, enable BitLocker). Checklist logs + tool gives +35 each.`
+   },
+   { 
+    label: 'Fluency', 
+    value: progress.communicationScores.fluency, 
+    desc: 'No filler (um/uh), no repetition, confident tone, ideal length', 
+    tip: progress.communicationScores.fluency >= 80 ? '✅ Fluent & confident — no filler, no repetition, ideal 15-80 words, varied sentences' : progress.communicationScores.fluency >= 50 ? '⚠️ Remove filler: avoid um/uh/like/you know, avoid "I think maybe/not sure" — be confident "I will check and fix"' : '❌ Fluency issues — avoid um/uh, avoid repeating words, avoid ALL CAPS, keep 15-80 words, 2-6 sentences. Use 🎙️ mic to practice.',
+    detail: `Advanced: counts filler (um, uh, like, you know, actually, kind of), repetition (word repeated), double spaces, ALL CAPS, low confidence phrases (I think maybe, not sure, probably), length checks (too short <5 words -25, too long >120 -10, ideal 15-80 +5).`
+   },
+   { 
+    label: 'Client Language', 
+    value: progress.communicationScores.clientLanguage, 
+    desc: 'Persona adaptation: Bloom simple+emojis 😅, NovaTech technical Correlation ID, Apex SEC-2024-07 formal', 
+    tip: progress.communicationScores.clientLanguage >= 80 ? '✅ Perfect client adaptation — SMB friendly + emoji, Enterprise technical Correlation ID, Apex formal audit trail' : progress.communicationScores.clientLanguage >= 50 ? '⚠️ Adapt more: Bloom = simple + 😅🥺 + no jargon. NovaTech = Correlation ID + Service Health + technical. Apex = Per SEC-2024-07 + audit trail + confirm escrow' : '❌ Wrong language for persona — Bloom hates jargon (DeviceNotCompliant, Entra), wants simple steps + emoji. NovaTech wants technical. Apex wants SEC-2024-07 + formal.',
+    detail: `SMB: simple/easy/quick + emoji 😅🥺 + friendly (please/thanks) + avoid jargon. Enterprise: technical (correlation ID, service health, CA tab) + professional (audit, RCA) + structured (first/second/next). Regulated: formal (per policy, SEC-2024-07, audit trail) + precise (confirm, verify) + documentation.`
+   },
    ].map(metric => (
    <div key={metric.label} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
     <div className="flex items-center justify-between mb-2">
@@ -129,7 +159,8 @@ export default function AssessmentReport({ progress, onReset }: Props) {
     <motion.div initial={{ width: 0 }} animate={{ width: `${metric.value}%` }} transition={{ duration: 0.8 }} className={`h-full ${metric.value >= 80 ? 'bg-emerald-500' : metric.value >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} />
     </div>
     <p className="text-[11px] text-zinc-500">{metric.desc}</p>
-    <p className="text-[10px] text-violet-300 mt-1">💡 {metric.tip}</p>
+    <p className="text-[10px] text-zinc-400 mt-1 leading-[1.4]">{metric.detail}</p>
+    <p className="text-[10px] text-violet-300 mt-2 p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">💡 {metric.tip}</p>
    </div>
    ))}
    </div>

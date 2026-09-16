@@ -60,67 +60,437 @@ export const initialProgress: StudentProgress = {
  history: [],
 };
 
+// Advanced language understanding — no external AI, pure client-side heuristics
+// Inspired by Gong.io, Chorus.ai, Grammarly, and real MSP QA rubrics
+
+const EMPATHY_PATTERNS = {
+ apology: [
+  /orry/i, /apologize/i, /apologies/i, /my apologies/i, /apologise/i,
+  /i understand.*frustrat/i, /must be frustrat/i, /i know.*difficult/i
+ ],
+ acknowledgment: [
+  /i understand/i, /i see/i, /got it/i, /i hear you/i, /that makes sense/i,
+  /i appreciate/i, /thanks for.*(letting|sharing|checking|patience)/i,
+  /thank you for/i, /appreciate.*patience/i, /i get it/i
+ ],
+ reassurance: [
+  /i'll (help|take care|sort|fix|look into)/i, /let me (help|check|look|see)/i,
+  /we'll (get|sort|fix|resolve)/i, /don't worry/i, /i've got you/i,
+  /i will.*(help|assist|resolve|fix)/i, /rest assured/i, /be with you/i
+ ],
+ personalization: [
+  /your (payroll|presentation|deadline|meeting)/i, /i know.*(important|urgent|deadline)/i,
+  /for your (team|client|work)/i, /i understand.*(time|pressure|stress)/i
+ ],
+ gratitude: [
+  /thank/i, /thanks/i, /appreciate/i, /grateful/i
+ ],
+};
+
+const CLARITY_PATTERNS = {
+ structure: [
+  /tep \d/i, /first,.*second/i, /1\.\s.*2\.\s/i, /- [\s\S]*?- /, /•/,
+  /to (do|fix|resolve).*?:/i, /here's what/i, /let's do this/i
+ ],
+ simpleLanguage: [
+  /click/i, /open/i, /go to/i, /type/i, /press/i, /elect/i,
+  /imple/i, /easy/i, /just/i, /quick/i
+ ],
+ technicalPrecision: [
+  /correlation id/i, /ign-?in logs/i, /conditional access/i, /ca tab/i,
+  /what if/i, /audit logs/i, /device.*compliant/i, /entra id/i,
+  /intune/i, /compliance policy/i, /dsregcmd/i, /get-bitlocker/i
+ ],
+ regulatedFormal: [
+  /per policy/i, /ec-2024-07/i, /audit trail/i, /rca/i, /root cause/i,
+  /compliance/i, /escrow/i, /key.*escrow/i, /attestation/i,
+  /per sec/i, /as per/i, /in accordance/i
+ ],
+ conciseness: {
+  smb: { min: 10, max: 40, ideal: 25 },
+  enterprise: { min: 15, max: 80, ideal: 45 },
+  regulated: { min: 20, max: 100, ideal: 60 },
+ }
+};
+
+const TECHNICAL_PATTERNS = {
+ diagnostics: [
+  /ign-?in logs/i, /audit logs/i, /ervice health/i, /message trace/i,
+  /dsregcmd/i, /company portal/i, /bitlocker/i, /get-bitlocker/i,
+  /what if/i, /conditional access/i, /compliance/i, /enrollment/i
+ ],
+ toolUsage: [
+  /entra.*admin/i, /intune.*admin/i, /exchange.*admin/i, /teams.*admin/i,
+  /check.*logs/i, /run.*status/i, /ync/i, /enable/i, /disable/i
+ ],
+ rca: [
+  /because/i, /due to/i, /root cause/i, /rca/i, /reason.*is/i,
+  /caused by/i, /policy.*without.*report-only/i, /without.*report-only/i
+ ],
+ remediation: [
+  /fix.*by/i, /resolve.*by/i, /to fix/i, /olution/i, /remediation/i,
+  /revert.*report-only/i, /enable.*bitlocker/i, /check.*status/i
+ ],
+};
+
+const FLUENCY_PATTERNS = {
+ filler: [
+  /\bum\b/gi, /\buh\b/gi, /\blike\b/gi, /\byou know\b/gi, /\bso\b/gi, /\bactually\b/gi,
+  /\bkind of\b/gi, /\bsort of\b/gi, /\bI mean\b/gi, /\bwell\b/gi
+ ],
+ repetition: /(\b\w+\b)(?:\s+\1){1,}/gi,
+ grammar: {
+  doubleSpace: /  +/g,
+  caps: /[A-Z]{4,}/,
+  punctuation: /[.!?]{2,}/,
+ },
+ confidence: [
+  /i think maybe/i, /not sure/i, /might be/i, /could be/i, /probably/i,
+  /i guess/i, /i'm not sure/i
+ ],
+};
+
+const CLIENT_LANGUAGE_PATTERNS = {
+ smb: {
+  simple: [/imple/i, /easy/i, /quick/i, /no jargon/i, /tep-by-step/i],
+  emoji: [/😅|🥺|😰|🙏|⭐|📎|💜|😊/u],
+  friendly: [/please/i, /thanks/i, /thank you/i, /happy to help/i, /no worries/i],
+  avoidJargon: [/device.*compliant/i, /conditional access/i, /entra/i],
+ },
+ enterprise: {
+  technical: [/correlation id/i, /ervice health/i, /ign-in logs/i, /ca tab/i, /what if/i],
+  professional: [/per/i, /audit/i, /rca/i, /remediation/i, /escalation/i],
+  structured: [/first/i, /econd/i, /next/i, /then/i, /finally/i],
+ },
+ regulated: {
+  formal: [/per policy/i, /ec-2024-07/i, /audit trail/i, /compliance/i, /escrow/i],
+  precise: [/confirm/i, /verify/i, /attestation/i, /in accordance/i],
+  documentation: [/document/i, /record/i, /log/i, /trail/i],
+ }
+};
+
 export function calculateCommunicationScore(
  userMessage: string,
  clientPersona: 'enterprise' | 'smb' | 'regulated',
  context: { usedClientLanguage: boolean; checkedLogs: boolean; usedCorrectTool: boolean }
 ): StudentProgress['communicationScores'] {
  const lower = userMessage.toLowerCase();
- 
- // Empathy: sorry, understand, thank you, apologize, appreciate
+ const words = userMessage.split(/\s+/).filter(w => w.length > 0);
+ const wordCount = words.length;
+ const sentences = userMessage.split(/[.!?]+/).filter(s => s.trim().length > 0);
+ const sentenceCount = sentences.length || 1;
+ const avgWordsPerSentence = wordCount / sentenceCount;
+
+ // === EMPATHY — Advanced ===
  let empathy = 0;
- if (lower.includes('sorry') || lower.includes('apologize')) empathy += 30;
- if (lower.includes('understand') || lower.includes('i see') || lower.includes('got it')) empathy += 25;
- if (lower.includes('thank')) empathy += 20;
- if (lower.includes('help') || lower.includes('assist')) empathy += 15;
- if (lower.length > 20) empathy += 10; // not too short
+ let empathyDetails: string[] = [];
+
+ // Apology detection
+ const apologyMatches = EMPATHY_PATTERNS.apology.filter(p => p.test(userMessage));
+ if (apologyMatches.length > 0) {
+  empathy += 30;
+  empathyDetails.push(`apology (${apologyMatches.length})`);
+ }
+ // Acknowledgment
+ const ackMatches = EMPATHY_PATTERNS.acknowledgment.filter(p => p.test(userMessage));
+ if (ackMatches.length > 0) {
+  empathy += 20 + Math.min(15, ackMatches.length * 5);
+  empathyDetails.push(`acknowledgment (${ackMatches.length})`);
+ }
+ // Reassurance
+ const reassureMatches = EMPATHY_PATTERNS.reassurance.filter(p => p.test(userMessage));
+ if (reassureMatches.length > 0) {
+  empathy += 15 + Math.min(10, reassureMatches.length * 5);
+  empathyDetails.push(`reassurance`);
+ }
+ // Personalization
+ const personalMatches = EMPATHY_PATTERNS.personalization.filter(p => p.test(userMessage));
+ if (personalMatches.length > 0) {
+  empathy += 15;
+  empathyDetails.push(`personalization`);
+ }
+ // Gratitude
+ const gratitudeMatches = EMPATHY_PATTERNS.gratitude.filter(p => p.test(userMessage));
+ if (gratitudeMatches.length > 0) {
+  empathy += 10;
+  empathyDetails.push(`gratitude`);
+ }
+ // Length bonus — not too short, shows effort
+ if (wordCount >= 15 && wordCount <= 60) empathy += 10;
+ else if (wordCount > 60 && wordCount <= 100) empathy += 5;
+ // Client name usage (if message contains name-like)
+ if (/[A-Z][a-z]+/.test(userMessage) && wordCount > 10) empathy += 5;
+
  empathy = Math.min(100, empathy);
 
- // Clarity: for SMB simple, for enterprise technical but clear
+ // === CLARITY — Advanced, persona-aware ===
  let clarity = 0;
- if (clientPersona === 'smb') {
- // SMB wants simple steps, no jargon
- if (!lower.includes('dsregcmd') && !lower.includes('conditional access') && !lower.includes('entra')) clarity += 40;
- if (lower.includes('click') || lower.includes('open') || lower.includes('start')) clarity += 30;
- if (lower.includes('simple') || lower.includes('easy')) clarity += 20;
- if (lower.split(' ').length < 30) clarity += 10; // concise for SMB
- } else if (clientPersona === 'enterprise') {
- if (lower.includes('correlation') || lower.includes('sign-in logs') || lower.includes('ca tab')) clarity += 40;
- if (lower.includes('what if') || lower.includes('audit logs')) clarity += 30;
- if (lower.includes('rca') || lower.includes('remediation')) clarity += 20;
- if (lower.split(' ').length > 15) clarity += 10; // detailed for enterprise
- } else {
- // regulated wants formal + audit trail
- if (lower.includes('sec-2024-07') || lower.includes('audit trail') || lower.includes('rca')) clarity += 50;
- if (lower.includes('per policy') || lower.includes('compliance')) clarity += 30;
- if (lower.includes('confirm') || lower.includes('escrow')) clarity += 20;
- }
- clarity = Math.min(100, clarity);
+ let clarityDetails: string[] = [];
 
- // Technical accuracy
+ // Structure detection
+ const structureMatches = CLARITY_PATTERNS.structure.filter(p => p.test(userMessage));
+ if (structureMatches.length > 0) {
+  clarity += 25;
+  clarityDetails.push(`structured steps`);
+ }
+ // Check for numbered or bulleted list
+ if (/\d+\.\s/.test(userMessage) || /[-•]\s/.test(userMessage)) {
+  clarity += 15;
+  clarityDetails.push(`list format`);
+ }
+
+ if (clientPersona === 'smb') {
+  // SMB wants simple, no jargon, actionable
+  const simpleMatches = CLARITY_PATTERNS.simpleLanguage.filter(p => p.test(lower));
+  clarity += Math.min(35, simpleMatches.length * 8);
+  if (simpleMatches.length > 0) clarityDetails.push(`simple language (${simpleMatches.length})`);
+  
+  // Penalize jargon for SMB
+  const jargonCount = (lower.match(/entra|conditional access|device.*compliant|correlation id|audit logs/gi) || []).length;
+  if (jargonCount > 0) {
+   clarity -= jargonCount * 8;
+   clarityDetails.push(`jargon penalty (-${jargonCount * 8})`);
+  } else {
+   clarity += 15;
+   clarityDetails.push(`no jargon +15`);
+  }
+  
+  // Conciseness for SMB
+  const { min, max, ideal } = CLARITY_PATTERNS.conciseness.smb;
+  if (wordCount >= min && wordCount <= max) {
+   const dist = Math.abs(wordCount - ideal);
+   clarity += Math.max(0, 20 - dist);
+   clarityDetails.push(`concise SMB`);
+  } else if (wordCount < min) {
+   clarity -= 10;
+  }
+  
+  // Emoji for SMB is clarity (friendly)
+  if (/😅|🥺|😊|🙏|⭐/u.test(userMessage)) {
+   clarity += 10;
+   clarityDetails.push(`emoji friendly`);
+  }
+ } else if (clientPersona === 'enterprise') {
+  // Enterprise wants technical precision + structure
+  const techMatches = CLARITY_PATTERNS.technicalPrecision.filter(p => p.test(lower));
+  clarity += Math.min(40, techMatches.length * 10);
+  if (techMatches.length > 0) clarityDetails.push(`technical precision (${techMatches.length})`);
+  
+  // Detailed for enterprise
+  const { min, max, ideal } = CLARITY_PATTERNS.conciseness.enterprise;
+  if (wordCount >= min && wordCount <= max) {
+   const dist = Math.abs(wordCount - ideal);
+   clarity += Math.max(0, 25 - dist * 0.5);
+   clarityDetails.push(`detailed enterprise`);
+  }
+  
+  // Correlation ID, logs, etc. are clarity for enterprise
+  if (/correlation/i.test(lower)) clarity += 10;
+  if (/ign-in logs|audit logs|what if/i.test(lower)) clarity += 10;
+ } else {
+  // Regulated wants formal + audit trail
+  const formalMatches = CLARITY_PATTERNS.regulatedFormal.filter(p => p.test(lower));
+  clarity += Math.min(50, formalMatches.length * 12);
+  if (formalMatches.length > 0) clarityDetails.push(`formal regulated (${formalMatches.length})`);
+  
+  const { min, max } = CLARITY_PATTERNS.conciseness.regulated;
+  if (wordCount >= min && wordCount <= max) clarity += 20;
+ }
+
+ // Readability — avg words per sentence
+ if (avgWordsPerSentence >= 8 && avgWordsPerSentence <= 20) {
+  clarity += 10;
+  clarityDetails.push(`readable sentence length`);
+ } else if (avgWordsPerSentence > 25) {
+  clarity -= 5;
+  clarityDetails.push(`long sentences penalty`);
+ }
+
+ clarity = Math.max(0, Math.min(100, clarity));
+
+ // === TECHNICAL ACCURACY — Advanced ===
  let technical = 0;
- if (context.checkedLogs) technical += 40;
- if (context.usedCorrectTool) technical += 40;
- if (lower.includes('dsregcmd') || lower.includes('bitlocker') || lower.includes('company portal') || lower.includes('message trace')) technical += 20;
+ let techDetails: string[] = [];
+
+ if (context.checkedLogs) {
+  technical += 35;
+  techDetails.push(`checked logs +35`);
+ }
+ if (context.usedCorrectTool) {
+  technical += 35;
+  techDetails.push(`correct tool +35`);
+ }
+
+ const diagMatches = TECHNICAL_PATTERNS.diagnostics.filter(p => p.test(lower));
+ technical += Math.min(20, diagMatches.length * 5);
+ if (diagMatches.length > 0) techDetails.push(`diagnostics (${diagMatches.length})`);
+
+ const rcaMatches = TECHNICAL_PATTERNS.rca.filter(p => p.test(lower));
+ if (rcaMatches.length > 0) {
+  technical += 15;
+  techDetails.push(`RCA mentioned`);
+ }
+
+ const remediationMatches = TECHNICAL_PATTERNS.remediation.filter(p => p.test(lower));
+ if (remediationMatches.length > 0) {
+  technical += 10;
+  techDetails.push(`remediation steps`);
+ }
+
+ // Penalize if no technical content but context says should have
+ if (!context.checkedLogs && !context.usedCorrectTool && diagMatches.length === 0) {
+  technical = Math.max(0, technical - 20);
+ }
+
  technical = Math.min(100, technical);
 
- // Fluency: based on message length and filler words
+ // === FLUENCY — Advanced ===
  let fluency = 100;
- const fillerWords = ['um', 'uh', 'like', 'you know', 'so', 'actually'];
- fillerWords.forEach(filler => {
- if (lower.includes(filler)) fluency -= 10;
+ let fluencyDetails: string[] = [];
+
+ // Filler words
+ let fillerCount = 0;
+ FLUENCY_PATTERNS.filler.forEach(pattern => {
+  const matches = userMessage.match(pattern);
+  if (matches) fillerCount += matches.length;
  });
- if (userMessage.split(' ').length < 5) fluency -= 20; // too short
- if (userMessage.split(' ').length > 100) fluency -= 10; // too long
+ if (fillerCount > 0) {
+  fluency -= fillerCount * 8;
+  fluencyDetails.push(`filler -${fillerCount * 8}`);
+ }
+
+ // Repetition
+ const repetitionMatches = userMessage.match(FLUENCY_PATTERNS.repetition);
+ if (repetitionMatches) {
+  fluency -= repetitionMatches.length * 10;
+  fluencyDetails.push(`repetition -${repetitionMatches.length * 10}`);
+ }
+
+ // Grammar checks
+ const doubleSpaces = (userMessage.match(FLUENCY_PATTERNS.grammar.doubleSpace) || []).length;
+ if (doubleSpaces > 2) {
+  fluency -= 5;
+  fluencyDetails.push(`formatting`);
+ }
+
+ if (FLUENCY_PATTERNS.grammar.caps.test(userMessage) && wordCount > 10) {
+  fluency -= 10;
+  fluencyDetails.push(`caps penalty`);
+ }
+
+ // Confidence — avoid "I think maybe", "not sure"
+ const confidenceMatches = FLUENCY_PATTERNS.confidence.filter(p => (p as RegExp).test ? (p as RegExp).test(lower) : lower.includes(p as unknown as string));
+ let lowConfidenceCount = 0;
+ [/i think maybe/i, /not sure/i, /might be/i, /could be/i, /probably/i, /i guess/i].forEach(p => {
+  if (p.test(lower)) lowConfidenceCount++;
+ });
+ if (lowConfidenceCount > 0) {
+  fluency -= lowConfidenceCount * 7;
+  fluencyDetails.push(`low confidence -${lowConfidenceCount * 7}`);
+ }
+
+ // Length checks
+ if (wordCount < 5) {
+  fluency -= 25;
+  fluencyDetails.push(`too short -25`);
+ } else if (wordCount > 120) {
+  fluency -= 10;
+  fluencyDetails.push(`too long -10`);
+ } else if (wordCount >= 15 && wordCount <= 80) {
+  fluency += 5;
+  fluencyDetails.push(`ideal length +5`);
+ }
+
+ // Sentence variety
+ if (sentenceCount >= 2 && sentenceCount <= 6) {
+  fluency += 5;
+ }
+
  fluency = Math.max(0, Math.min(100, fluency));
 
- // Client language
+ // === CLIENT LANGUAGE — Advanced, persona-specific ===
  let clientLang = 0;
- if (context.usedClientLanguage) clientLang = 90;
- else {
- if (clientPersona === 'smb' && (lower.includes('😅') || lower.includes('please') || lower.includes('thanks'))) clientLang = 60;
- if (clientPersona === 'enterprise' && (lower.includes('correlation') || lower.includes('service health'))) clientLang = 60;
- if (clientPersona === 'regulated' && lower.includes('sec-2024-07')) clientLang = 70;
+ let langDetails: string[] = [];
+
+ if (context.usedClientLanguage) {
+  clientLang = 85;
+  langDetails.push(`checklist flag +85`);
+ } else {
+  if (clientPersona === 'smb') {
+   const simpleMatches = CLIENT_LANGUAGE_PATTERNS.smb.simple.filter(p => p.test(lower));
+   clientLang += Math.min(30, simpleMatches.length * 10);
+   
+   const emojiMatches = userMessage.match(CLIENT_LANGUAGE_PATTERNS.smb.emoji[0]);
+   if (emojiMatches) {
+    clientLang += 20;
+    langDetails.push(`emoji +20`);
+   }
+   
+   const friendlyMatches = CLIENT_LANGUAGE_PATTERNS.smb.friendly.filter(p => p.test(lower));
+   clientLang += Math.min(20, friendlyMatches.length * 7);
+   
+   // Avoid jargon for SMB is good
+   const hasJargon = CLIENT_LANGUAGE_PATTERNS.smb.avoidJargon.some(p => p.test(lower));
+   if (!hasJargon && wordCount > 10) {
+    clientLang += 25;
+    langDetails.push(`no jargon SMB +25`);
+   } else if (hasJargon) {
+    clientLang -= 15;
+    langDetails.push(`jargon penalty SMB -15`);
+   }
+  } else if (clientPersona === 'enterprise') {
+   const techMatches = CLIENT_LANGUAGE_PATTERNS.enterprise.technical.filter(p => p.test(lower));
+   clientLang += Math.min(40, techMatches.length * 12);
+   
+   const profMatches = CLIENT_LANGUAGE_PATTERNS.enterprise.professional.filter(p => p.test(lower));
+   clientLang += Math.min(25, profMatches.length * 8);
+   
+   const structMatches = CLIENT_LANGUAGE_PATTERNS.enterprise.structured.filter(p => p.test(lower));
+   if (structMatches.length >= 2) {
+    clientLang += 20;
+    langDetails.push(`structured enterprise +20`);
+   }
+   
+   // Enterprise should NOT use too many emojis
+   const emojiCount = (userMessage.match(/😅|🥺|😰|😊|🙏/gu) || []).length;
+   if (emojiCount > 2) {
+    clientLang -= 10;
+    langDetails.push(`too many emojis enterprise -10`);
+   }
+  } else {
+   // Regulated
+   const formalMatches = CLIENT_LANGUAGE_PATTERNS.regulated.formal.filter(p => p.test(lower));
+   clientLang += Math.min(45, formalMatches.length * 15);
+   
+   const preciseMatches = CLIENT_LANGUAGE_PATTERNS.regulated.precise.filter(p => p.test(lower));
+   clientLang += Math.min(25, preciseMatches.length * 8);
+   
+   const docMatches = CLIENT_LANGUAGE_PATTERNS.regulated.documentation.filter(p => p.test(lower));
+   if (docMatches.length > 0) {
+    clientLang += 15;
+    langDetails.push(`documentation +15`);
+   }
+  }
+ }
+
+ // Bonus for using client name or company
+ if (/novatech|bloom|apex/i.test(lower) && wordCount > 10) {
+  clientLang += 10;
+  langDetails.push(`client name +10`);
+ }
+
+ clientLang = Math.max(0, Math.min(100, clientLang));
+
+ // Debug log for advanced understanding (only in dev)
+ if (typeof window !== 'undefined' && (window as any).DEBUG_ORBITDESK) {
+  console.log('Advanced Score:', {
+   empathy: { score: empathy, details: empathyDetails },
+   clarity: { score: clarity, details: clarityDetails },
+   technical: { score: technical, details: techDetails },
+   fluency: { score: fluency, details: fluencyDetails },
+   clientLang: { score: clientLang, details: langDetails },
+   wordCount, sentenceCount, avgWordsPerSentence
+  });
  }
 
  return {
