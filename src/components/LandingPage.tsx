@@ -223,14 +223,19 @@ export default function LandingPage({ onEnterLab }: Props) {
  </AnimatePresence>
 
  <footer className="border-t border-zinc-800/60">
-  <div className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-between text-[12px] text-zinc-500">
+  <div className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-[12px] text-zinc-500">
   <div className="flex items-center gap-3">
   <div className="h-6 w-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
    <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
   </div>
-  <span>OrbitDesk — Modern Workplace Operations Lab</span>
+  <span className="font-medium text-zinc-300">© 2026 Devine Nyaenya • OrbitDesk — Proprietary flagship</span>
+  <span className="hidden md:inline-flex items-center gap-1.5 h-5 px-2.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300">v6.11.0 • Source-available Noncommercial • IP Locked</span>
   </div>
-  <span>© 2026 • Educational • Not affiliated with Microsoft</span>
+  <div className="flex items-center gap-2">
+   <span>Educational • Not affiliated with Microsoft</span>
+   <span className="hidden md:inline w-px h-3 bg-zinc-800" />
+   <span className="hidden md:inline">devinenyaenya@gmail.com</span>
+  </div>
   </div>
  </footer>
  </div>
