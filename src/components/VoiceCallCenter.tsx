@@ -953,7 +953,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  <>
  <AnimatePresence>
   {incoming && (
-  <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} className="fixed bottom-6 right-[360px] lg:right-[720px] z-[100] w-[360px] max-w-[92vw] rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-zinc-800 bg-[#0a0a0a] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+  <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="absolute top-10 right-0 z-20 w-[360px] max-w-[92vw] rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-zinc-800 bg-[#0a0a0a] overflow-hidden" onClick={(e) => e.stopPropagation()}>
    <motion.div className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
     <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-violet-700 p-4 text-white relative overflow-hidden">
      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.15),transparent)]" />
@@ -993,7 +993,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
       </button>
      </div>
      <div className="mt-2 flex items-center justify-between text-[9px] text-zinc-600">
-      <span>Teams-like toast • Not full-screen • No leaks</span>
+      <span>Teams-like • Own space in header</span>
       <span className="flex items-center gap-1">{isRingMuted ? '🔇 Ring muted' : '🔔 440Hz+480Hz'} • {isAppHidden ? '⏸️ Paused' : '🔊 Live'}</span>
      </div>
     </div>
@@ -1003,21 +1003,22 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  </AnimatePresence>
 
  {!activeCall && !incoming && (
-  <div className="fixed top-[68px] right-4 z-30 flex flex-col gap-2 items-end max-w-[360px]">
-   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-full px-4 py-2 flex items-center gap-3 shadow-2xl">
-    <Logo variant="icon" size={18} animated />
-    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-    <span className="text-[11px] text-zinc-300">Lvl {level} • {level <=1 ? '📵 No auto calls — focus tickets' : level ===2 ? `📞 P1 only • Next ${nextCallIn}s` : `Next ${nextCallIn}s • ${freqConfig.maxCallsPerHour}/hr`}</span>
-    <button onClick={() => (window as any).triggerIncomingCall?.()} type="button" className="h-7 px-3 rounded-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white text-[11px] font-bold cursor-pointer transition-colors">📞 Call Now</button>
-    <button onClick={() => setShowCallHistory(!showCallHistory)} type="button" className="h-7 px-3 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] cursor-pointer">📋</button>
+  <div className="relative flex flex-col gap-2 items-end">
+   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-xl h-8">
+    <Logo variant="icon" size={16} animated />
+    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+    <span className="text-[11px] text-zinc-300 hidden lg:inline">Lvl {level} • {level <=1 ? '📵 Focus tickets' : level ===2 ? `📞 P1 only • ${nextCallIn}s` : `${nextCallIn}s • ${freqConfig.maxCallsPerHour}/hr`}</span>
+    <span className="text-[11px] text-zinc-300 lg:hidden">Lvl {level} • {nextCallIn}s</span>
+    <button onClick={() => (window as any).triggerIncomingCall?.()} type="button" className="h-6 px-2.5 rounded-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white text-[11px] font-bold cursor-pointer transition-colors">📞 Call</button>
+    <button onClick={() => setShowCallHistory(!showCallHistory)} type="button" className="h-6 w-6 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] cursor-pointer flex items-center justify-center">📋</button>
    </div>
-   {level <=1 && (
-    <div className="bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 rounded-xl px-3 py-2 text-[10px] text-amber-200 max-w-[320px]">
-     💡 Phone training unlocks at Level 2 — focus on tickets first. Use Call Now to practice P1 critical calls manually. No spam.
+   {level <=1 && showCallHistory === false && missedCalls.length === 0 && (
+    <div className="absolute top-10 right-0 z-20 w-[300px] bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 rounded-xl px-3 py-2 text-[11px] text-amber-200 shadow-xl">
+     💡 Phone training unlocks at Level 2 — focus on tickets first. Use Call to practice P1 critical calls manually. No spam.
     </div>
    )}
    {missedCalls.length > 0 && (
-   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl w-[320px]">
+   <div className="absolute top-10 right-0 z-20 bg-[#0a0a0a] border border-zinc-800 rounded-2xl p-3 shadow-2xl w-[320px]">
     <p className="text-[11px] font-bold text-zinc-300 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Missed Calls ({missedCalls.length}) • Lvl {level} only critical</p>
     <div className="mt-2 space-y-1.5">
      {missedCalls.slice(0,3).map((c, i) => (
@@ -1034,13 +1035,13 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
    </div>
    )}
    {showCallHistory && (
-   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-3 shadow-2xl w-[360px] max-h-[400px] overflow-y-auto">
+   <div className="absolute top-10 right-0 z-20 bg-[#0a0a0a] border border-zinc-800 rounded-2xl p-3 shadow-2xl w-[360px] max-h-[400px] overflow-y-auto">
     <div className="flex items-center justify-between">
      <p className="text-[11px] font-bold text-zinc-300">Call History — Lvl {level} • {freqConfig.description}</p>
      <button onClick={() => setShowCallHistory(false)} type="button" className="h-6 w-6 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 cursor-pointer">✕</button>
     </div>
     <div className="mt-3 space-y-2">
-     {callHistory.length === 0 ? <p className="text-[11px] text-zinc-500">{level <=1 ? 'Lvl1 — No auto calls. Phone unlocks at Lvl2. Use Call Now for P1 practice.' : `No calls yet — ${freqConfig.description} Next in ${nextCallIn}s`}</p> : callHistory.map((c, i) => (
+     {callHistory.length === 0 ? <p className="text-[11px] text-zinc-500">{level <=1 ? 'Lvl1 — No auto calls. Phone unlocks at Lvl2. Use Call for P1 practice.' : `No calls yet — ${freqConfig.description} Next in ${nextCallIn}s`}</p> : callHistory.map((c, i) => (
      <div key={i} className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
       <div className="flex items-center gap-2">
        <span className={`h-2 w-2 rounded-full ${c.status === 'missed' ? 'bg-red-500' : 'bg-emerald-500'}`} />
