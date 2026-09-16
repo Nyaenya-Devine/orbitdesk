@@ -1,4 +1,4 @@
-# OrbitDesk — Modern Workplace Operations Lab v6.6
+# OrbitDesk — Modern Workplace Operations Lab v6.7.2
 
 ![CI](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/ci.yml/badge.svg)
 ![Security](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/security.yml/badge.svg)
@@ -14,7 +14,7 @@
 
 Simulated MSP Team Lead environment for Entra ID, Intune, Exchange, Teams, and Windows troubleshooting — with LinkedIn-style messaging dock, real-time voice calls, remote PC access, per-client policies, audit trails, and Electron auto-update.
 
-**Live:** https://orbitdesk-gamma.vercel.app · **GitHub:** https://github.com/Nyaenya-Devine/orbitdesk · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
+**Live:** https://orbitdesk.vercel.app · **GitHub:** https://github.com/Nyaenya-Devine/orbitdesk · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
 
 ---
 
