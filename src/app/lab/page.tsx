@@ -464,17 +464,18 @@ export default function HomeV3() {
   </AnimatePresence>
  </main>
 
- {/* Clean Footer — No overlapping, simple, classy */}
+ {/* Footer — Proprietary flagship watermark + version */}
  <footer className="mt-auto border-t border-zinc-800/50 bg-[#0a0a0a]/80 backdrop-blur-xl">
   <div className="max-w-[1600px] mx-auto px-5 h-11 flex items-center justify-between text-[11px] text-zinc-500">
    <div className="flex items-center gap-3">
-    <span className="font-medium text-zinc-400">OrbitDesk</span>
+    <span className="font-medium text-zinc-300">© 2026 Devine Nyaenya • OrbitDesk</span>
     <span className="hidden md:inline w-px h-3 bg-zinc-800" />
-    <span className="hidden md:inline">{getLevelInfo(progress.level).title} • {getLevelInfo(progress.level).orbitRings} rings</span>
-    <span className="hidden md:inline w-px h-3 bg-zinc-800" />
-    <span className="hidden md:inline">{progress.ticketsResolved < 5 ? 'Beginner' : progress.ticketsResolved < 10 ? 'Intermediate' : progress.ticketsResolved < 20 ? 'Advanced' : 'Expert'} • {isPaused ? 'Paused' : 'Live'}</span>
+    <span className="hidden sm:inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300">Proprietary • Source-available</span>
+    <span className="hidden lg:inline w-px h-3 bg-zinc-800" />
+    <span className="hidden lg:inline">{getLevelInfo(progress.level).title} • {getLevelInfo(progress.level).orbitRings} rings</span>
    </div>
    <div className="flex items-center gap-3 font-mono">
+    <span className="hidden md:inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-900 border border-zinc-800 text-[10px]">v6.11.0 • IP Locked</span>
     <span>Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} ✓</span>
     <span className="hidden md:inline">• Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100</span>
    </div>
