@@ -516,27 +516,37 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  }, []);
 
  const speakClient = useCallback((text: string, persona: 'enterprise' | 'smb' | 'regulated') => {
- if (!synthRef.current || isMuted || isOnHold) return;
+ if (!text) return;
+ if (isMuted || isOnHold) return;
  try {
-  synthRef.current.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  const synth = synthRef.current || window.speechSynthesis;
+  if (!synth) return;
+  synthRef.current = synth as any;
+  try { synth.cancel(); } catch {}
+  const utter = new SpeechSynthesisUtterance(text.substring(0, 400));
   utter.rate = persona === 'smb' ? 1.15 : persona === 'regulated' ? 0.9 : 1.0;
   utter.pitch = persona === 'smb' ? 1.2 : persona === 'regulated' ? 0.8 : 0.9;
   utter.volume = 0.95;
-  const voices = synthRef.current.getVoices();
-  const match = voices.find(v => v.lang.startsWith('en')) || voices[0];
-  if (match) utter.voice = match;
-  utter.onstart = () => { setIsSpeaking(true); };
-  utter.onend = () => { setIsSpeaking(false); setClientAudioLevel(0); };
-  utter.onerror = () => { setIsSpeaking(false); setClientAudioLevel(0); };
-  synthRef.current.speak(utter);
+  try {
+   const voices = synth.getVoices?.() || [];
+   const match = voices.find((v:any) => v.lang?.startsWith('en')) || voices[0];
+   if (match) utter.voice = match;
+  } catch {}
+  utter.onstart = () => { try { setIsSpeaking(true); } catch {} };
+  utter.onend = () => { try { setIsSpeaking(false); setClientAudioLevel(0); } catch {} };
+  utter.onerror = () => { try { setIsSpeaking(false); setClientAudioLevel(0); } catch {} };
+  synth.speak(utter);
   const interval = setInterval(() => {
-   if (!synthRef.current?.speaking) { clearInterval(interval); setClientAudioLevel(0); return; }
-   setClientAudioLevel(Math.random() * 80 + 20);
+   try {
+    if (!synthRef.current?.speaking) { clearInterval(interval); setClientAudioLevel(0); return; }
+    setClientAudioLevel(Math.random() * 80 + 20);
+   } catch { clearInterval(interval); }
   }, 100);
-  setTimeout(() => clearInterval(interval), 8000);
- } catch {
-  setIsSpeaking(false);
+  setTimeout(() => { try { clearInterval(interval); } catch {} }, 8000);
+ } catch (e) {
+  console.log('speakClient failed, fallback to text only', e);
+  try { setIsSpeaking(false); } catch {}
  }
  }, [isMuted, isOnHold]);
 
@@ -665,42 +675,70 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  const acceptCall = useCallback((e?: any) => {
  if (e) { e.preventDefault(); e.stopPropagation(); }
  if (accepting) return;
- const ticketToAccept = incomingRef.current || incoming;
- if (!ticketToAccept) {
-  console.log('No incoming call to accept');
-  return;
- }
- setAccepting(true);
- console.log('Accepting call', ticketToAccept.id);
- stopRingtone();
- const persona = (ticketToAccept.clientId === 'client-a' ? 'enterprise' : ticketToAccept.clientId === 'client-b' ? 'smb' : 'regulated') as 'enterprise' | 'smb' | 'regulated';
- const greeting = greetings[persona][Math.floor(Math.random() * greetings[persona].length)];
- const newCall: Call = {
-  id: ticketToAccept.id,
-  status: 'active',
-  duration: 0,
-  holdDuration: 0,
-  transcript: [
-   { id: '1', speaker: 'system', text: `📞 Voice Call Connected • ${ticketToAccept.userEmail} • ${ticketToAccept.clientName} • 🔴 Recording ON • Encrypted TLS 1.3 • Mouth-to-Ear Voice, No Text • Beep every 15s`, time: '00:00', isVoice: false },
-   { id: '2', speaker: 'client', text: greeting, time: '00:03', isVoice: true, sentiment: 'calm' },
-  ],
-  persona,
-  phase: 'waiting_greeting',
-  isRecording: true,
-  clientName: ticketToAccept.clientName,
-  userEmail: ticketToAccept.userEmail,
-  priority: ticketToAccept.priority,
- };
- setActiveCall(newCall);
- activeCallRef.current = newCall;
- setIncoming(null);
- incomingRef.current = null;
- try { onAccept(ticketToAccept); } catch (err) { console.error('onAccept error', err); }
- startRecordingBeep();
- setTimeout(() => {
-  speakClient(greeting, persona);
+ try {
+  const ticketToAccept = incomingRef.current || incoming;
+  if (!ticketToAccept) {
+   console.log('No incoming call to accept');
+   return;
+  }
+  setAccepting(true);
+  console.log('Accepting call', ticketToAccept.id);
+  try { stopRingtone(); } catch {}
+  const persona = (ticketToAccept.clientId === 'client-a' ? 'enterprise' : ticketToAccept.clientId === 'client-b' ? 'smb' : 'regulated') as 'enterprise' | 'smb' | 'regulated';
+  const greeting = greetings[persona]?.[Math.floor(Math.random() * greetings[persona].length)] || greetings.enterprise[0];
+  const newCall: Call = {
+   id: ticketToAccept.id || `call-${Date.now()}`,
+   status: 'active',
+   duration: 0,
+   holdDuration: 0,
+   transcript: [
+    { id: '1', speaker: 'system', text: `📞 Voice Call Connected • ${ticketToAccept.userEmail || 'client'} • ${ticketToAccept.clientName || 'Client'} • 🔴 Recording ON • Encrypted TLS 1.3`, time: '00:00', isVoice: false },
+    { id: '2', speaker: 'client', text: greeting, time: '00:03', isVoice: true, sentiment: 'calm' },
+   ],
+   persona,
+   phase: 'waiting_greeting',
+   isRecording: true,
+   clientName: ticketToAccept.clientName || 'Client',
+   userEmail: ticketToAccept.userEmail || 'client@example.com',
+   priority: ticketToAccept.priority || 'P1',
+  };
+  setActiveCall(newCall);
+  activeCallRef.current = newCall;
+  setIncoming(null);
+  incomingRef.current = null;
+  try { onAccept(ticketToAccept); } catch (err) { console.error('onAccept error', err); }
+  try { startRecordingBeep(); } catch {}
+  setTimeout(() => {
+   try { speakClient(greeting, persona); } catch {}
+   setAccepting(false);
+  }, 600);
+ } catch (err) {
+  console.error('acceptCall failed', err);
   setAccepting(false);
- }, 600);
+  // Fallback: ensure call still opens even if speech fails
+  try {
+   const ticketToAccept = incomingRef.current || incoming;
+   if (ticketToAccept) {
+    const fallbackCall: Call = {
+     id: ticketToAccept.id || `call-${Date.now()}`,
+     status: 'active',
+     duration: 0,
+     holdDuration: 0,
+     transcript: [{ id: '1', speaker: 'system', text: '📞 Call connected — voice may be unavailable in this browser, use text fallback', time: '00:00', isVoice: false }],
+     persona: 'enterprise',
+     phase: 'problem',
+     isRecording: false,
+     clientName: ticketToAccept.clientName || 'Client',
+     userEmail: ticketToAccept.userEmail || 'client@example.com',
+     priority: ticketToAccept.priority || 'P1',
+    };
+    setActiveCall(fallbackCall);
+    activeCallRef.current = fallbackCall;
+    setIncoming(null);
+    incomingRef.current = null;
+   }
+  } catch {}
+ }
  }, [accepting, onAccept, speakClient, startRecordingBeep, stopRingtone, incoming]);
 
  const declineCall = useCallback((e?: any) => {
@@ -1062,19 +1100,19 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
    <div className="h-14 px-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
     <div className="flex items-center gap-3">
      <Logo variant="icon" size={32} animated />
-     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white font-bold ring-2 ring-violet-500/20">{activeCall.id[0].toUpperCase()}</div>
+     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white font-bold ring-2 ring-violet-500/20">{(activeCall.id?.[0] || 'C').toUpperCase()}</div>
      <div>
       <p className="text-[13px] font-semibold text-zinc-100 flex items-center gap-2">
-       {activeCall.clientName} • {activeCall.priority} • {activeCall.id.substring(0,8)}
+       {activeCall.clientName || 'Client'} • {activeCall.priority || 'P1'} • {(activeCall.id || '').substring(0,8) || 'call'}
        <span className={`h-2 w-2 rounded-full ${activeCall.status === 'on-hold' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
-       <span className="text-[11px] text-emerald-400 font-mono">{String(Math.floor(activeCall.duration/60)).padStart(2,'0')}:{String(activeCall.duration%60).padStart(2,'0')}</span>
-       {activeCall.status === 'on-hold' && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">⏸️ On Hold {activeCall.holdDuration}s • Music</span>}
+       <span className="text-[11px] text-emerald-400 font-mono">{String(Math.floor((activeCall.duration||0)/60)).padStart(2,'0')}:{String((activeCall.duration||0)%60).padStart(2,'0')}</span>
+       {activeCall.status === 'on-hold' && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">⏸️ On Hold {(activeCall.holdDuration||0)}s • Music</span>}
        {isListening && <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 animate-pulse">🎙️ You Speaking</span>}
        {isSpeaking && <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 animate-pulse">🔊 Client Speaking</span>}
        {activeCall.isRecording && <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 animate-pulse">🔴 REC • 15s Beep</span>}
       </p>
       <p className="text-[11px] text-zinc-500 flex items-center gap-2">
-       <span>{activeCall.userEmail} • Mouth-to-Ear • No leaks • {activeCall.phase}</span>
+       <span>{activeCall.userEmail || ''} • Mouth-to-Ear • No leaks • {activeCall.phase || ''}</span>
       </p>
      </div>
     </div>
@@ -1085,7 +1123,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
      <button onClick={toggleHold} type="button" className={`h-9 px-3 rounded-full flex items-center justify-center gap-1.5 border text-[11px] font-medium cursor-pointer ${isOnHold ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'}`} title="Hold with music">
       {isOnHold ? '▶️ Resume' : '⏸️ Hold + Music'}
      </button>
-     <button onClick={() => { if (activeCall) setActiveCall({ ...activeCall, isRecording: !activeCall.isRecording }); if (activeCall?.isRecording) stopRecordingBeep(); else startRecordingBeep(); }} type="button" className={`h-9 w-9 rounded-full flex items-center justify-center border cursor-pointer ${activeCall.isRecording ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`} title="Recording toggle">
+     <button onClick={() => { try { if (activeCall) setActiveCall({ ...activeCall, isRecording: !activeCall.isRecording }); if (activeCall?.isRecording) stopRecordingBeep(); else startRecordingBeep(); } catch {} }} type="button" className={`h-9 w-9 rounded-full flex items-center justify-center border cursor-pointer ${activeCall.isRecording ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`} title="Recording toggle">
       🔴
      </button>
      <button onClick={endCall} type="button" className="h-9 w-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg cursor-pointer" title="End call">📞</button>
@@ -1095,13 +1133,13 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
    <div className="flex flex-1 overflow-hidden">
     <div className="flex-1 flex flex-col">
      <div ref={transcriptRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#050507]">
-      {activeCall.transcript.map(m => (
-      <div key={m.id} className={`flex ${m.speaker === 'you' ? 'justify-end' : 'justify-start'}`}>
+      {(activeCall.transcript || []).map(m => (
+      <div key={m.id || Math.random()} className={`flex ${m.speaker === 'you' ? 'justify-end' : 'justify-start'}`}>
        <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-[1.4] border ${m.speaker === 'you' ? 'bg-violet-600 border-violet-500 text-white rounded-br-sm' : m.speaker === 'client' ? 'bg-zinc-800 border-zinc-700 text-zinc-100 rounded-bl-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-500 text-[11px]'}`}>
         <p className="text-[10px] opacity-70 mb-1 flex items-center gap-1.5">
-         {m.speaker === 'you' ? '🎙️ You' : m.speaker === 'client' ? '🔊 Client' : '📋 System'} • {m.time} • {m.isVoice ? 'Voice' : 'System'} • {m.sentiment || 'calm'}
+         {m.speaker === 'you' ? '🎙️ You' : m.speaker === 'client' ? '🔊 Client' : '📋 System'} • {m.time || '00:00'} • {m.isVoice ? 'Voice' : 'System'} • {m.sentiment || 'calm'}
         </p>
-        <p>{m.text}</p>
+        <p>{m.text || ''}</p>
        </div>
       </div>
       ))}
