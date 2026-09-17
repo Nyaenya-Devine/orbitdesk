@@ -4,12 +4,17 @@
 ![Security](https://github.com/Nyaenya-Devine/orbitdesk/actions/workflows/security.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-Source--Available%20Noncommercial-blue)
 ![Live](https://img.shields.io/badge/Live-orbitdesk--gamma.vercel.app-violet)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)
+![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa)
 
-**Live Demo:** https://orbitdesk-gamma.vercel.app · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app
+**Live Demo:** https://orbitdesk-gamma.vercel.app · **Portfolio:** https://devine-nyaenya-portfolio.vercel.app · **Case Study:** https://devine-nyaenya-portfolio.vercel.app/projects/orbitdesk
 
 > Training environment for Modern Workplace operations — practice IT support in a safe, audited lab.
 
-**For IT Support Professionals and MSP Team Leads** — built by a security engineer in Nairobi, focused on verifiable skills over claims.
+**For IT Support Professionals, MSP Team Leads, Modern Workplace Engineers** — built by a security engineer in Nairobi, focused on verifiable skills over claims.
+
+**Keywords:** `modern-workplace` `entra-id` `intune` `exchange-online` `msp` `helpdesk` `conditional-access` `zero-trust` `it-support` `microsoft-365` `training-lab` `webrtc` `pwa` `nextjs`
 
 ---
 
