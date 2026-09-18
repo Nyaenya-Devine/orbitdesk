@@ -37,6 +37,8 @@ import OUTreeView, { OUObject } from '@/components/OUTreeView';
 import ADUserProperties from '@/components/ADUserProperties';
 import PowerShellHistory, { PowerShellCommand, logPowerShellCommand } from '@/components/PowerShellHistory';
 import EntraIDCenter from '@/components/EntraIDCenter';
+import GPOManagement from '@/components/GPOManagement';
+import IntuneDeviceCenter from '@/components/IntuneDeviceCenter';
 
 type Tab = 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment';
 
@@ -77,6 +79,7 @@ export default function HomeV3() {
  const [selectedADObject, setSelectedADObject] = useState<OUObject | null>(null);
  const [psHistory, setPsHistory] = useState<PowerShellCommand[]>([]);
  const [directoryView, setDirectoryView] = useState<'ou' | 'entra'>('ou');
+ const [policiesView, setPoliciesView] = useState<'ca' | 'gpo' | 'intune' | 'agents'>('ca');
 
  useEffect(() => {
   const handler = (e: any) => {
@@ -561,7 +564,23 @@ export default function HomeV3() {
    )}
 
    {activeTab === 'comms' && <motion.div key="comms" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><CommunicationChannel /></motion.div>}
-   {activeTab === 'clients' && <motion.div key="clients" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 grid lg:grid-cols-2 gap-4"><PolicyCenter selectedClientId={selectedClientForPolicies} onSelectClient={setSelectedClientForPolicies} /><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></motion.div>}
+   {activeTab === 'clients' && (
+    <motion.div key="clients" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 flex flex-col gap-4">
+     <div className="flex items-center gap-2">
+      <div className="flex gap-1 p-1 rounded-full bg-zinc-900 border border-zinc-800">
+        <button onClick={() => setPoliciesView('ca')} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${policiesView === 'ca' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>🛡️ Conditional Access</button>
+        <button onClick={() => setPoliciesView('gpo')} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${policiesView === 'gpo' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>📜 GPO — GPMC</button>
+        <button onClick={() => setPoliciesView('intune')} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${policiesView === 'intune' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>💻 Intune Devices</button>
+        <button onClick={() => setPoliciesView('agents')} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${policiesView === 'agents' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>👥 Agents</button>
+      </div>
+      <span className="text-[11px] text-zinc-500">Policies & Devices — CA, GPO linking, Intune compliance, BitLocker — like Entra + Intune + GPMC</span>
+     </div>
+     {policiesView === 'ca' && <div className="flex-1 min-h-0 grid lg:grid-cols-2 gap-4"><PolicyCenter selectedClientId={selectedClientForPolicies} onSelectClient={setSelectedClientForPolicies} /><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></div>}
+     {policiesView === 'gpo' && <div className="flex-1 min-h-[600px]"><GPOManagement onAction={(a) => addToast(a, 'success', 4000, a.substring(0,20))} /></div>}
+     {policiesView === 'intune' && <div className="flex-1 min-h-[600px]"><IntuneDeviceCenter onAction={(a) => addToast(a, 'success', 4000, a.substring(0,20))} /></div>}
+     {policiesView === 'agents' && <div className="flex-1 min-h-0"><AgentRoster agents={agents} onResolveConflict={handleResolveConflict} onAssign={(ticketId, agentId) => handleAssign(ticketId, agentId)} tickets={tickets} /></div>}
+    </motion.div>
+   )}
    {activeTab === 'class' && <motion.div key="class" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><ClassCommandCenter myProgress={progress} userProfile={userProfile} /></motion.div>}
    {activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto"><AssessmentReport progress={progress} onReset={handleResetProgress} /></motion.div>}
   </AnimatePresence>
