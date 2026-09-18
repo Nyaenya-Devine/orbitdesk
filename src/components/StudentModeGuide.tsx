@@ -64,7 +64,7 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
    <p className="text-[11px] text-zinc-500">Step {step + 1} of {steps.length} • Structured learning path</p>
    </div>
   </div>
-  <button onClick={onClose} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400">✕</button>
+  <button onClick={() => { try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}; onClose(); }} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400">✕</button>
   </div>
   
   <div className="mt-4 flex gap-1">
@@ -90,7 +90,7 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
   <button
    onClick={() => {
    if (step < steps.length - 1) setStep(s => s + 1);
-   else onClose();
+   else { try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}; onClose(); }
    }}
    className="flex-1 h-10 rounded-full bg-zinc-100 hover:bg-white text-zinc-900 text-[13px] font-semibold transition"
   >

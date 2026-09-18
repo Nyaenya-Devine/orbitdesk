@@ -69,7 +69,16 @@ export default function HomeV3() {
  const [bitLockerFixed, setBitLockerFixed] = useState(false);
  const [syncDone, setSyncDone] = useState(false);
  const [studentMode, setStudentMode] = useState(true);
- const [showGuide, setShowGuide] = useState(true);
+ const [showGuide, setShowGuide] = useState(false);
+ // Only show guide for new users (no progress), not returning users — professional learning tool
+ useEffect(() => {
+  if (!isAuthenticated) return;
+  const hasProgress = progress.ticketsResolved > 0 || progress.xp > 20;
+  const hasSeenGuide = localStorage.getItem('orbitdesk_guide_seen');
+  if (!hasProgress && !hasSeenGuide) {
+   setShowGuide(true);
+  }
+ }, [isAuthenticated, progress.ticketsResolved, progress.xp]);
  const [levelUp, setLevelUp] = useState<{ oldLevel: number; newLevel: number } | null>(null);
  const [isPaused, setIsPaused] = useState(false);
  const [isManualPaused, setIsManualPaused] = useState(false);
@@ -377,7 +386,7 @@ export default function HomeV3() {
     </div>
     <button onClick={triggerManualCall} className="hidden h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300 items-center justify-center transition" title="Simulate client call">📞</button>
     {/* Team Calls — own space in header, not overlaying */}
-    <ClassCallDock classCode="INFLUX-2026-A" currentUserId="me" currentUserProfile={userProfile} />
+    <ClassCallDock classCode="ORBIT-2026-A" currentUserId="me" currentUserProfile={userProfile} />
     <LanguageSelector />
     <ShortcutsHelp />
     <div className="h-8 w-px bg-zinc-800 mx-1 hidden md:block" />
@@ -597,7 +606,7 @@ export default function HomeV3() {
     <span className="hidden lg:inline">{getLevelInfo(progress.level).title} • {getLevelInfo(progress.level).orbitRings} rings</span>
    </div>
    <div className="flex items-center gap-3 font-mono">
-    <span className="hidden md:inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-900 border border-zinc-800 text-[10px]">v6.11.0 • IP Locked</span>
+    <span className="hidden md:inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-900 border border-zinc-800 text-[10px]">v6.16.3 • Real Live Demo • IP Locked • Lean 4M</span>
     <span>Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} ✓</span>
     <span className="hidden md:inline">• Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100</span>
    </div>

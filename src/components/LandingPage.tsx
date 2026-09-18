@@ -229,7 +229,7 @@ export default function LandingPage({ onEnterLab }: Props) {
    <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
   </div>
   <span className="font-medium text-zinc-300">© 2026 Devine Nyaenya • OrbitDesk — Proprietary flagship</span>
-  <span className="hidden md:inline-flex items-center gap-1.5 h-5 px-2.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300">v6.11.0 • Source-available Noncommercial • IP Locked</span>
+  <span className="hidden md:inline-flex items-center gap-1.5 h-5 px-2.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300">v6.16.3 • Source-available Noncommercial • IP Locked</span>
   </div>
   <div className="flex items-center gap-2">
    <span>Educational • Not affiliated with Microsoft</span>

@@ -123,7 +123,7 @@ interface Props {
 }
 
 export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
- const [classCode, setClassCode] = useState('INFLUX-2026-A');
+ const [classCode, setClassCode] = useState('ORBIT-2026-A');
  const [students, setStudents] = useState<StudentProgress[]>(mockStudents);
  const [showCreateModal, setShowCreateModal] = useState(false);
  const [showJoinModal, setShowJoinModal] = useState(false);
@@ -164,7 +164,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  const onlineCount = allStudents.filter((s: any) => s.status === 'online' || s.status === 'in-call').length;
 
   const handleCreateClass = () => {
- const code = `INFLUX-${new Date().getFullYear()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
+ const code = `ORBIT-${new Date().getFullYear()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
  setClassCode(code);
  setShowCreateModal(false);
  // Save to localStorage for persistence
@@ -573,7 +573,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-[#0a0a0a] rounded-[20px] border border-zinc-800 max-w-[400px] w-full p-6">
    <h3 className="font-bold text-[16px] text-white">Join Class — Student</h3>
    <p className="text-[11px] text-zinc-500 mt-1">Enter class code from your instructor — like Google Classroom, but for IT support</p>
-   <input value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="INFLUX-2026-A" className="mt-4 w-full h-11 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-mono text-[14px] tracking-widest" />
+   <input value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="ORBIT-2026-A" className="mt-4 w-full h-11 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-mono text-[14px] tracking-widest" />
    <div className="mt-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
    <p className="text-[11px] text-zinc-400">Your progress will be visible to instructor in real-time — tickets, calls, XP, CSAT, QA. 100% local now, exportable.</p>
    </div>
