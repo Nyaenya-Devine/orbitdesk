@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrbitDesk — 8K Marketing Demo • Human Voice • Not Basic</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui;background:#050507;color:white;overflow:hidden;height:100vh;width:100vw}
+.scene{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}
+.scene.active{opacity:1}
+.scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.05);transition:transform 12s linear}
+.scene.active img{transform:scale(1.15)}
+.overlay{position:absolute;inset:0;background:linear-gradient(to top,#050507 0%,rgba(5,5,7,0.7) 50%,rgba(5,5,7,0.3) 100%),linear-gradient(to right,rgba(5,5,7,0.8) 0%,transparent 60%,rgba(5,5,7,0.4) 100%)}
+.accent{position:absolute;inset:0;mix-blend-overlay;opacity:0.15}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.6) 100%)}
+.top{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:24px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 0 30px rgba(124,58,237,0.5)}
+.badge{font-size:10px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);letter-spacing:0.15em}
+.center{position:absolute;inset:0;z-index:20;display:flex;align-items:center;padding:0 64px}
+.content{max-width:900px}
+.eyebrow{font-size:11px;letter-spacing:0.3em;color:#a78bfa;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'';width:48px;height:1px;background:linear-gradient(to right,#7c3aed,#4f46e5);display:inline-block}
+h1{font-size:68px;font-weight:900;line-height:0.9;letter-spacing:-0.03em;text-transform:uppercase}
+h1 span{display:inline-block;margin-right:0.2em;animation:rise 0.6s ease forwards;opacity:0;transform:translateY(20px)}
+@keyframes rise{to{opacity:1;transform:translateY(0)}}
+.subtitle{margin-top:24px;font-size:28px;font-weight:300;line-height:1.2;color:#e4e4e7}
+.caption{margin-top:32px;padding:20px;border-radius:16px;background:rgba(0,0,0,0.4);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);max-width:680px}
+.caption p{font-size:16px;line-height:1.5;color:#d4d4d8}
+.progress-wrap{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:24px}
+.bar{height:3px;width:100%;background:#18181b;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(to right,#7c3aed,#4f46e5);width:0%;box-shadow:0 0 10px rgba(124,58,237,0.8);transition:width 0.05s linear}
+.controls{margin-top:20px;display:flex;justify-content:space-between;align-items:center}
+.play{width:56px;height:56px;border-radius:999px;background:white;color:black;border:none;font-size:20px;cursor:pointer;box-shadow:0 0 30px rgba(255,255,255,0.3)}
+.play:hover{transform:scale(1.05)}
+</style>
+</head>
+<body>
+<div id="scenes"></div>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<div class="top">
+<div class="logo"><div class="logo-icon">O</div><div><div style="font-size:13px;font-weight:700;letter-spacing:0.2em">ORBITDESK</div><div style="font-size:10px;letter-spacing:0.15em;color:#71717a">MODERN WORKPLACE OPERATIONS LAB • 8K • HUMAN VOICE • PROPRIETARY</div></div><div style="margin-left:24px;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:999px;background:#10b981;box-shadow:0 0 10px rgba(16,185,129,0.8);display:inline-block;animation:pulse 2s infinite"></span><span style="font-size:10px;letter-spacing:0.15em;color:#71717a">LIVE DEMO • 16 TICKETS • WEBRTC • PWA READY</span></div></div>
+<div style="display:flex;gap:12px"><span class="badge">MARKETING CUT • v6.16.0 • 8K</span><span class="badge" id="counter" style="background:#7c3aed">1 / 6</span></div>
+</div>
+
+<div class="center"><div class="content" id="content"></div></div>
+
+<div class="progress-wrap">
+<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;letter-spacing:0.2em;color:#71717a" id="label">MARKETING DEMO • 8K CINEMATIC • HUMAN VOICEOVER • 84 SECONDS</span><span style="font-size:10px;font-family:monospace;color:#71717a" id="time">0s / 0s</span></div>
+<div class="bar"><div class="fill" id="fill"></div></div>
+<div class="controls">
+<div style="display:flex;gap:12px;align-items:center"><button class="play" id="play">▶️</button><span style="font-size:11px;letter-spacing:0.2em;color:#71717a">HUMAN VOICE • ADVERTISING GRADE • NOT AI BASIC • 8K • CINEMATIC</span></div>
+<div style="display:flex;gap:12px;align-items:center"><a href="/lab" style="height:36px;padding:0 20px;border-radius:999px;background:#7c3aed;color:white;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.15em;display:flex;align-items:center;box-shadow:0 0 20px rgba(124,58,237,0.5)">TRY LIVE LAB →</a><span style="font-size:11px;font-weight:700;letter-spacing:0.15em">© 2026 DEVINE NYAENYA • ORBITDESK • PROPRIETARY</span></div>
+</div>
+</div>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+const scenes=[
+{id:'hero',img:'/demo-hero-8k.png',audio:'/demo-voice-01-hero.mp3',title:"ORBITDESK ISN'T A DEMO.",subtitle:"It's where Active Directory operations become instinct.",caption:"Your helpdesk doesn't need another wiki. It needs a lab that bleeds production reality. No VMs. No tenant risk. Just operational pressure.",duration:9500,color:'linear-gradient(135deg,#7c3aed,#4f46e5)'},
+{id:'ou',img:'/demo-ou-tree-8k.png',audio:'/demo-voice-02-ou.mp3',title:"ACTIVE DIRECTORY, AS SENIORS SEE IT.",subtitle:"A living OU tree. Not a diagram.",caption:"Users locked at 2 AM. Groups nested three levels deep. You don't read about delegation. You feel it when payroll stops.",duration:12500,color:'linear-gradient(135deg,#059669,#0d9488)'},
+{id:'entra',img:'/demo-entra-whatif-8k.png',audio:'/demo-voice-03-entra.mp3',title:"ENTRA ID DOESN'T FORGIVE ASSUMPTIONS.",subtitle:"One policy. Fifty users blocked. 53000.",caption:"Report-Only isn't optional. It's survival. OrbitDesk forces What-If before you touch production.",duration:12000,color:'linear-gradient(135deg,#2563eb,#7c3aed)'},
+{id:'gpo',img:'/demo-gpo-intune-8k.png',audio:'/demo-voice-04-gpo-intune.mp3',title:"GPO ISN'T A SETTING. IT'S INHERITANCE.",subtitle:"Enforcement. WMI. BitLocker at 0% while payroll is blocked.",caption:"This is the detail they never teach in cert courses. Company Portal. Dsregcmd. Recovery keys escrowed to AD.",duration:13500,color:'linear-gradient(135deg,#d97706,#ea580c)'},
+{id:'calls',img:'/demo-calls-8k.png',audio:'/demo-voice-05-calls.mp3',title:"AND THEN THE PHONE RINGS.",subtitle:"P1. Forty-five minutes to deadline. You greet first.",caption:"Team calls via WebRTC. Presence. Live activity. The chaos of a real MSP floor, compressed into a browser tab.",duration:12500,color:'linear-gradient(135deg,#dc2626,#ec4899)'},
+{id:'cta',img:'/demo-hero-8k.png',audio:'/demo-voice-06-cta.mp3',title:"ORBITDESK — MODERN WORKPLACE OPERATIONS LAB",subtitle:"Built for engineers who will own the next outage.",caption:"Proprietary. Source-available. Production-grade thinking. Try the live lab. This is where you become AD.",duration:14000,color:'linear-gradient(135deg,#7c3aed,#4f46e5,#2563eb)'},
+];
+
+let cur=0, playing=false, prog=0, timer=null;
+const scenesEl=document.getElementById('scenes'), contentEl=document.getElementById('content'), fillEl=document.getElementById('fill'), timeEl=document.getElementById('time'), counterEl=document.getElementById('counter'), labelEl=document.getElementById('label'), audioEl=document.getElementById('audio'), playBtn=document.getElementById('play');
+
+function renderScenes(){
+scenesEl.innerHTML=scenes.map((s,i)=>`<div class="scene ${i===cur?'active':''}" id="scene-${i}"><img src="${s.img}"><div class="overlay"></div><div class="accent" style="background:${s.color}"></div></div>`).join('');
+}
+function renderContent(){
+const s=scenes[cur];
+contentEl.innerHTML=`<div class="eyebrow">SCENE ${String(cur+1).padStart(2,'0')} • ${s.id.toUpperCase()} • 8K CINEMATIC</div><h1>${s.title.split(' ').map((w,i)=>`<span style="animation-delay:${0.1+i*0.05}s">${w}</span>`).join('')}</h1><div class="subtitle">${s.subtitle}</div><div class="caption"><p>${s.caption}</p><div style="margin-top:16px;display:flex;align-items:center;gap:8px"><div style="height:2px;flex:1;background:${s.color};opacity:0.6;border-radius:999px"></div><span style="font-size:10px;letter-spacing:0.15em;color:#71717a">HUMAN VOICE • ADVERTISING GRADE • NOT AI BASIC</span></div></div>`;
+counterEl.textContent=`${cur+1} / ${scenes.length}`;
+labelEl.textContent=`${s.title.substring(0,40)}... • ${s.id.toUpperCase()} • 8K`;
+audioEl.src=s.audio;
+if(playing) audioEl.play().catch(()=>{});
+}
+function tick(){
+if(!playing) return;
+prog+=50;
+const pct=(prog/scenes[cur].duration)*100;
+fillEl.style.width=pct+'%';
+timeEl.textContent=`${Math.floor(prog/1000)}s / ${Math.floor(scenes[cur].duration/1000)}s`;
+if(prog>=scenes[cur].duration){
+if(cur<scenes.length-1){cur++;prog=0;renderScenes();renderContent();}else{playing=false;playBtn.textContent='▶️';clearInterval(timer);timer=null;prog=0;fillEl.style.width='0%';}
+}
+}
+playBtn.onclick=()=>{
+playing=!playing;
+playBtn.textContent=playing?'⏸️':'▶️';
+if(playing){
+if(!timer) timer=setInterval(tick,50);
+audioEl.play().catch(()=>{});
+}else{
+audioEl.pause();
+}
+};
+audioEl.onended=()=>{if(cur<scenes.length-1){cur++;prog=0;renderScenes();renderContent();}else{playing=false;playBtn.textContent='▶️';}};
+renderScenes();renderContent();
+</script>
+</body>
+</html>

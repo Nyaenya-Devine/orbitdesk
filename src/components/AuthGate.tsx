@@ -321,32 +321,40 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
           </AnimatePresence>
         </div>
 
-        <div className="px-8 py-5 bg-zinc-900/50 border-t border-zinc-800/60 flex items-center justify-between">
-          <button
-            onClick={handleGuest}
-            className="text-[13px] text-zinc-500 hover:text-zinc-300 transition"
-          >
-            {t('auth.guest')}
-          </button>
-
-          <div className="flex items-center gap-3">
-            {step > 1 && (
-              <button
-                onClick={() => setStep((step - 1) as Step)}
-                className="h-10 px-5 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[13px] font-medium transition"
-              >
-                {t('auth.back')}
-              </button>
-            )}
+        <div className="px-8 py-5 bg-zinc-900/50 border-t border-zinc-800/60 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
             <button
-              onClick={handleContinue}
-              disabled={!canContinue()}
-              className="h-10 px-6 rounded-full bg-white hover:bg-zinc-100 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-900 font-semibold text-[13px] shadow-sm transition flex items-center gap-2"
+              onClick={handleGuest}
+              className="text-[13px] text-zinc-500 hover:text-zinc-300 transition flex items-center gap-1.5"
             >
-              {step === 3 ? t('auth.startLab') : t('auth.continue')}
-              <span>→</span>
+              <span className="h-5 w-5 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px]">👤</span>
+              {t('auth.guest')} — Skip all → Enter Lab Now
             </button>
+
+            <div className="flex items-center gap-3">
+              {step > 1 && (
+                <button
+                  onClick={() => setStep((step - 1) as Step)}
+                  className="h-10 px-5 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[13px] font-medium transition"
+                >
+                  {t('auth.back')}
+                </button>
+              )}
+              <button
+                onClick={handleContinue}
+                disabled={!canContinue()}
+                className="h-10 px-6 rounded-full bg-white hover:bg-zinc-100 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-900 font-semibold text-[13px] shadow-sm transition flex items-center gap-2"
+              >
+                {step === 3 ? t('auth.startLab') : t('auth.continue')}
+                <span>→</span>
+              </button>
+            </div>
           </div>
+          <div className="flex gap-2">
+            <button onClick={handleGuest} className="flex-1 h-11 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold text-[13px] tracking-wide shadow-[0_0_20px_rgba(124,58,237,0.3)] transition">🚀 Skip → Enter Lab Now — Demo Mode</button>
+            <a href="/demo" className="h-11 px-5 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[13px] font-medium flex items-center justify-center">📹 Watch How It Works 2m</a>
+          </div>
+          <p className="text-[10px] text-zinc-600 text-center">Stuck? Click Skip → Enter Lab Now — no signup, local-only, 16 tickets, ADUC + Entra ID + GPO + Intune + WebRTC calls</p>
         </div>
 
         <div className="px-8 py-3 bg-[#050507] border-t border-zinc-800/40 flex items-center justify-between text-[10px] text-zinc-600">
