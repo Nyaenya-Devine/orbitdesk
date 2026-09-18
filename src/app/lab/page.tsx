@@ -36,6 +36,7 @@ import { detectLanguage, getTranslation, Language } from '@/lib/i18n';
 import OUTreeView, { OUObject } from '@/components/OUTreeView';
 import ADUserProperties from '@/components/ADUserProperties';
 import PowerShellHistory, { PowerShellCommand, logPowerShellCommand } from '@/components/PowerShellHistory';
+import EntraIDCenter from '@/components/EntraIDCenter';
 
 type Tab = 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment';
 
@@ -75,6 +76,7 @@ export default function HomeV3() {
  const [lastActive, setLastActive] = useState<number>(Date.now());
  const [selectedADObject, setSelectedADObject] = useState<OUObject | null>(null);
  const [psHistory, setPsHistory] = useState<PowerShellCommand[]>([]);
+ const [directoryView, setDirectoryView] = useState<'ou' | 'entra'>('ou');
 
  useEffect(() => {
   const handler = (e: any) => {
@@ -477,7 +479,18 @@ export default function HomeV3() {
    )}
 
    {activeTab === 'directory' && (
-    <motion.div key="directory" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4">
+    <motion.div key="directory" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex-1 min-h-0 flex flex-col gap-4">
+     {/* Directory sub-tabs — OU Tree vs Entra ID */}
+     <div className="flex items-center gap-2">
+      <div className="flex gap-1 p-1 rounded-full bg-zinc-900 border border-zinc-800">
+        <button onClick={() => setDirectoryView('ou')} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${directoryView === 'ou' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>🌳 OU Tree — ADUC style</button>
+        <button onClick={() => setDirectoryView('entra')} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${directoryView === 'entra' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>🔵 Entra ID — Admin Center</button>
+      </div>
+      <span className="text-[11px] text-zinc-500">Flat is better • 3 OUs • Bulk edit • What-If • Like entra.microsoft.com</span>
+     </div>
+
+     {directoryView === 'ou' ? (
+     <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4">
      {/* Left — OU Tree */}
      <div className="w-full lg:w-[360px] flex-shrink-0 min-h-[500px]">
       <OUTreeView
@@ -538,6 +551,12 @@ export default function HomeV3() {
         <p className="text-[10px] text-zinc-600 mt-3">Like ADAC Recycle Bin — restore deleted users, groups, computers with original attributes, group membership, SID</p>
       </div>
      </div>
+     </div>
+     ) : (
+     <div className="flex-1 min-h-[600px]">
+       <EntraIDCenter onAction={(a) => { addToast(a, 'success', 4000, a.substring(0,20)); }} />
+     </div>
+     )}
     </motion.div>
    )}
 
