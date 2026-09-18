@@ -33,8 +33,11 @@ import ShortcutsHelp from '@/components/ShortcutsHelp';
 import ClassCallDock from '@/components/ClassCallDock';
 import LanguageSelector from '@/components/LanguageSelector';
 import { detectLanguage, getTranslation, Language } from '@/lib/i18n';
+import OUTreeView, { OUObject } from '@/components/OUTreeView';
+import ADUserProperties from '@/components/ADUserProperties';
+import PowerShellHistory, { PowerShellCommand, logPowerShellCommand } from '@/components/PowerShellHistory';
 
-type Tab = 'overview' | 'queue' | 'comms' | 'clients' | 'class' | 'assessment';
+type Tab = 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment';
 
 export default function HomeV3() {
  const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -70,6 +73,17 @@ export default function HomeV3() {
  const [awayMinutes, setAwayMinutes] = useState(0);
  const [showAwayWelcome, setShowAwayWelcome] = useState<{ minutes: number; added: number } | null>(null);
  const [lastActive, setLastActive] = useState<number>(Date.now());
+ const [selectedADObject, setSelectedADObject] = useState<OUObject | null>(null);
+ const [psHistory, setPsHistory] = useState<PowerShellCommand[]>([]);
+
+ useEffect(() => {
+  const handler = (e: any) => {
+   const cmd = e.detail as PowerShellCommand;
+   setPsHistory(prev => [cmd, ...prev].slice(0, 50));
+  };
+  window.addEventListener('orbitdesk-powershell', handler as any);
+  return () => window.removeEventListener('orbitdesk-powershell', handler as any);
+ }, []);
 
  useEffect(() => {
  const savedProfile = localStorage.getItem('orbitdesk_user_profile');
@@ -91,8 +105,8 @@ export default function HomeV3() {
     const handleKeys = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
-      if (e.key >= '1' && e.key <= '6') {
-        const tabs = ['overview', 'queue', 'comms', 'clients', 'class', 'assessment'];
+      if (e.key >= '1' && e.key <= '7') {
+        const tabs = ['overview', 'queue', 'directory', 'comms', 'clients', 'class', 'assessment'];
         const idx = parseInt(e.key) - 1;
         if (tabs[idx]) setActiveTab(tabs[idx] as any);
       }
@@ -310,6 +324,7 @@ export default function HomeV3() {
  const tabs: any[] = [
  { id: 'overview', label: t('header.overview'), icon: '◍' },
  { id: 'queue', label: t('header.queue'), icon: '◐', badge: pendingCount },
+ { id: 'directory', label: 'Directory', icon: '🌳', badge: undefined },
  { id: 'comms', label: t('header.comms'), icon: '◑' },
  { id: 'clients', label: t('header.clients'), icon: '◒' },
  { id: 'class', label: t('header.class'), icon: '👥' },
@@ -458,6 +473,71 @@ export default function HomeV3() {
 
      {/* Right — Portals */}
      <div className="flex-1 min-w-0 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60 overflow-hidden flex flex-col min-h-[600px] lg:min-h-0"><MockPortals ticket={selectedTicket} onAction={handlePortalAction} /></div>
+    </motion.div>
+   )}
+
+   {activeTab === 'directory' && (
+    <motion.div key="directory" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4">
+     {/* Left — OU Tree */}
+     <div className="w-full lg:w-[360px] flex-shrink-0 min-h-[500px]">
+      <OUTreeView
+        selectedId={selectedADObject?.id}
+        onSelectObject={(obj) => {
+          setSelectedADObject(obj);
+          // Log PowerShell for ADUC-like experience
+          if (obj.type === 'user') logPowerShellCommand('Get-ADUser', `-Identity "${obj.name}" -Properties MemberOf, LockedOut, Enabled`, userProfile?.name || 'You', obj.name);
+          if (obj.type === 'ou') logPowerShellCommand('Get-ADOrganizationalUnit', `-Identity "${obj.dn}"`, userProfile?.name || 'You', obj.name);
+          if (obj.type === 'group') logPowerShellCommand('Get-ADGroup', `-Identity "${obj.name}" -Properties Members`, userProfile?.name || 'You', obj.name);
+          addToast(`Selected ${obj.type}: ${obj.name} • ${obj.dn}`, 'info', 3000, `ad-${obj.id}`);
+        }}
+        onAction={(action, obj) => {
+          addToast(`${action}: ${obj.name}`, 'success', 3000, `${action}-${obj.id}`);
+          if (action === 'unlock') logPowerShellCommand('Unlock-ADAccount', `-Identity "${obj.name}"`, userProfile?.name || 'You', obj.name);
+          if (action === 'reset-password') logPowerShellCommand('Set-ADAccountPassword', `-Identity "${obj.name}" -Reset`, userProfile?.name || 'You', obj.name);
+          if (action === 'disable') logPowerShellCommand('Disable-ADAccount', `-Identity "${obj.name}"`, userProfile?.name || 'You', obj.name);
+          if (action === 'enable') logPowerShellCommand('Enable-ADAccount', `-Identity "${obj.name}"`, userProfile?.name || 'You', obj.name);
+          // Update status for demo
+          if (action === 'unlock' && selectedADObject?.id === obj.id) {
+            setSelectedADObject({ ...obj, status: 'enabled' });
+          }
+        }}
+      />
+     </div>
+     {/* Center — User Properties */}
+     <div className="flex-1 min-w-0 min-h-[500px]">
+      <ADUserProperties
+        object={selectedADObject}
+        onAction={(action, obj) => {
+          addToast(`${action}: ${obj.name} • PowerShell logged`, 'success', 4000, `${action}-${obj.id}`);
+          if (action === 'unlock') logPowerShellCommand('Unlock-ADAccount', `-Identity "${obj.name}"`, userProfile?.name || 'You', obj.name);
+          if (action === 'reset-password') logPowerShellCommand('Set-ADAccountPassword', `-Identity "${obj.name}" -Reset`, userProfile?.name || 'You', obj.name);
+          if (action === 'add-group') logPowerShellCommand('Add-ADGroupMember', `-Identity "Group" -Members "${obj.name}"`, userProfile?.name || 'You', obj.name);
+          // Demo state update
+          if (action === 'unlock') setSelectedADObject({ ...obj, status: 'enabled' } as any);
+          setPsHistory(prev => [...prev].slice(0, 50));
+        }}
+        onClose={() => setSelectedADObject(null)}
+      />
+     </div>
+     {/* Right — PowerShell History + Recycle Bin */}
+     <div className="w-full lg:w-[380px] flex-shrink-0 flex flex-col gap-4 min-h-[500px]">
+      <div className="flex-1 min-h-[300px]"><PowerShellHistory commands={psHistory} onClear={() => setPsHistory([])} /></div>
+      <div className="p-4 rounded-2xl bg-[#0a0a0a] border border-zinc-800/60">
+        <h4 className="text-[12px] font-semibold text-zinc-100 flex items-center gap-2">🗑️ Recycle Bin — ADAC feature</h4>
+        <p className="text-[11px] text-zinc-500 mt-1">Deleted objects — restore within 180 days, like AD Recycle Bin</p>
+        <div className="mt-3 space-y-2">
+          <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+            <div><p className="text-[11px] text-zinc-300">John Old — Finance</p><p className="text-[10px] text-zinc-500">Deleted 2 days ago • CN=John Old,OU=Finance</p></div>
+            <button onClick={() => { addToast('Restored John Old from Recycle Bin', 'success', 3000, 'restore'); logPowerShellCommand('Restore-ADObject', '-Identity "John Old" -TargetPath "OU=Finance"', userProfile?.name || 'You', 'John Old'); }} className="h-7 px-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-[11px]">Restore</button>
+          </div>
+          <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+            <div><p className="text-[11px] text-zinc-300">WS-OLD-042</p><p className="text-[10px] text-zinc-500">Deleted 5 days ago • Computer</p></div>
+            <button className="h-7 px-2.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-[11px]">Restore</button>
+          </div>
+        </div>
+        <p className="text-[10px] text-zinc-600 mt-3">Like ADAC Recycle Bin — restore deleted users, groups, computers with original attributes, group membership, SID</p>
+      </div>
+     </div>
     </motion.div>
    )}
 

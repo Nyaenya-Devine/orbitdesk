@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
 import ClassCallCenter from './ClassCallCenter';
+import CallTestHarness from './CallTestHarness';
 
 interface StudentProgress {
  id: string;
@@ -483,12 +484,15 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   )}
 
   {activeView === 'calls' && (
-  <ClassCallCenter
-    classCode={classCode}
-    students={allStudents as any}
-    currentUserId="me"
-    currentUserProfile={userProfile}
-  />
+  <div className="space-y-4">
+   <CallTestHarness />
+   <ClassCallCenter
+     classCode={classCode}
+     students={allStudents as any}
+     currentUserId="me"
+     currentUserProfile={userProfile}
+   />
+  </div>
   )}
 
   {activeView === 'export' && (
