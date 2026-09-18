@@ -60,7 +60,7 @@ class ClassCallEngine {
   private calls: Map<string, ClassCall> = new Map();
   private listeners: Set<(calls: ClassCall[]) => void> = new Set();
   private signalListeners: Set<(signal: CallSignal) => void> = new Set();
-  private classCode: string = 'INFLUX-2026-A';
+  private classCode: string = 'ORBIT-2026-A';
   private currentUserId: string = 'me';
   private currentUserProfile: any = null;
   private peerConnections: Map<string, RTCPeerConnection> = new Map();

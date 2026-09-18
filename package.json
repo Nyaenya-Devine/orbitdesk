@@ -1,6 +1,6 @@
 {
   "name": "orbitdesk",
-  "version": "6.11.3",
+  "version": "6.16.3",
   "private": true,
   "description": "OrbitDesk \u2014 Modern Workplace Operations Lab \u2014 Source-available Noncommercial \u2014 Proprietary flagship by Devine Nyaenya",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
@@ -30,6 +30,7 @@
     "electron-updater": "^6.6.2",
     "framer-motion": "^13.2.0",
     "next": "16.3.5",
+    "playwright": "^1.63.0",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },

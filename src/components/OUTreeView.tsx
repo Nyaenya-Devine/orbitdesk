@@ -160,9 +160,22 @@ function OUItem({ obj, depth, onSelect, selectedId, onToggle, onAction }: { obj:
 
       <AnimatePresence>
         {isExpanded && hasChildren && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            {obj.children!.map(child => (
-              <OUItem key={child.id} obj={child} depth={depth + 1} onSelect={onSelect} selectedId={selectedId} onToggle={onToggle} onAction={onAction} />
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }} 
+            animate={{ opacity: 1, height: 'auto' }} 
+            exit={{ opacity: 0, height: 0 }} 
+            transition={{ type: 'spring', stiffness: 300, damping: 25, mass: 0.8 }}
+            className="overflow-hidden"
+          >
+            {obj.children!.map((child, idx) => (
+              <motion.div
+                key={child.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25, delay: idx * 0.02 }}
+              >
+                <OUItem obj={child} depth={depth + 1} onSelect={onSelect} selectedId={selectedId} onToggle={onToggle} onAction={onAction} />
+              </motion.div>
             ))}
           </motion.div>
         )}

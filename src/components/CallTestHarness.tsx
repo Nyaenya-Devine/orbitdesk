@@ -188,7 +188,7 @@ export default function CallTestHarness() {
       <div className="mt-3 text-[10px] text-zinc-600">
         <p>How to manually test both sides:</p>
         <ol className="list-decimal pl-4 mt-1 space-y-0.5">
-          <li>Open OrbitDesk in 2 tabs, join same class INFLUX-2026-A (Class → Join)</li>
+          <li>Open OrbitDesk in 2 tabs, join same class ORBIT-2026-A (Class → Join)</li>
           <li>Tab 1: Class → Team Calls → Call agent</li>
           <li>Tab 2: Header shows incoming badge + Answer/Decline dropdown (own space, not overlay)</li>
           <li>Answer → WebRTC audio peer-to-peer, duration timer, mute/hold/end</li>

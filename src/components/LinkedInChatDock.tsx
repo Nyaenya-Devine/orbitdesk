@@ -241,23 +241,23 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
    </div>
   </div>
 
-  {/* Messaging Dock — LinkedIn style bottom-right */}
-  <div className="fixed bottom-0 right-4 z-[65] w-[320px] pointer-events-auto">
-   <motion.div layout className="bg-white rounded-t-xl shadow-2xl border border-zinc-200 overflow-hidden">
-    <button onClick={() => setIsOpen(!isOpen)} className="w-full h-12 px-3 bg-white hover:bg-zinc-50 flex items-center justify-between border-b border-zinc-200 transition">
-     <div className="flex items-center gap-2.5">
+  {/* Messaging Dock — LinkedIn style bottom-right — compact non-intrusive, doesn't overwrite, Teams-like 420px for calls only */}
+  <div className="fixed bottom-0 right-4 z-[40] w-[300px] pointer-events-auto">
+   <motion.div layout className="bg-white rounded-t-xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-zinc-200 overflow-hidden">
+    <button onClick={() => setIsOpen(!isOpen)} className="w-full h-10 px-3 bg-white hover:bg-zinc-50 flex items-center justify-between border-b border-zinc-200 transition">
+     <div className="flex items-center gap-2">
       <div className="relative">
-       <img src="/icon-512.png" alt="" className="h-8 w-8 rounded-full object-cover" />
-       <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-emerald-500 rounded-full border-2 border-white" />
+       <img src="/icon-512.png" alt="" className="h-7 w-7 rounded-full object-cover" />
+       <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-white" />
       </div>
-      <span className="text-[14px] font-semibold text-zinc-900">Messaging</span>
-      {totalUnread > 0 && <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">{totalUnread}</span>}
-      {isPaused && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Paused</span>}
+      <span className="text-[13px] font-semibold text-zinc-900">Messaging</span>
+      {totalUnread > 0 && <span className="h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{totalUnread}</span>}
+      {isPaused && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Paused</span>}
      </div>
-     <div className="flex items-center gap-1">
-      <span className="h-7 w-7 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500">•••</span>
-      <span className="h-7 w-7 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500">✎</span>
-      <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="h-7 w-7 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500">⌃</motion.span>
+     <div className="flex items-center gap-0.5">
+      <span className="h-6 w-6 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 text-[12px]">•••</span>
+      <span className="h-6 w-6 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 text-[12px]">✎</span>
+      <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="h-6 w-6 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 text-[12px]">⌃</motion.span>
      </div>
     </button>
 
