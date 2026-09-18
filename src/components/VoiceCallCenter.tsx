@@ -1096,7 +1096,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  )}
 
  {activeCall && (activeCall.status === 'active' || activeCall.status === 'on-hold') && (
-  <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[70] w-[96%] max-w-6xl bg-[#0a0a0a] rounded-[24px] shadow-2xl border border-zinc-800 overflow-hidden flex flex-col max-h-[88vh]">
+  <motion.div initial={{ y: 20, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} className="fixed bottom-4 right-4 z-[70] w-[420px] max-w-[92vw] bg-[#0a0a0a] rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-zinc-800 overflow-hidden flex flex-col max-h-[82vh] backdrop-blur-xl">
    <div className="h-14 px-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
     <div className="flex items-center gap-3">
      <Logo variant="icon" size={32} animated />
@@ -1130,68 +1130,45 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
     </div>
    </div>
 
-   <div className="flex flex-1 overflow-hidden">
-    <div className="flex-1 flex flex-col">
-     <div ref={transcriptRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#050507]">
-      {(activeCall.transcript || []).map(m => (
+   <div className="flex flex-1 flex-col overflow-hidden">
+     <div ref={transcriptRef} className="flex-1 overflow-y-auto p-3 space-y-2 bg-[#050507] max-h-[320px]">
+      {(activeCall.transcript || []).slice(-6).map(m => (
       <div key={m.id || Math.random()} className={`flex ${m.speaker === 'you' ? 'justify-end' : 'justify-start'}`}>
-       <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-[1.4] border ${m.speaker === 'you' ? 'bg-violet-600 border-violet-500 text-white rounded-br-sm' : m.speaker === 'client' ? 'bg-zinc-800 border-zinc-700 text-zinc-100 rounded-bl-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-500 text-[11px]'}`}>
-        <p className="text-[10px] opacity-70 mb-1 flex items-center gap-1.5">
-         {m.speaker === 'you' ? '🎙️ You' : m.speaker === 'client' ? '🔊 Client' : '📋 System'} • {m.time || '00:00'} • {m.isVoice ? 'Voice' : 'System'} • {m.sentiment || 'calm'}
-        </p>
+       <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-[12px] leading-[1.4] border ${m.speaker === 'you' ? 'bg-violet-600 border-violet-500 text-white rounded-br-sm' : m.speaker === 'client' ? 'bg-zinc-800 border-zinc-700 text-zinc-100 rounded-bl-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-500 text-[10px]'}`}>
         <p>{m.text || ''}</p>
        </div>
       </div>
       ))}
       {liveTranscript && (
       <div className="flex justify-end">
-       <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-[13px] border bg-violet-600/50 border-violet-500/50 text-white border-dashed">
-        <p className="text-[10px] mb-1">🎙️ Live — Caller Hears...</p>
-        <p className="italic">{liveTranscript}</p>
-       </div>
+       <div className="max-w-[85%] rounded-2xl rounded-br-sm px-3 py-2 text-[11px] border bg-violet-600/50 border-violet-500/50 text-white border-dashed italic">{liveTranscript}</div>
       </div>
       )}
       {isOnHold && (
       <div className="flex justify-center">
-       <div className="rounded-full px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-center gap-2">
-        <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-        🎵 Hold music — C4 E4 G4 C5 • No leaks
-       </div>
+       <div className="rounded-full px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300 flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />🎵 On hold • Music</div>
       </div>
       )}
       <div ref={transcriptEndRef} />
      </div>
 
-     <div className="p-4 bg-zinc-900 border-t border-zinc-800">
-      <div className="flex flex-col items-center gap-3">
-       <div className="flex items-center gap-6">
-        <div className="flex flex-col items-center gap-1.5">
-         <div className="h-16 w-16 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center relative overflow-hidden shadow-inner">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-indigo-600/20" />
-          <span className="text-2xl relative">🎙️</span>
-          {isListening && <motion.div animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }} transition={{ repeat: Infinity, duration: 1 }} className="absolute inset-0 rounded-full border-2 border-red-500/50" />}
+     <div className="p-3 bg-zinc-900 border-t border-zinc-800">
+      <div className="flex flex-col items-center gap-2.5">
+       <div className="flex items-center gap-4">
+        <div className="flex flex-col items-center gap-1">
+         <div className="h-10 w-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center relative overflow-hidden">
+          <span className="text-[16px]">🎙️</span>
+          {isListening && <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }} transition={{ repeat: Infinity, duration: 1 }} className="absolute inset-0 rounded-full border-2 border-red-500/50" />}
          </div>
-         <span className="text-[10px] text-zinc-500 font-medium">You — Mouth</span>
-         <div className="h-1.5 w-16 bg-zinc-800 rounded-full overflow-hidden"><motion.div animate={{ width: `${userAudioLevel}%` }} className="h-full bg-gradient-to-r from-red-500 to-orange-500" /></div>
+         <div className="h-1 w-10 bg-zinc-800 rounded-full overflow-hidden"><motion.div animate={{ width: `${userAudioLevel}%` }} className="h-full bg-red-500" /></div>
         </div>
-
-        <div className="flex flex-col items-center gap-2">
-         <div className="flex items-center gap-2">
-          <div className="h-px w-8 bg-zinc-700" />
-          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="h-2 w-2 rounded-full bg-emerald-500" />
-          <div className="h-px w-8 bg-zinc-700" />
+        <div className="h-px w-6 bg-zinc-700" />
+        <div className="flex flex-col items-center gap-1">
+         <div className="h-10 w-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center relative">
+          <span className="text-[16px]">🔊</span>
+          {isSpeaking && <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }} transition={{ repeat: Infinity, duration: 1 }} className="absolute inset-0 rounded-full border-2 border-violet-500/50" />}
          </div>
-         <span className="text-[10px] text-zinc-600 font-mono px-2 py-1 rounded-full bg-zinc-800 border border-zinc-700">Voice • No leaks • Human</span>
-        </div>
-
-        <div className="flex flex-col items-center gap-1.5">
-         <div className="h-16 w-16 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center relative overflow-hidden shadow-inner">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-violet-600/20" />
-          <span className="text-2xl relative">🔊</span>
-          {isSpeaking && <motion.div animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }} transition={{ repeat: Infinity, duration: 1 }} className="absolute inset-0 rounded-full border-2 border-violet-500/50" />}
-         </div>
-         <span className="text-[10px] text-zinc-500 font-medium">Client — Ear</span>
-         <div className="h-1.5 w-16 bg-zinc-800 rounded-full overflow-hidden"><motion.div animate={{ width: `${clientAudioLevel}%` }} className="h-full bg-gradient-to-r from-violet-500 to-indigo-500" /></div>
+         <div className="h-1 w-10 bg-zinc-800 rounded-full overflow-hidden"><motion.div animate={{ width: `${clientAudioLevel}%` }} className="h-full bg-violet-500" /></div>
         </div>
        </div>
 
@@ -1202,53 +1179,15 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
         onTouchEnd={stopMic}
         disabled={isOnHold}
         type="button"
-        className={`h-14 w-[320px] rounded-full font-bold text-[13px] flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer ${isOnHold ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : isListening ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20 scale-105' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'}`}
+        className={`h-10 w-full rounded-full font-bold text-[12px] flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer ${isOnHold ? 'bg-zinc-700 text-zinc-500' : isListening ? 'bg-red-600 text-white scale-[0.98]' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
        >
-        {isOnHold ? '⏸️ On Hold — Resume to Speak' : isListening ? '● Recording — Release to Send' : '🎙️ Hold to Speak — No leaks'}
+        {isOnHold ? '⏸️ On Hold' : isListening ? '● Release to Send' : '🎙️ Hold to Speak'}
        </button>
-       <p className="text-[11px] text-zinc-500 text-center max-w-[520px] leading-[1.4]">
-        {activeCall.phase === 'waiting_greeting' ? '💡 Client said hello — YOU greet first: Hold mic and say "Hello, how may I help you?"' :
-        activeCall.phase === 'waiting_intro' ? 'Client introducing — listen, then reply with voice' :
-        '💡 Controls: Mute, Hold + Music, REC Beep 15s, Transfer, Notes — hardened no audio leaks.'}
+       <p className="text-[10px] text-zinc-500 text-center leading-[1.3]">
+        Teams-like • Bottom-right • {activeCall.phase === 'waiting_greeting' ? 'Greet first' : activeCall.phase} • {isMuted ? '🔇 Muted' : '🎙️ Live'} • {activeCall.isRecording ? '🔴 REC' : ''}
        </p>
       </div>
      </div>
-    </div>
-
-    <div className="hidden lg:flex w-[280px] bg-zinc-900/50 border-l border-zinc-800 flex-col p-3 gap-3 overflow-y-auto">
-     <div className="p-3 rounded-xl bg-zinc-800 border border-zinc-700">
-      <p className="text-[11px] font-bold text-zinc-300 flex items-center gap-2"><Logo variant="icon" size={16} /> Controls — No leaks</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-       <button onClick={toggleMute} type="button" className={`h-8 rounded-full text-[11px] font-medium border cursor-pointer ${isMuted ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-zinc-700 text-zinc-300 border-zinc-600 hover:bg-zinc-600'}`}>{isMuted ? '🔇 Unmute' : '🎙️ Mute'}</button>
-       <button onClick={toggleHold} type="button" className={`h-8 rounded-full text-[11px] font-medium border cursor-pointer ${isOnHold ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-zinc-700 text-zinc-300 border-zinc-600 hover:bg-zinc-600'}`}>{isOnHold ? '▶️ Resume' : '⏸️ Hold'}</button>
-       <button type="button" className="h-8 rounded-full bg-zinc-700 text-zinc-300 border border-zinc-600 text-[11px] hover:bg-zinc-600 cursor-pointer">↗️ Transfer</button>
-       <button type="button" className="h-8 rounded-full bg-zinc-700 text-zinc-300 border border-zinc-600 text-[11px] hover:bg-zinc-600 cursor-pointer">📝 Notes</button>
-      </div>
-     </div>
-
-     <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
-      <p className="text-[11px] font-bold text-violet-300">Call Info — Live</p>
-      <div className="mt-2 space-y-1.5 text-[11px]">
-       <div className="flex justify-between"><span className="text-zinc-500">Client:</span><span className="text-zinc-200 font-medium truncate">{activeCall.clientName}</span></div>
-       <div className="flex justify-between"><span className="text-zinc-500">User:</span><span className="text-zinc-200 truncate">{activeCall.userEmail.split('@')[0]}</span></div>
-       <div className="flex justify-between"><span className="text-zinc-500">Priority:</span><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeCall.priority === 'P1' ? 'bg-red-500/20 text-red-300 border border-red-500/20' : 'bg-amber-500/20 text-amber-300'}`}>{activeCall.priority}</span></div>
-       <div className="flex justify-between"><span className="text-zinc-500">Duration:</span><span className="text-zinc-200 font-mono">{String(Math.floor(activeCall.duration/60)).padStart(2,'0')}:{String(activeCall.duration%60).padStart(2,'0')}</span></div>
-       <div className="flex justify-between"><span className="text-zinc-500">Hold:</span><span className="text-amber-300 font-mono">{activeCall.holdDuration}s</span></div>
-       <div className="flex justify-between"><span className="text-zinc-500">Phase:</span><span className="text-violet-300">{activeCall.phase}</span></div>
-       <div className="flex justify-between"><span className="text-zinc-500">Recording:</span><span className="text-red-300">{activeCall.isRecording ? '🔴 ON' : 'Off'}</span></div>
-      </div>
-     </div>
-
-     <div className="p-3 rounded-xl bg-zinc-800 border border-zinc-700">
-      <p className="text-[11px] font-bold text-zinc-300">Quick Actions</p>
-      <div className="mt-2 space-y-1.5">
-       <button type="button" className="w-full h-7 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-[11px] text-left px-3 cursor-pointer">📋 Check Sign-in Logs CA tab</button>
-       <button type="button" className="w-full h-7 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-[11px] text-left px-3 cursor-pointer">🏢 Open Company Portal</button>
-       <button type="button" className="w-full h-7 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-[11px] text-left px-3 cursor-pointer">💻 Run dsregcmd /status</button>
-       <button type="button" className="w-full h-7 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-[11px] text-left px-3 cursor-pointer">🔐 Enable BitLocker</button>
-      </div>
-     </div>
-    </div>
    </div>
   </motion.div>
  )}
