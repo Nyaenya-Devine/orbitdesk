@@ -1,5 +1,5 @@
-// OrbitDesk Service Worker v6.16.3 — Auto-Update PWA — Fixes desktop not reflecting update
-const CACHE_NAME = 'orbitdesk-v6.16.3-real-live-demo';
+// OrbitDesk Service Worker v6.18 — Auto-Update PWA — Fixes desktop not reflecting update
+const CACHE_NAME = 'orbitdesk-v6.18-real-live-demo';
 const urlsToCache = [
   '/',
   '/lab',
@@ -11,7 +11,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[OrbitDesk SW] Install v6.16.3 — real live demo, fixed stuck start page, AD fully functional');
+  console.log('[OrbitDesk SW] Install v6.18 — real live demo, fixed stuck start page, AD fully functional');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache).catch(() => {
@@ -23,7 +23,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[OrbitDesk SW] Activate v6.16.3 — cleaning old caches, forcing update');
+  console.log('[OrbitDesk SW] Activate v6.18 — cleaning old caches, forcing update');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
