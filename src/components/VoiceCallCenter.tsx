@@ -57,15 +57,14 @@ const troubleshooting = {
 };
 
 function getCallFrequencyForLevel(level: number) {
- // Beginner-friendly: phone is rare and only critical, scales with level
  if (level <= 1) {
   return {
-   initialDelayMs: 5 * 60 * 1000, // 5 min before first call for lvl1
+   initialDelayMs: 5 * 60 * 1000,
    countdownIntervalMs: 1000,
-   autoCheckIntervalMs: 120 * 1000, // check every 2 min
-   randomChance: 0, // no random auto-calls at lvl1 — only manual or P1 critical trigger
-   minNextCallSec: 300, // 5 min
-   maxNextCallSec: 600, // 10 min
+   autoCheckIntervalMs: 120 * 1000,
+   randomChance: 0,
+   minNextCallSec: 300,
+   maxNextCallSec: 600,
    allowNonCritical: false,
    maxCallsPerHour: 1,
    description: "Level 1 — No auto calls, focus on tickets. Phone unlocks at Lvl 2. Use Call Now to practice.",
@@ -73,26 +72,26 @@ function getCallFrequencyForLevel(level: number) {
  }
  if (level === 2) {
   return {
-   initialDelayMs: 3 * 60 * 1000, // 3 min
+   initialDelayMs: 3 * 60 * 1000,
    countdownIntervalMs: 1000,
    autoCheckIntervalMs: 90 * 1000,
-   randomChance: 0.05, // 5% chance every check
-   minNextCallSec: 240, // 4 min
-   maxNextCallSec: 480, // 8 min
-   allowNonCritical: false, // only P1 critical
+   randomChance: 0.05,
+   minNextCallSec: 240,
+   maxNextCallSec: 480,
+   allowNonCritical: false,
    maxCallsPerHour: 2,
-   description: "Level 2 — Rare P1 critical calls only, 1 per 4-8 min max. Learn basics first.",
+   description: "Level 2 — Rare P1 critical calls only, 1 per 4-8 min max.",
   };
  }
  if (level === 3) {
   return {
-   initialDelayMs: 2 * 60 * 1000, // 2 min
+   initialDelayMs: 2 * 60 * 1000,
    countdownIntervalMs: 1000,
    autoCheckIntervalMs: 60 * 1000,
    randomChance: 0.10,
    minNextCallSec: 180,
    maxNextCallSec: 360,
-   allowNonCritical: true, // allow P2 but prefer P1
+   allowNonCritical: true,
    maxCallsPerHour: 3,
    description: "Level 3 — Occasional calls, P1 priority, 1 per 3-6 min.",
   };
@@ -110,7 +109,6 @@ function getCallFrequencyForLevel(level: number) {
    description: "Level 4 — Moderate calls, real MSP pace.",
   };
  }
- // Level 5+
  return {
   initialDelayMs: 60 * 1000,
   countdownIntervalMs: 1000,
@@ -120,11 +118,11 @@ function getCallFrequencyForLevel(level: number) {
   maxNextCallSec: 240,
   allowNonCritical: true,
   maxCallsPerHour: 6,
-  description: `Level ${level} — Realistic MSP: calls when P1 critical or SLA breaching, max ${Math.min(8, 4 + level)} per hour.`,
+  description: `Level ${level} — Realistic MSP: max ${Math.min(8, 4 + level)} per hour.`,
  };
 }
 
-export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tickets: any[], onAccept: (t: any) => void, level?: number }) {
+export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: { tickets?: any[], onAccept?: (t: any) => void, level?: number }) {
  const [activeCall, setActiveCall] = useState<Call | null>(null);
  const [incoming, setIncoming] = useState<any | null>(null);
  const [isListening, setIsListening] = useState(false);
@@ -138,6 +136,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  const [clientAudioLevel, setClientAudioLevel] = useState(0);
  const [showCallHistory, setShowCallHistory] = useState(false);
  const [accepting, setAccepting] = useState(false);
+ const [hasError, setHasError] = useState(false);
 
  const transcriptRef = useRef<HTMLDivElement>(null);
  const transcriptEndRef = useRef<HTMLDivElement>(null);
@@ -161,831 +160,632 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
  const [missedCalls, setMissedCalls] = useState<any[]>([]);
  const [callHistory, setCallHistory] = useState<any[]>([]);
 
- // Keep refs in sync
  useEffect(() => { incomingRef.current = incoming; }, [incoming]);
  useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
 
- // Cleanup on unmount — harden all audio leaks
  useEffect(() => {
- return () => {
-  isRingingRef.current = false;
-  try {
-   if (audioContextRef.current && audioContextRef.current.state !== 'closed') audioContextRef.current.close();
-  } catch {}
-  audioContextRef.current = null;
-  try {
-   if (holdMusicRef.current && holdMusicRef.current.state !== 'closed') holdMusicRef.current.close();
-  } catch {}
-  holdMusicRef.current = null;
-  if (holdMusicTimeoutRef.current) clearTimeout(holdMusicTimeoutRef.current);
-  if (recordingBeepRef.current) clearInterval(recordingBeepRef.current);
-  if (vibrateTimeoutRef.current) clearTimeout(vibrateTimeoutRef.current);
-  if (micRafRef.current) cancelAnimationFrame(micRafRef.current);
-  try {
-   if (micContextRef.current && micContextRef.current.state !== 'closed') micContextRef.current.close();
-  } catch {}
-  if (streamRef.current) {
-   try { streamRef.current.getTracks().forEach(t => t.stop()); } catch {}
-   streamRef.current = null;
-  }
-  if ('vibrate' in navigator) {
-   try { navigator.vibrate(0); } catch {}
-  }
-  if (synthRef.current) {
-   try { synthRef.current.cancel(); } catch {}
-  }
- };
- }, []);
-
- useEffect(() => {
- if (typeof window !== 'undefined') {
-  synthRef.current = window.speechSynthesis;
-  if (synthRef.current) {
-   synthRef.current.getVoices();
-   if (typeof speechSynthesis !== 'undefined') {
-    speechSynthesis.onvoiceschanged = () => synthRef.current?.getVoices();
-   }
-  }
-  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-  if (SpeechRecognition) {
-   const rec = new SpeechRecognition();
-   rec.continuous = false;
-   rec.interimResults = true;
-   rec.lang = 'en-US';
-   rec.onstart = () => setIsListening(true);
-   rec.onend = () => setIsListening(false);
-   rec.onresult = (event: any) => {
-    let interim = '';
-    let final = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-     const t = event.results[i][0].transcript;
-     if (event.results[i].isFinal) final += t + ' ';
-     else interim += t;
-    }
-    if (final) {
-     handleUserVoice(final.trim());
-     setLiveTranscript('');
-    } else setLiveTranscript(interim);
-   };
-   rec.onerror = () => setIsListening(false);
-   recognitionRef.current = rec;
-  }
-  if ('Notification' in window && Notification.permission === 'default') {
-   Notification.requestPermission();
-  }
-  try {
-   const savedMute = localStorage.getItem('orbitdesk_ring_muted');
-   if (savedMute === 'true') setIsRingMuted(true);
-  } catch {}
-  const handleVisibility = () => {
-   const hidden = document.hidden;
-   setIsAppHidden(hidden);
-   if (hidden) {
-    isRingingRef.current = false;
-    try {
-     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.close();
-     }
-     audioContextRef.current = null;
-    } catch {}
-    if (ringOscillatorsRef.current) {
-     try {
-      ringOscillatorsRef.current.osc1?.stop();
-      ringOscillatorsRef.current.osc2?.stop();
-     } catch {}
-     ringOscillatorsRef.current = null;
-    }
-    if (vibrateTimeoutRef.current) {
-     clearTimeout(vibrateTimeoutRef.current);
-     vibrateTimeoutRef.current = null;
-    }
-    if ('vibrate' in navigator) {
-     try { navigator.vibrate(0); } catch {}
-    }
-   }
-  };
-  document.addEventListener('visibilitychange', handleVisibility);
-  const handleBlur = () => {
-   setIsAppHidden(true);
-   isRingingRef.current = false;
-   try {
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-     audioContextRef.current.close();
-    }
-    audioContextRef.current = null;
-   } catch {}
-   if (ringOscillatorsRef.current) {
-    try {
-     ringOscillatorsRef.current.osc1?.stop();
-     ringOscillatorsRef.current.osc2?.stop();
-    } catch {}
-    ringOscillatorsRef.current = null;
-   }
-   if (vibrateTimeoutRef.current) {
-    clearTimeout(vibrateTimeoutRef.current);
-    vibrateTimeoutRef.current = null;
-   }
-   try { if ('vibrate' in navigator) navigator.vibrate(0); } catch {}
-  };
-  const handleFocus = () => setIsAppHidden(false);
-  window.addEventListener('blur', handleBlur);
-  window.addEventListener('focus', handleFocus);
   return () => {
-   document.removeEventListener('visibilitychange', handleVisibility);
-   window.removeEventListener('blur', handleBlur);
-   window.removeEventListener('focus', handleFocus);
+   try {
+    isRingingRef.current = false;
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') audioContextRef.current.close();
+    audioContextRef.current = null;
+    if (holdMusicRef.current && holdMusicRef.current.state !== 'closed') holdMusicRef.current.close();
+    holdMusicRef.current = null;
+    if (holdMusicTimeoutRef.current) clearTimeout(holdMusicTimeoutRef.current);
+    if (recordingBeepRef.current) clearInterval(recordingBeepRef.current);
+    if (vibrateTimeoutRef.current) clearTimeout(vibrateTimeoutRef.current);
+    if (micRafRef.current) cancelAnimationFrame(micRafRef.current);
+    if (micContextRef.current && micContextRef.current.state !== 'closed') micContextRef.current.close();
+    if (streamRef.current) { try { streamRef.current.getTracks().forEach(t => t.stop()); } catch {} streamRef.current = null; }
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) { try { (navigator as any).vibrate(0); } catch {} }
+    if (synthRef.current) { try { synthRef.current.cancel(); } catch {} }
+   } catch {}
   };
- }
  }, []);
 
- // Transcript auto-scroll — hardened
  useEffect(() => {
- if (transcriptEndRef.current) {
-  transcriptEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
- } else if (transcriptRef.current) {
-  transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
- }
+  try {
+   if (typeof window === 'undefined') return;
+   synthRef.current = window.speechSynthesis || null;
+   if (synthRef.current) {
+    try { synthRef.current.getVoices(); } catch {}
+    if (typeof speechSynthesis !== 'undefined') {
+     try { speechSynthesis.onvoiceschanged = () => { try { synthRef.current?.getVoices(); } catch {} }; } catch {}
+    }
+   }
+   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+   if (SpeechRecognition) {
+    try {
+     const rec = new SpeechRecognition();
+     rec.continuous = false;
+     rec.interimResults = true;
+     rec.lang = 'en-US';
+     rec.onstart = () => { try { setIsListening(true); } catch {} };
+     rec.onend = () => { try { setIsListening(false); } catch {} };
+     rec.onresult = (event: any) => {
+      try {
+       let interim = '';
+       let final = '';
+       for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) final += t + ' ';
+        else interim += t;
+       }
+       if (final) { handleUserVoice(final.trim()); setLiveTranscript(''); }
+       else setLiveTranscript(interim);
+      } catch {}
+     };
+     rec.onerror = () => { try { setIsListening(false); } catch {} };
+     recognitionRef.current = rec;
+    } catch {}
+   }
+   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+    try { Notification.requestPermission(); } catch {}
+   }
+   try {
+    const savedMute = localStorage.getItem('orbitdesk_ring_muted');
+    if (savedMute === 'true') setIsRingMuted(true);
+   } catch {}
+   const handleVisibility = () => {
+    try {
+     const hidden = document.hidden;
+     setIsAppHidden(hidden);
+     if (hidden) {
+      isRingingRef.current = false;
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') { try { audioContextRef.current.close(); } catch {} audioContextRef.current = null; }
+      if (ringOscillatorsRef.current) { try { ringOscillatorsRef.current.osc1?.stop(); ringOscillatorsRef.current.osc2?.stop(); } catch {} ringOscillatorsRef.current = null; }
+      if (vibrateTimeoutRef.current) { clearTimeout(vibrateTimeoutRef.current); vibrateTimeoutRef.current = null; }
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) { try { (navigator as any).vibrate(0); } catch {} }
+     }
+    } catch {}
+   };
+   const handleBlur = () => {
+    try {
+     setIsAppHidden(true);
+     isRingingRef.current = false;
+     if (audioContextRef.current && audioContextRef.current.state !== 'closed') { try { audioContextRef.current.close(); } catch {} audioContextRef.current = null; }
+     if (ringOscillatorsRef.current) { try { ringOscillatorsRef.current.osc1?.stop(); ringOscillatorsRef.current.osc2?.stop(); } catch {} ringOscillatorsRef.current = null; }
+     if (vibrateTimeoutRef.current) { clearTimeout(vibrateTimeoutRef.current); vibrateTimeoutRef.current = null; }
+     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) { try { (navigator as any).vibrate(0); } catch {} }
+    } catch {}
+   };
+   const handleFocus = () => { try { setIsAppHidden(false); } catch {} };
+   document.addEventListener('visibilitychange', handleVisibility);
+   window.addEventListener('blur', handleBlur);
+   window.addEventListener('focus', handleFocus);
+   return () => {
+    try {
+     document.removeEventListener('visibilitychange', handleVisibility);
+     window.removeEventListener('blur', handleBlur);
+     window.removeEventListener('focus', handleFocus);
+    } catch {}
+   };
+  } catch { setHasError(true); }
+ }, []);
+
+ useEffect(() => {
+  try {
+   if (transcriptEndRef.current) { transcriptEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
+   else if (transcriptRef.current) { transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight; }
+  } catch {}
  }, [activeCall?.transcript, liveTranscript, isOnHold]);
 
  const showBrowserNotification = useCallback((ticket: any) => {
- if ('Notification' in window && Notification.permission === 'granted') {
   try {
-   new Notification(`📞 Incoming Call — ${ticket.clientName}`, {
-    body: `${ticket.userEmail} • ${ticket.priority} • ${ticket.title}\n"${ticket.userMessage.substring(0,60)}..."`,
-    icon: '/icon-512.png',
-    tag: 'orbitdesk-call',
-    requireInteraction: true,
-   });
+   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+    new Notification(`📞 Incoming Call — ${ticket.clientName}`, {
+     body: `${ticket.userEmail} • ${ticket.priority} • ${ticket.title}\n"${(ticket.userMessage || '').substring(0,60)}..."`,
+     icon: '/icon-512.png',
+     tag: 'orbitdesk-call',
+     requireInteraction: true,
+    });
+   }
   } catch {}
- }
  }, []);
 
  const stopRingtone = useCallback(() => {
- isRingingRef.current = false;
- if (vibrateTimeoutRef.current) {
-  clearTimeout(vibrateTimeoutRef.current);
-  vibrateTimeoutRef.current = null;
- }
- try {
-  if (ringOscillatorsRef.current) {
-   try {
-    ringOscillatorsRef.current.osc1?.stop();
-    ringOscillatorsRef.current.osc2?.stop();
-   } catch {}
-   ringOscillatorsRef.current = null;
-  }
-  if (audioContextRef.current) {
-   if (audioContextRef.current.state !== 'closed') {
-    audioContextRef.current.close();
-   }
-   audioContextRef.current = null;
-  }
-  if ('vibrate' in navigator) navigator.vibrate(0);
- } catch {}
+  try {
+   isRingingRef.current = false;
+   if (vibrateTimeoutRef.current) { clearTimeout(vibrateTimeoutRef.current); vibrateTimeoutRef.current = null; }
+   if (ringOscillatorsRef.current) { try { ringOscillatorsRef.current.osc1?.stop(); ringOscillatorsRef.current.osc2?.stop(); } catch {} ringOscillatorsRef.current = null; }
+   if (audioContextRef.current) { try { if (audioContextRef.current.state !== 'closed') audioContextRef.current.close(); } catch {} audioContextRef.current = null; }
+   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) { try { (navigator as any).vibrate(0); } catch {} }
+  } catch {}
  }, []);
 
  const playRingtone = useCallback(() => {
- if (isRingingRef.current) return;
- if (isRingMuted) return;
- if (typeof document !== 'undefined' && document.hidden) return;
- if (isAppHidden) return;
- // Ensure previous cleaned
- stopRingtone();
- isRingingRef.current = true;
- try {
-  const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-  if (!AudioCtx) return;
-  const ctx = new AudioCtx();
-  audioContextRef.current = ctx;
-
-  const playCycle = () => {
-   if (!isRingingRef.current) return;
-   if (!audioContextRef.current || audioContextRef.current.state === 'closed') return;
-   if (isRingMuted) { stopRingtone(); return; }
-   if (typeof document !== 'undefined' && document.hidden) { stopRingtone(); return; }
-   if (isAppHidden) { stopRingtone(); return; }
-   try {
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-    osc1.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    osc1.frequency.value = 440;
-    osc2.frequency.value = 480;
-    filter.type = 'bandpass';
-    filter.frequency.value = 460;
-    gain.gain.value = 0.12;
-    ringOscillatorsRef.current = { osc1, osc2, gain };
-    osc1.start();
-    osc2.start();
-    setTimeout(() => {
-     try { 
-      osc1.stop(); 
-      osc2.stop(); 
-     } catch {}
-     ringOscillatorsRef.current = null;
-     if (isRingingRef.current && !isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
-      vibrateTimeoutRef.current = setTimeout(playCycle, 4000);
-     }
-    }, 2000);
-   } catch {
-    if (isRingingRef.current && !isRingMuted && !isAppHidden) {
-     vibrateTimeoutRef.current = setTimeout(playCycle, 4000);
+  try {
+   if (isRingingRef.current) return;
+   if (isRingMuted) return;
+   if (typeof document !== 'undefined' && document.hidden) return;
+   if (isAppHidden) return;
+   stopRingtone();
+   isRingingRef.current = true;
+   const AudioCtx = (typeof window !== 'undefined' ? (window as any).AudioContext || (window as any).webkitAudioContext : null);
+   if (!AudioCtx) return;
+   const ctx = new AudioCtx();
+   audioContextRef.current = ctx;
+   const playCycle = () => {
+    try {
+     if (!isRingingRef.current) return;
+     if (!audioContextRef.current || audioContextRef.current.state === 'closed') return;
+     if (isRingMuted) { stopRingtone(); return; }
+     if (typeof document !== 'undefined' && document.hidden) { stopRingtone(); return; }
+     if (isAppHidden) { stopRingtone(); return; }
+     const osc1 = ctx.createOscillator();
+     const osc2 = ctx.createOscillator();
+     const gain = ctx.createGain();
+     const filter = ctx.createBiquadFilter();
+     osc1.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+     osc1.frequency.value = 440; osc2.frequency.value = 480;
+     filter.type = 'bandpass'; filter.frequency.value = 460;
+     gain.gain.value = 0.12;
+     ringOscillatorsRef.current = { osc1, osc2, gain };
+     osc1.start(); osc2.start();
+     setTimeout(() => {
+      try { osc1.stop(); osc2.stop(); } catch {}
+      ringOscillatorsRef.current = null;
+      if (isRingingRef.current && !isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
+       vibrateTimeoutRef.current = setTimeout(playCycle, 4000);
+      }
+     }, 2000);
+    } catch {
+     if (isRingingRef.current && !isRingMuted && !isAppHidden) { vibrateTimeoutRef.current = setTimeout(playCycle, 4000); }
     }
-   }
-  };
-  if (ctx.state === 'suspended') {
-   ctx.resume().then(playCycle).catch(playCycle);
-  } else {
-   playCycle();
-  }
-  if ('vibrate' in navigator && !isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
-   const vibrateLoop = () => {
-    if (!isRingingRef.current || isRingMuted || isAppHidden) return;
-    if (typeof document !== 'undefined' && document.hidden) return;
-    try { navigator.vibrate([500, 300, 500, 300, 500]); } catch {}
-    vibrateTimeoutRef.current = setTimeout(vibrateLoop, 6000);
    };
-   vibrateLoop();
-  }
- } catch {}
+   if (ctx.state === 'suspended') { ctx.resume().then(playCycle).catch(playCycle); } else { playCycle(); }
+   if (typeof navigator !== 'undefined' && 'vibrate' in navigator && !isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
+    const vibrateLoop = () => {
+     try {
+      if (!isRingingRef.current || isRingMuted || isAppHidden) return;
+      if (typeof document !== 'undefined' && document.hidden) return;
+      (navigator as any).vibrate([500, 300, 500, 300, 500]);
+      vibrateTimeoutRef.current = setTimeout(vibrateLoop, 6000);
+     } catch {}
+    };
+    vibrateLoop();
+   }
+  } catch {}
  }, [isRingMuted, isAppHidden, stopRingtone]);
 
  const playRecordingBeep = useCallback(() => {
- // Use single-use context but close immediately — no leak
- try {
-  const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-  if (!AudioCtx) return;
-  const ctx = new AudioCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.frequency.value = 1000;
-  gain.gain.value = 0.08;
-  osc.start();
-  setTimeout(() => {
-   try { osc.stop(); } catch {}
-   try { if (ctx.state !== 'closed') ctx.close(); } catch {}
-  }, 200);
- } catch {}
+  try {
+   const AudioCtx = (typeof window !== 'undefined' ? (window as any).AudioContext || (window as any).webkitAudioContext : null);
+   if (!AudioCtx) return;
+   const ctx = new AudioCtx();
+   const osc = ctx.createOscillator();
+   const gain = ctx.createGain();
+   osc.connect(gain); gain.connect(ctx.destination);
+   osc.frequency.value = 1000; gain.gain.value = 0.08;
+   osc.start();
+   setTimeout(() => { try { osc.stop(); } catch {} try { if (ctx.state !== 'closed') ctx.close(); } catch {} }, 200);
+  } catch {}
  }, []);
 
  const startRecordingBeep = useCallback(() => {
- if (recordingBeepRef.current) clearInterval(recordingBeepRef.current);
- playRecordingBeep();
- recordingBeepRef.current = setInterval(playRecordingBeep, 15000);
+  try {
+   if (recordingBeepRef.current) clearInterval(recordingBeepRef.current);
+   playRecordingBeep();
+   recordingBeepRef.current = setInterval(playRecordingBeep, 15000);
+  } catch {}
  }, [playRecordingBeep]);
 
  const stopRecordingBeep = useCallback(() => {
- if (recordingBeepRef.current) {
-  clearInterval(recordingBeepRef.current);
-  recordingBeepRef.current = null;
- }
+  try { if (recordingBeepRef.current) { clearInterval(recordingBeepRef.current); recordingBeepRef.current = null; } } catch {}
  }, []);
 
  const playHoldMusic = useCallback(() => {
- // Clean previous first
- try {
-  if (holdMusicRef.current && holdMusicRef.current.state !== 'closed') {
-   holdMusicRef.current.close();
-  }
- } catch {}
- holdMusicRef.current = null;
- if (holdMusicTimeoutRef.current) {
-  clearTimeout(holdMusicTimeoutRef.current);
-  holdMusicTimeoutRef.current = null;
- }
- try {
-  const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-  if (!AudioCtx) return;
-  const ctx = new AudioCtx();
-  holdMusicRef.current = ctx;
-  const playNote = (freq: number, duration: number, delay: number) => {
-   holdMusicTimeoutRef.current = setTimeout(() => {
-    if (!holdMusicRef.current || holdMusicRef.current.state === 'closed') return;
-    if (!activeCallRef.current || activeCallRef.current.status !== 'on-hold') return;
+  try {
+   if (holdMusicRef.current && holdMusicRef.current.state !== 'closed') { try { holdMusicRef.current.close(); } catch {} }
+   holdMusicRef.current = null;
+   if (holdMusicTimeoutRef.current) { clearTimeout(holdMusicTimeoutRef.current); holdMusicTimeoutRef.current = null; }
+   const AudioCtx = (typeof window !== 'undefined' ? (window as any).AudioContext || (window as any).webkitAudioContext : null);
+   if (!AudioCtx) return;
+   const ctx = new AudioCtx();
+   holdMusicRef.current = ctx;
+   const playNote = (freq: number, duration: number, delay: number) => {
+    holdMusicTimeoutRef.current = setTimeout(() => {
+     try {
+      if (!holdMusicRef.current || holdMusicRef.current.state === 'closed') return;
+      if (!activeCallRef.current || activeCallRef.current.status !== 'on-hold') return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq; osc.type = 'sine';
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.1);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+      osc.start(); osc.stop(ctx.currentTime + duration);
+     } catch {}
+    }, delay);
+   };
+   const melody = [261.63, 329.63, 392.00, 523.25];
+   const loopMelody = () => {
     try {
-     const osc = ctx.createOscillator();
-     const gain = ctx.createGain();
-     osc.connect(gain);
-     gain.connect(ctx.destination);
-     osc.frequency.value = freq;
-     osc.type = 'sine';
-     gain.gain.setValueAtTime(0, ctx.currentTime);
-     gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.1);
-     gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
-     osc.start();
-     osc.stop(ctx.currentTime + duration);
+     if (!holdMusicRef.current || holdMusicRef.current.state === 'closed') return;
+     if (!activeCallRef.current || activeCallRef.current.status !== 'on-hold') return;
+     let time = 0;
+     melody.forEach((freq, i) => { playNote(freq, 0.8, time + i * 900); });
+     time += melody.length * 900 + 1000;
+     holdMusicTimeoutRef.current = setTimeout(loopMelody, melody.length * 900 + 2000);
     } catch {}
-   }, delay);
-  };
-  const melody = [261.63, 329.63, 392.00, 523.25];
-  const loopMelody = () => {
-   if (!holdMusicRef.current || holdMusicRef.current.state === 'closed') return;
-   if (!activeCallRef.current || activeCallRef.current.status !== 'on-hold') return;
-   let time = 0;
-   melody.forEach((freq, i) => {
-    playNote(freq, 0.8, time + i * 900);
-   });
-   time += melody.length * 900 + 1000;
-   holdMusicTimeoutRef.current = setTimeout(loopMelody, melody.length * 900 + 2000);
-  };
-  loopMelody();
- } catch {}
+   };
+   loopMelody();
+  } catch {}
  }, []);
 
  const stopHoldMusic = useCallback(() => {
- if (holdMusicTimeoutRef.current) {
-  clearTimeout(holdMusicTimeoutRef.current);
-  holdMusicTimeoutRef.current = null;
- }
- try {
-  if (holdMusicRef.current) {
-   if (holdMusicRef.current.state !== 'closed') {
-    holdMusicRef.current.close();
-   }
-   holdMusicRef.current = null;
-  }
- } catch {
-  holdMusicRef.current = null;
- }
+  try {
+   if (holdMusicTimeoutRef.current) { clearTimeout(holdMusicTimeoutRef.current); holdMusicTimeoutRef.current = null; }
+   if (holdMusicRef.current) { try { if (holdMusicRef.current.state !== 'closed') holdMusicRef.current.close(); } catch {} holdMusicRef.current = null; }
+  } catch {}
  }, []);
 
  const speakClient = useCallback((text: string, persona: 'enterprise' | 'smb' | 'regulated') => {
- if (!text) return;
- if (isMuted || isOnHold) return;
- try {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  const synth = synthRef.current || window.speechSynthesis;
-  if (!synth) return;
-  synthRef.current = synth as any;
-  try { synth.cancel(); } catch {}
-  const utter = new SpeechSynthesisUtterance(text.substring(0, 400));
-  utter.rate = persona === 'smb' ? 1.15 : persona === 'regulated' ? 0.9 : 1.0;
-  utter.pitch = persona === 'smb' ? 1.2 : persona === 'regulated' ? 0.8 : 0.9;
-  utter.volume = 0.95;
   try {
-   const voices = synth.getVoices?.() || [];
-   const match = voices.find((v:any) => v.lang?.startsWith('en')) || voices[0];
-   if (match) utter.voice = match;
-  } catch {}
-  utter.onstart = () => { try { setIsSpeaking(true); } catch {} };
-  utter.onend = () => { try { setIsSpeaking(false); setClientAudioLevel(0); } catch {} };
-  utter.onerror = () => { try { setIsSpeaking(false); setClientAudioLevel(0); } catch {} };
-  synth.speak(utter);
-  const interval = setInterval(() => {
-   try {
-    if (!synthRef.current?.speaking) { clearInterval(interval); setClientAudioLevel(0); return; }
-    setClientAudioLevel(Math.random() * 80 + 20);
-   } catch { clearInterval(interval); }
-  }, 100);
-  setTimeout(() => { try { clearInterval(interval); } catch {} }, 8000);
- } catch (e) {
-  console.log('speakClient failed, fallback to text only', e);
-  try { setIsSpeaking(false); } catch {}
- }
+   if (!text) return;
+   if (isMuted || isOnHold) return;
+   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+   const synth = synthRef.current || window.speechSynthesis;
+   if (!synth) return;
+   synthRef.current = synth as any;
+   try { synth.cancel(); } catch {}
+   const utter = new SpeechSynthesisUtterance(text.substring(0, 400));
+   utter.rate = persona === 'smb' ? 1.15 : persona === 'regulated' ? 0.9 : 1.0;
+   utter.pitch = persona === 'smb' ? 1.2 : persona === 'regulated' ? 0.8 : 0.9;
+   utter.volume = 0.95;
+   try { const voices = synth.getVoices?.() || []; const match = voices.find((v:any) => v.lang?.startsWith('en')) || voices[0]; if (match) utter.voice = match; } catch {}
+   utter.onstart = () => { try { setIsSpeaking(true); } catch {} };
+   utter.onend = () => { try { setIsSpeaking(false); setClientAudioLevel(0); } catch {} };
+   utter.onerror = () => { try { setIsSpeaking(false); setClientAudioLevel(0); } catch {} };
+   synth.speak(utter);
+   const interval = setInterval(() => {
+    try { if (!synthRef.current?.speaking) { clearInterval(interval); setClientAudioLevel(0); return; } setClientAudioLevel(Math.random() * 80 + 20); } catch { clearInterval(interval); }
+   }, 100);
+   setTimeout(() => { try { clearInterval(interval); } catch {} }, 8000);
+  } catch { try { setIsSpeaking(false); } catch {} }
  }, [isMuted, isOnHold]);
 
  const startMic = async () => {
- if (!recognitionRef.current) { alert('Use Chrome/Edge for mic 🎙️ — voice-to-voice call, no texting'); return; }
- // Clean previous
- if (micRafRef.current) {
-  cancelAnimationFrame(micRafRef.current);
-  micRafRef.current = null;
- }
- try {
-  if (micContextRef.current && micContextRef.current.state !== 'closed') {
-   micContextRef.current.close();
-  }
- } catch {}
- micContextRef.current = null;
- if (streamRef.current) {
-  try { streamRef.current.getTracks().forEach(t => t.stop()); } catch {}
-  streamRef.current = null;
- }
- try {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  streamRef.current = stream;
-  const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-  const ctx = new AudioCtx();
-  micContextRef.current = ctx;
-  if (ctx.state === 'suspended') {
-   await ctx.resume().catch(()=>{});
-  }
-  const analyser = ctx.createAnalyser();
-  const source = ctx.createMediaStreamSource(stream);
-  source.connect(analyser);
-  analyser.fftSize = 256;
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
-  let running = true;
-  const animate = () => {
-   if (!running) return;
-   if (!isListening && recognitionRef.current) {
-    // Still animate level while listening state true, but check ref
+  try {
+   if (!recognitionRef.current) { alert('Use Chrome/Edge for mic 🎙️ — voice-to-voice call'); return; }
+   if (micRafRef.current) { cancelAnimationFrame(micRafRef.current); micRafRef.current = null; }
+   if (micContextRef.current && micContextRef.current.state !== 'closed') { try { micContextRef.current.close(); } catch {} }
+   micContextRef.current = null;
+   if (streamRef.current) { try { streamRef.current.getTracks().forEach(t => t.stop()); } catch {} streamRef.current = null; }
+   const stream = await (navigator as any).mediaDevices.getUserMedia({ audio: true });
+   streamRef.current = stream;
+   const AudioCtx = (typeof window !== 'undefined' ? (window as any).AudioContext || (window as any).webkitAudioContext : null);
+   if (AudioCtx) {
+    const ctx = new AudioCtx();
+    micContextRef.current = ctx;
+    if (ctx.state === 'suspended') { await ctx.resume().catch(()=>{}); }
+    const analyser = ctx.createAnalyser();
+    const source = ctx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.fftSize = 256;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    let running = true;
+    const animate = () => {
+     if (!running) return;
+     try { analyser.getByteFrequencyData(dataArray); const avg = dataArray.reduce((a,b) => a+b, 0) / dataArray.length; setUserAudioLevel(avg); } catch {}
+     if (running) { micRafRef.current = requestAnimationFrame(animate); }
+    };
+    animate();
+    (stream as any)._stopAnimate = () => { running = false; };
    }
-   try {
-    analyser.getByteFrequencyData(dataArray);
-    const avg = dataArray.reduce((a,b) => a+b, 0) / dataArray.length;
-    setUserAudioLevel(avg);
-   } catch {}
-   if (running) {
-    micRafRef.current = requestAnimationFrame(animate);
-   }
-  };
-  animate();
-  // Store stop handler
-  (stream as any)._stopAnimate = () => { running = false; };
- } catch (e) { console.log('mic error', e); }
- setLiveTranscript('');
- try { recognitionRef.current.start(); } catch {}
+   setLiveTranscript('');
+   try { recognitionRef.current.start(); } catch {}
+  } catch (e) { console.log('mic error', e); }
  };
 
  const stopMic = useCallback(() => {
- try {
-  if (recognitionRef.current) {
-   try { recognitionRef.current.stop(); } catch {}
-  }
- } catch {}
- if (micRafRef.current) {
-  cancelAnimationFrame(micRafRef.current);
-  micRafRef.current = null;
- }
- try {
-  if (micContextRef.current && micContextRef.current.state !== 'closed') {
-   micContextRef.current.close();
-  }
- } catch {}
- micContextRef.current = null;
- if (streamRef.current) {
   try {
-   const s: any = streamRef.current;
-   if (s._stopAnimate) s._stopAnimate();
-   streamRef.current.getTracks().forEach(t => t.stop());
+   if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
+   if (micRafRef.current) { cancelAnimationFrame(micRafRef.current); micRafRef.current = null; }
+   if (micContextRef.current && micContextRef.current.state !== 'closed') { try { micContextRef.current.close(); } catch {} }
+   micContextRef.current = null;
+   if (streamRef.current) { try { const s: any = streamRef.current; if (s._stopAnimate) s._stopAnimate(); streamRef.current.getTracks().forEach(t => t.stop()); } catch {} streamRef.current = null; }
+   setUserAudioLevel(0); setIsListening(false);
   } catch {}
-  streamRef.current = null;
- }
- setUserAudioLevel(0);
- setIsListening(false);
  }, []);
 
  const handleUserVoice = (text: string) => {
- if (!text.trim()) return;
- const currentCall = activeCallRef.current;
- if (!currentCall) return;
- const now = `${String(Math.floor(currentCall.duration/60)).padStart(2,'0')}:${String(currentCall.duration%60).padStart(2,'0')}`;
- const prevPhase = currentCall.phase;
- let nextPhase: Call['phase'] = prevPhase;
- if (prevPhase === 'waiting_greeting') nextPhase = 'waiting_intro';
- else if (prevPhase === 'waiting_intro') nextPhase = 'problem';
- else if (prevPhase === 'problem') nextPhase = 'troubleshooting';
-
- const userMsg: CallMessage = { id: Date.now().toString(), speaker: 'you', text, time: now, isVoice: true };
- setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, userMsg], phase: nextPhase } : null);
-
- setTimeout(() => {
-  let reply = '';
-  const persona = currentCall.persona;
-  if (prevPhase === 'waiting_greeting') {
-   reply = intros[persona](currentCall.id.split('-')[0], currentCall.clientName);
-   setActiveCall(prev => prev ? { ...prev, phase: 'waiting_intro' } : null);
-  } else if (prevPhase === 'waiting_intro') {
-   if (persona === 'enterprise') reply = `Yes, so I'm getting blocked by Conditional Access when trying to access Outlook and Teams. Error DeviceNotCompliant 53000. Could you check Sign-in logs CA tab? P1 payroll deadline 45 mins.`;
-   else if (persona === 'smb') reply = `Yeah, shared mailbox finance at bloomco dot studio not showing in Outlook? I can see it in webmail though. Could you help with simple steps? Client call in 20 mins!`;
-   else reply = `Thank you. Per SEC-2024-07, device Not Compliant blocking Teams. I checked Get-BitLockerVolume, Protection Off, 0 percent. Need audit trail and RCA.`;
-   setActiveCall(prev => prev ? { ...prev, phase: 'problem' } : null);
-  } else {
-   const replies = troubleshooting[persona];
-   reply = replies[Math.floor(Math.random() * replies.length)].replace('{id}', Math.random().toString(36).substring(7));
-   const lower = text.toLowerCase();
-   if (lower.includes('dsregcmd')) reply = `Okay, I ran dsregcmd status — AzureAdJoined YES, Compliance NO, DeviceId ${Math.random().toString(36).substring(7)}. What next?`;
-   else if (lower.includes('company portal') || lower.includes('sync')) reply = `Company Portal? Blue icon with shopping bag? I clicked Sync, spins, says last sync just now but still Not compliant?`;
-   else if (lower.includes('bitlocker')) reply = `Oh, BitLocker? Is it safe? Will it delete my files? Will I lose my Photoshop work?`;
-   else if (lower.includes('thank') || lower.includes('fixed') || lower.includes('working')) { reply = `Perfect, it works now! Thank you, you explained in simple steps! Five stars! ⭐⭐⭐⭐⭐`; setActiveCall(prev => prev ? { ...prev, phase: 'resolution' } : null); }
-  }
-  const clientMsg: CallMessage = { id: (Date.now()+1).toString(), speaker: 'client', text: reply, time: `${String(Math.floor((currentCall.duration+2)/60)).padStart(2,'0')}:${String((currentCall.duration+2)%60).padStart(2,'0')}`, isVoice: true, sentiment: prevPhase === 'waiting_greeting' ? 'calm' : 'urgent' };
-  setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, clientMsg] } : null);
-  speakClient(reply, persona);
- }, 800);
+  try {
+   if (!text.trim()) return;
+   const currentCall = activeCallRef.current;
+   if (!currentCall) return;
+   const now = `${String(Math.floor(currentCall.duration/60)).padStart(2,'0')}:${String(currentCall.duration%60).padStart(2,'0')}`;
+   const prevPhase = currentCall.phase;
+   let nextPhase: Call['phase'] = prevPhase;
+   if (prevPhase === 'waiting_greeting') nextPhase = 'waiting_intro';
+   else if (prevPhase === 'waiting_intro') nextPhase = 'problem';
+   else if (prevPhase === 'problem') nextPhase = 'troubleshooting';
+   const userMsg: CallMessage = { id: Date.now().toString(), speaker: 'you', text, time: now, isVoice: true };
+   setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, userMsg], phase: nextPhase } : null);
+   setTimeout(() => {
+    try {
+     let reply = '';
+     const persona = currentCall.persona;
+     if (prevPhase === 'waiting_greeting') {
+      reply = intros[persona](currentCall.id.split('-')[0], currentCall.clientName);
+      setActiveCall(prev => prev ? { ...prev, phase: 'waiting_intro' } : null);
+     } else if (prevPhase === 'waiting_intro') {
+      if (persona === 'enterprise') reply = `Yes, so I'm getting blocked by Conditional Access when trying to access Outlook and Teams. Error DeviceNotCompliant 53000. Could you check Sign-in logs CA tab? P1 payroll deadline 45 mins.`;
+      else if (persona === 'smb') reply = `Yeah, shared mailbox finance at bloomco dot studio not showing in Outlook? I can see it in webmail though. Could you help with simple steps? Client call in 20 mins!`;
+      else reply = `Thank you. Per SEC-2024-07, device Not Compliant blocking Teams. I checked Get-BitLockerVolume, Protection Off, 0 percent. Need audit trail and RCA.`;
+      setActiveCall(prev => prev ? { ...prev, phase: 'problem' } : null);
+     } else {
+      const replies = troubleshooting[persona];
+      reply = replies[Math.floor(Math.random() * replies.length)].replace('{id}', Math.random().toString(36).substring(7));
+      const lower = text.toLowerCase();
+      if (lower.includes('dsregcmd')) reply = `Okay, I ran dsregcmd status — AzureADJoined YES, Compliance NO, DeviceId ${Math.random().toString(36).substring(7)}. What next?`;
+      else if (lower.includes('company portal') || lower.includes('sync')) reply = `Company Portal? Blue icon with shopping bag? I clicked Sync, spins, says last sync just now but still Not compliant?`;
+      else if (lower.includes('bitlocker')) reply = `Oh, BitLocker? Is it safe? Will it delete my files? Will I lose my Photoshop work?`;
+      else if (lower.includes('thank') || lower.includes('fixed') || lower.includes('working')) { reply = `Perfect, it works now! Thank you, you explained in simple steps! Five stars! ⭐⭐⭐⭐⭐`; setActiveCall(prev => prev ? { ...prev, phase: 'resolution' } : null); }
+     }
+     const clientMsg: CallMessage = { id: (Date.now()+1).toString(), speaker: 'client', text: reply, time: `${String(Math.floor((currentCall.duration+2)/60)).padStart(2,'0')}:${String((currentCall.duration+2)%60).padStart(2,'0')}`, isVoice: true, sentiment: prevPhase === 'waiting_greeting' ? 'calm' : 'urgent' };
+     setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, clientMsg] } : null);
+     speakClient(reply, persona);
+    } catch {}
+   }, 800);
+  } catch {}
  };
 
  const acceptCall = useCallback((e?: any) => {
- if (e) { e.preventDefault(); e.stopPropagation(); }
- if (accepting) return;
- try {
-  const ticketToAccept = incomingRef.current || incoming;
-  if (!ticketToAccept) {
-   console.log('No incoming call to accept');
-   return;
-  }
-  setAccepting(true);
-  console.log('Accepting call', ticketToAccept.id);
-  try { stopRingtone(); } catch {}
-  const persona = (ticketToAccept.clientId === 'client-a' ? 'enterprise' : ticketToAccept.clientId === 'client-b' ? 'smb' : 'regulated') as 'enterprise' | 'smb' | 'regulated';
-  const greeting = greetings[persona]?.[Math.floor(Math.random() * greetings[persona].length)] || greetings.enterprise[0];
-  const newCall: Call = {
-   id: ticketToAccept.id || `call-${Date.now()}`,
-   status: 'active',
-   duration: 0,
-   holdDuration: 0,
-   transcript: [
-    { id: '1', speaker: 'system', text: `📞 Voice Call Connected • ${ticketToAccept.userEmail || 'client'} • ${ticketToAccept.clientName || 'Client'} • 🔴 Recording ON • Encrypted TLS 1.3`, time: '00:00', isVoice: false },
-    { id: '2', speaker: 'client', text: greeting, time: '00:03', isVoice: true, sentiment: 'calm' },
-   ],
-   persona,
-   phase: 'waiting_greeting',
-   isRecording: true,
-   clientName: ticketToAccept.clientName || 'Client',
-   userEmail: ticketToAccept.userEmail || 'client@example.com',
-   priority: ticketToAccept.priority || 'P1',
-  };
-  setActiveCall(newCall);
-  activeCallRef.current = newCall;
-  setIncoming(null);
-  incomingRef.current = null;
-  try { onAccept(ticketToAccept); } catch (err) { console.error('onAccept error', err); }
-  try { startRecordingBeep(); } catch {}
-  setTimeout(() => {
-   try { speakClient(greeting, persona); } catch {}
-   setAccepting(false);
-  }, 600);
- } catch (err) {
-  console.error('acceptCall failed', err);
-  setAccepting(false);
-  // Fallback: ensure call still opens even if speech fails
   try {
+   if (e) { e.preventDefault(); e.stopPropagation(); }
+   if (accepting) return;
    const ticketToAccept = incomingRef.current || incoming;
-   if (ticketToAccept) {
-    const fallbackCall: Call = {
-     id: ticketToAccept.id || `call-${Date.now()}`,
-     status: 'active',
-     duration: 0,
-     holdDuration: 0,
-     transcript: [{ id: '1', speaker: 'system', text: '📞 Call connected — voice may be unavailable in this browser, use text fallback', time: '00:00', isVoice: false }],
-     persona: 'enterprise',
-     phase: 'problem',
-     isRecording: false,
-     clientName: ticketToAccept.clientName || 'Client',
-     userEmail: ticketToAccept.userEmail || 'client@example.com',
-     priority: ticketToAccept.priority || 'P1',
-    };
-    setActiveCall(fallbackCall);
-    activeCallRef.current = fallbackCall;
-    setIncoming(null);
-    incomingRef.current = null;
-   }
-  } catch {}
- }
+   if (!ticketToAccept) return;
+   setAccepting(true);
+   try { stopRingtone(); } catch {}
+   const persona = (ticketToAccept.clientId === 'client-a' ? 'enterprise' : ticketToAccept.clientId === 'client-b' ? 'smb' : 'regulated') as 'enterprise' | 'smb' | 'regulated';
+   const greeting = greetings[persona]?.[Math.floor(Math.random() * greetings[persona].length)] || greetings.enterprise[0];
+   const newCall: Call = {
+    id: ticketToAccept.id || `call-${Date.now()}`,
+    status: 'active',
+    duration: 0,
+    holdDuration: 0,
+    transcript: [
+     { id: '1', speaker: 'system', text: `📞 Voice Call Connected • ${ticketToAccept.userEmail || 'client'} • ${ticketToAccept.clientName || 'Client'} • 🔴 Recording ON • Encrypted TLS 1.3`, time: '00:00', isVoice: false },
+     { id: '2', speaker: 'client', text: greeting, time: '00:03', isVoice: true, sentiment: 'calm' },
+    ],
+    persona,
+    phase: 'waiting_greeting',
+    isRecording: true,
+    clientName: ticketToAccept.clientName || 'Client',
+    userEmail: ticketToAccept.userEmail || 'client@example.com',
+    priority: ticketToAccept.priority || 'P1',
+   };
+   setActiveCall(newCall);
+   activeCallRef.current = newCall;
+   setIncoming(null);
+   incomingRef.current = null;
+   try { onAccept?.(ticketToAccept); } catch {}
+   try { startRecordingBeep(); } catch {}
+   setTimeout(() => { try { speakClient(greeting, persona); } catch {} setAccepting(false); }, 600);
+  } catch (err) {
+   console.error('acceptCall failed', err);
+   setAccepting(false);
+   try {
+    const ticketToAccept = incomingRef.current || incoming;
+    if (ticketToAccept) {
+     const fallbackCall: Call = {
+      id: ticketToAccept.id || `call-${Date.now()}`,
+      status: 'active',
+      duration: 0,
+      holdDuration: 0,
+      transcript: [{ id: '1', speaker: 'system', text: '📞 Call connected — voice may be unavailable in this browser, use text fallback', time: '00:00', isVoice: false }],
+      persona: 'enterprise',
+      phase: 'problem',
+      isRecording: false,
+      clientName: ticketToAccept.clientName || 'Client',
+      userEmail: ticketToAccept.userEmail || 'client@example.com',
+      priority: ticketToAccept.priority || 'P1',
+     };
+     setActiveCall(fallbackCall);
+     activeCallRef.current = fallbackCall;
+     setIncoming(null);
+     incomingRef.current = null;
+    }
+   } catch {}
+  }
  }, [accepting, onAccept, speakClient, startRecordingBeep, stopRingtone, incoming]);
 
  const declineCall = useCallback((e?: any) => {
- if (e) { e.preventDefault(); e.stopPropagation(); }
- const ticket = incomingRef.current || incoming;
- if (ticket) {
-  setMissedCalls(prev => [{ ...ticket, missedAt: Date.now() }, ...prev].slice(0,5));
-  setCallHistory(prev => [{ id: ticket.id, clientName: ticket.clientName, userEmail: ticket.userEmail, priority: ticket.priority, status: 'missed', duration: 0, endedAt: Date.now(), persona: ticket.clientId === 'client-a' ? 'enterprise' : ticket.clientId === 'client-b' ? 'smb' : 'regulated' }, ...prev].slice(0,20));
- }
- stopRingtone();
- stopMic();
- setIncoming(null);
- incomingRef.current = null;
- const c = getCallFrequencyForLevel(level);
- setNextCallIn(c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec)));
- setAccepting(false);
+  try {
+   if (e) { e.preventDefault(); e.stopPropagation(); }
+   const ticket = incomingRef.current || incoming;
+   if (ticket) {
+    setMissedCalls(prev => [{ ...ticket, missedAt: Date.now() }, ...prev].slice(0,5));
+    setCallHistory(prev => [{ id: ticket.id, clientName: ticket.clientName, userEmail: ticket.userEmail, priority: ticket.priority, status: 'missed', duration: 0, endedAt: Date.now(), persona: ticket.clientId === 'client-a' ? 'enterprise' : ticket.clientId === 'client-b' ? 'smb' : 'regulated' }, ...prev].slice(0,20));
+   }
+   stopRingtone(); stopMic();
+   setIncoming(null); incomingRef.current = null;
+   const c = getCallFrequencyForLevel(level);
+   setNextCallIn(c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec)));
+   setAccepting(false);
+  } catch {}
  }, [incoming, stopRingtone, stopMic, level]);
  
  const endCall = useCallback(() => { 
- if (activeCallRef.current) {
-  setCallHistory(prev => [{ id: activeCallRef.current!.id, clientName: activeCallRef.current!.clientName, userEmail: activeCallRef.current!.userEmail, priority: activeCallRef.current!.priority, status: 'ended', duration: activeCallRef.current!.duration, endedAt: Date.now(), persona: activeCallRef.current!.persona }, ...prev].slice(0,20));
- }
- stopRingtone(); 
- stopRecordingBeep();
- stopHoldMusic();
- stopMic();
- if (synthRef.current) {
-  try { synthRef.current.cancel(); } catch {}
- }
- setIsSpeaking(false);
- setClientAudioLevel(0);
- setActiveCall(null); 
- activeCallRef.current = null;
- setIsOnHold(false);
- const c = getCallFrequencyForLevel(level);
- setNextCallIn(c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec)));
+  try {
+   if (activeCallRef.current) {
+    setCallHistory(prev => [{ id: activeCallRef.current!.id, clientName: activeCallRef.current!.clientName, userEmail: activeCallRef.current!.userEmail, priority: activeCallRef.current!.priority, status: 'ended', duration: activeCallRef.current!.duration, endedAt: Date.now(), persona: activeCallRef.current!.persona }, ...prev].slice(0,20));
+   }
+   stopRingtone(); stopRecordingBeep(); stopHoldMusic(); stopMic();
+   if (synthRef.current) { try { synthRef.current.cancel(); } catch {} }
+   setIsSpeaking(false); setClientAudioLevel(0);
+   setActiveCall(null); activeCallRef.current = null; setIsOnHold(false);
+   const c = getCallFrequencyForLevel(level);
+   setNextCallIn(c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec)));
+  } catch {}
  }, [stopRingtone, stopRecordingBeep, stopHoldMusic, stopMic, level]);
 
  const toggleHold = useCallback(() => {
- const call = activeCallRef.current;
- if (!call) return;
- const newHold = !isOnHold;
- setIsOnHold(newHold);
- if (newHold) {
-  setActiveCall(prev => prev ? { ...prev, status: 'on-hold' } : null);
-  if (activeCallRef.current) activeCallRef.current.status = 'on-hold';
-  playHoldMusic();
-  const holdMsg: CallMessage = { id: Date.now().toString(), speaker: 'system', text: `⏸️ Call placed on hold at ${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')} — playing hold music for client`, time: `${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')}`, isVoice: false };
-  setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, holdMsg] } : null);
- } else {
-  setActiveCall(prev => prev ? { ...prev, status: 'active' } : null);
-  if (activeCallRef.current) activeCallRef.current.status = 'active';
-  stopHoldMusic();
-  const resumeMsg: CallMessage = { id: Date.now().toString(), speaker: 'system', text: `▶️ Call resumed at ${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')} — hold duration ${call.holdDuration}s`, time: `${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')}`, isVoice: false };
-  setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, resumeMsg] } : null);
- }
+  try {
+   const call = activeCallRef.current;
+   if (!call) return;
+   const newHold = !isOnHold;
+   setIsOnHold(newHold);
+   if (newHold) {
+    setActiveCall(prev => prev ? { ...prev, status: 'on-hold' } : null);
+    if (activeCallRef.current) activeCallRef.current.status = 'on-hold';
+    playHoldMusic();
+    const holdMsg: CallMessage = { id: Date.now().toString(), speaker: 'system', text: `⏸️ Call placed on hold at ${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')} — playing hold music for client`, time: `${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')}`, isVoice: false };
+    setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, holdMsg] } : null);
+   } else {
+    setActiveCall(prev => prev ? { ...prev, status: 'active' } : null);
+    if (activeCallRef.current) activeCallRef.current.status = 'active';
+    stopHoldMusic();
+    const resumeMsg: CallMessage = { id: Date.now().toString(), speaker: 'system', text: `▶️ Call resumed at ${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')} — hold duration ${call.holdDuration}s`, time: `${String(Math.floor(call.duration/60)).padStart(2,'0')}:${String(call.duration%60).padStart(2,'0')}`, isVoice: false };
+    setActiveCall(prev => prev ? { ...prev, transcript: [...prev.transcript, resumeMsg] } : null);
+   }
+  } catch {}
  }, [isOnHold, playHoldMusic, stopHoldMusic]);
 
  const toggleMute = useCallback(() => {
- setIsMuted(prev => {
-  const newMuted = !prev;
-  if (newMuted && synthRef.current) {
-   try { synthRef.current.cancel(); } catch {}
-   setIsSpeaking(false);
-   setClientAudioLevel(0);
-  }
-  return newMuted;
- });
+  try {
+   setIsMuted(prev => {
+    const newMuted = !prev;
+    if (newMuted && synthRef.current) { try { synthRef.current.cancel(); } catch {} setIsSpeaking(false); setClientAudioLevel(0); }
+    return newMuted;
+   });
+  } catch {}
  }, []);
 
  const createRandomTicket = useCallback(() => {
- // Critical-only for beginners: prefer P1 and breaching tickets
- const cfg = getCallFrequencyForLevel(level);
- let pool = tickets;
- if (cfg.allowNonCritical === false) {
-  // Only P1 or breaching
-  const critical = tickets.filter((t:any) => t.priority === 'P1' || t.slaBreach || t.timeLeftMs < 5*60*1000);
-  if (critical.length > 0) pool = critical;
-  else {
-   // No critical tickets — don't create call at low level (return null to suppress)
-   if (level <= 2) return null;
-  }
- }
- if (pool.length > 0) {
-  // Prefer P1
-  const p1s = pool.filter((t:any) => t.priority === 'P1');
-  const chosen = p1s.length > 0 && Math.random() < 0.8 ? p1s[Math.floor(Math.random()*p1s.length)] : pool[Math.floor(Math.random()*pool.length)];
-  return chosen;
- }
- // Fallback only if level allows non-critical
- if (!cfg.allowNonCritical && level <= 2) return null;
- return {
-  id: `call-${Date.now()}`,
-  clientId: ['client-a', 'client-b', 'client-c'][Math.floor(Math.random()*3)],
-  clientName: ['NovaTech Financial', 'Bloom Studio', 'Apex Financial'][Math.floor(Math.random()*3)],
-  priority: cfg.allowNonCritical ? (Math.random() < 0.4 ? 'P1' : 'P2') : 'P1',
-  userEmail: ['sarah.finance@novatech.com', 'emma@bloomco.studio', 'risk@apexfin.com'][Math.floor(Math.random()*3)],
-  userMessage: level <=2 ? "P1 CRITICAL: Can't access Outlook, device not compliant. Need payroll email! Correlation ID urgent — please help!" : "Hello? Is this IT support? Need help with my account.",
-  code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
-  title: level <=2 ? 'P1 Critical Call - Needs Immediate Help' : 'Live Call - Need Assistance',
- };
+  try {
+   const cfg = getCallFrequencyForLevel(level);
+   let pool = tickets || [];
+   if (cfg.allowNonCritical === false) {
+    const critical = pool.filter((t:any) => t.priority === 'P1' || t.slaBreach || t.timeLeftMs < 5*60*1000);
+    if (critical.length > 0) pool = critical;
+    else { if (level <= 2) return null; }
+   }
+   if (pool.length > 0) {
+    const p1s = pool.filter((t:any) => t.priority === 'P1');
+    const chosen = p1s.length > 0 && Math.random() < 0.8 ? p1s[Math.floor(Math.random()*p1s.length)] : pool[Math.floor(Math.random()*pool.length)];
+    return chosen;
+   }
+   if (!cfg.allowNonCritical && level <= 2) return null;
+   return {
+    id: `call-${Date.now()}`,
+    clientId: ['client-a', 'client-b', 'client-c'][Math.floor(Math.random()*3)],
+    clientName: ['NovaTech Financial', 'Bloom Studio', 'Apex Financial'][Math.floor(Math.random()*3)],
+    priority: cfg.allowNonCritical ? (Math.random() < 0.4 ? 'P1' : 'P2') : 'P1',
+    userEmail: ['sarah.finance@novatech.com', 'emma@bloomco.studio', 'risk@apexfin.com'][Math.floor(Math.random()*3)],
+    userMessage: level <=2 ? "P1 CRITICAL: Can't access Outlook, device not compliant. Need payroll email! Correlation ID urgent — please help!" : "Hello? Is this IT support? Need help with my account.",
+    code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
+    title: level <=2 ? 'P1 Critical Call - Needs Immediate Help' : 'Live Call - Need Assistance',
+   };
+  } catch { return null; }
  }, [tickets, level]);
 
  const triggerCall = useCallback((ticket?: any) => {
- if (activeCallRef.current || incomingRef.current) return;
- const cfg = getCallFrequencyForLevel(level);
- // For beginners lvl1, no auto calls unless explicitly triggered with ticket
- if (!ticket && level <=1) {
-  console.log('Lvl1 — auto calls disabled, use Call Now button to practice');
-  return;
- }
- const t = ticket || createRandomTicket();
- if (!t) {
-  console.log('No critical ticket available for call at this level — suppressing');
-  // Reschedule next check longer
-  setNextCallIn(cfg.minNextCallSec + Math.floor(Math.random()*(cfg.maxNextCallSec - cfg.minNextCallSec)));
-  return;
- }
- console.log(`Triggering incoming call [Lvl ${level} — ${cfg.description}]`, t.id);
- setIncoming(t);
- incomingRef.current = t;
- if (!isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) {
-  playRingtone();
- } else {
-  console.log('Ring suppressed — muted:', isRingMuted, 'hidden:', typeof document !== 'undefined' && document.hidden, 'appHidden:', isAppHidden);
- }
- showBrowserNotification(t);
- const nextSec = cfg.minNextCallSec + Math.floor(Math.random()*(cfg.maxNextCallSec - cfg.minNextCallSec));
- setNextCallIn(nextSec);
+  try {
+   if (activeCallRef.current || incomingRef.current) return;
+   const cfg = getCallFrequencyForLevel(level);
+   if (!ticket && level <=1) return;
+   const t = ticket || createRandomTicket();
+   if (!t) { setNextCallIn(cfg.minNextCallSec + Math.floor(Math.random()*(cfg.maxNextCallSec - cfg.minNextCallSec))); return; }
+   setIncoming(t);
+   incomingRef.current = t;
+   if (!isRingMuted && !(typeof document !== 'undefined' && document.hidden) && !isAppHidden) { playRingtone(); }
+   showBrowserNotification(t);
+   const nextSec = cfg.minNextCallSec + Math.floor(Math.random()*(cfg.maxNextCallSec - cfg.minNextCallSec));
+   setNextCallIn(nextSec);
+  } catch {}
  }, [createRandomTicket, playRingtone, showBrowserNotification, isRingMuted, isAppHidden, level]);
 
  useEffect(() => {
- const cfg = getCallFrequencyForLevel(level);
- console.log(`[OrbitDesk Phone] Lvl ${level} config:`, cfg.description);
- // Initial delay based on level
- const initialTimer = setTimeout(() => {
-  if (!activeCallRef.current && !incomingRef.current) {
-   // Only auto-trigger if level >=2, lvl1 needs manual
-   if (level >= 2) {
-    triggerCall();
+  try {
+   const cfg = getCallFrequencyForLevel(level);
+   const initialTimer = setTimeout(() => { if (!activeCallRef.current && !incomingRef.current && level >= 2) { triggerCall(); } }, cfg.initialDelayMs);
+   const countdown = setInterval(() => {
+    setNextCallIn(prev => {
+     try {
+      if (prev <= 1) {
+       if (!activeCallRef.current && !incomingRef.current && level >= 2) { triggerCall(); }
+       const c = getCallFrequencyForLevel(level);
+       return c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec));
+      }
+      return prev - 1;
+     } catch { return prev; }
+    });
+   }, cfg.countdownIntervalMs);
+   const interval = setInterval(() => {
+    try { if (!activeCallRef.current && !incomingRef.current) { const c = getCallFrequencyForLevel(level); if (Math.random() < c.randomChance) { triggerCall(); } } } catch {}
+   }, cfg.autoCheckIntervalMs);
+   if (typeof window !== 'undefined') {
+    (window as any).triggerIncomingCall = (ticket?: any) => {
+     try {
+      if (ticket) triggerCall(ticket);
+      else {
+       const t = createRandomTicket() || {
+        id: `call-${Date.now()}`,
+        clientId: 'client-a',
+        clientName: 'NovaTech Financial',
+        priority: 'P1',
+        userEmail: 'sarah.finance@novatech.com',
+        userMessage: "P1: Can't access Outlook, device not compliant. Need payroll email! Correlation ID urgent!",
+        code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
+        title: 'Manual Call - Practice',
+       };
+       triggerCall(t);
+      }
+     } catch {}
+    };
    }
-  }
- }, cfg.initialDelayMs);
-
- const countdown = setInterval(() => {
-  setNextCallIn(prev => {
-   if (prev <= 1) {
-    if (!activeCallRef.current && !incomingRef.current) {
-     // Only trigger if level allows and critical exists
-     if (level >= 2) {
-      triggerCall();
-     }
-    }
-    const c = getCallFrequencyForLevel(level);
-    return c.minNextCallSec + Math.floor(Math.random()*(c.maxNextCallSec - c.minNextCallSec));
-   }
-   return prev - 1;
-  });
- }, cfg.countdownIntervalMs);
-
- const interval = setInterval(() => {
-  if (!activeCallRef.current && !incomingRef.current) {
-   const c = getCallFrequencyForLevel(level);
-   if (Math.random() < c.randomChance) {
-    triggerCall();
-   }
-  }
- }, cfg.autoCheckIntervalMs);
-
- (window as any).triggerIncomingCall = (ticket?: any) => {
-  console.log('Manual trigger call clicked — always allowed');
-  if (ticket) triggerCall(ticket);
-  else {
-   // For manual, bypass level check and force create
-   const t = createRandomTicket() || {
-    id: `call-${Date.now()}`,
-    clientId: 'client-a',
-    clientName: 'NovaTech Financial',
-    priority: 'P1',
-    userEmail: 'sarah.finance@novatech.com',
-    userMessage: "P1: Can't access Outlook, device not compliant. Need payroll email! Correlation ID urgent!",
-    code: 'CALL-' + Math.random().toString(36).substring(7).toUpperCase(),
-    title: 'Manual Call - Practice',
-   };
-   triggerCall(t);
-  }
- };
-
- return () => {
-  clearTimeout(initialTimer);
-  clearInterval(countdown);
-  clearInterval(interval);
-  isRingingRef.current = false;
- };
+   return () => { try { clearTimeout(initialTimer); clearInterval(countdown); clearInterval(interval); isRingingRef.current = false; } catch {} };
+  } catch { setHasError(true); }
  }, [triggerCall, level, createRandomTicket]);
 
  useEffect(() => {
- if (!activeCall || activeCall.status !== 'active') return;
- const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, duration: prev.duration + 1 } : null), 1000);
- return () => clearInterval(timer);
+  try { if (!activeCall || activeCall.status !== 'active') return; const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, duration: prev.duration + 1 } : null), 1000); return () => clearInterval(timer); } catch {}
  }, [activeCall]);
 
  useEffect(() => {
- if (!activeCall || activeCall.status !== 'on-hold') return;
- const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, holdDuration: prev.holdDuration + 1 } : null), 1000);
- return () => clearInterval(timer);
+  try { if (!activeCall || activeCall.status !== 'on-hold') return; const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, holdDuration: prev.holdDuration + 1 } : null), 1000); return () => clearInterval(timer); } catch {}
  }, [activeCall?.status]);
 
  useEffect(() => {
- const resumeAudio = () => {
-  if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-   audioContextRef.current.resume().catch(()=>{});
-  }
-  if (holdMusicRef.current && holdMusicRef.current.state === 'suspended') {
-   holdMusicRef.current.resume().catch(()=>{});
-  }
-  if (micContextRef.current && micContextRef.current.state === 'suspended') {
-   micContextRef.current.resume().catch(()=>{});
-  }
- };
- window.addEventListener('click', resumeAudio);
- window.addEventListener('keydown', resumeAudio);
- return () => {
-  window.removeEventListener('click', resumeAudio);
-  window.removeEventListener('keydown', resumeAudio);
- };
+  try {
+   const resumeAudio = () => {
+    try {
+     if (audioContextRef.current && audioContextRef.current.state === 'suspended') audioContextRef.current.resume().catch(()=>{});
+     if (holdMusicRef.current && holdMusicRef.current.state === 'suspended') holdMusicRef.current.resume().catch(()=>{});
+     if (micContextRef.current && micContextRef.current.state === 'suspended') micContextRef.current.resume().catch(()=>{});
+    } catch {}
+   };
+   if (typeof window !== 'undefined') {
+    window.addEventListener('click', resumeAudio);
+    window.addEventListener('keydown', resumeAudio);
+    return () => { try { window.removeEventListener('click', resumeAudio); window.removeEventListener('keydown', resumeAudio); } catch {} };
+   }
+  } catch {}
  }, []);
 
  useEffect(() => {
-  if (!incoming) {
-   stopRingtone();
-   return;
-  }
-  if (isRingMuted || isAppHidden || (typeof document !== 'undefined' && document.hidden)) {
-   stopRingtone();
-  } else {
-   if (!isRingingRef.current) {
-    playRingtone();
-   }
-  }
+  try {
+   if (!incoming) { stopRingtone(); return; }
+   if (isRingMuted || isAppHidden || (typeof document !== 'undefined' && document.hidden)) { stopRingtone(); }
+   else { if (!isRingingRef.current) { playRingtone(); } }
+  } catch {}
  }, [incoming, isRingMuted, isAppHidden, playRingtone, stopRingtone]);
 
- useEffect(() => {
-  try {
-   localStorage.setItem('orbitdesk_ring_muted', isRingMuted ? 'true' : 'false');
-  } catch {}
- }, [isRingMuted]);
+ useEffect(() => { try { localStorage.setItem('orbitdesk_ring_muted', isRingMuted ? 'true' : 'false'); } catch {} }, [isRingMuted]);
+
+ if (hasError) {
+  return (
+   <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-zinc-800 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-xl h-8">
+    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+    <span className="text-[11px] text-zinc-400">Phone • Safe mode • Click to retry</span>
+    <button onClick={() => setHasError(false)} className="h-6 px-2.5 rounded-full bg-zinc-800 text-white text-[11px]">Retry</button>
+   </div>
+  );
+ }
 
  return (
  <>
@@ -1047,7 +847,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
     <span className="text-[11px] text-zinc-300 hidden lg:inline">Lvl {level} • {level <=1 ? '📵 Focus tickets' : level ===2 ? `📞 P1 only • ${nextCallIn}s` : `${nextCallIn}s • ${freqConfig.maxCallsPerHour}/hr`}</span>
     <span className="text-[11px] text-zinc-300 lg:hidden">Lvl {level} • {nextCallIn}s</span>
-    <button onClick={() => (window as any).triggerIncomingCall?.()} type="button" className="h-6 px-2.5 rounded-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white text-[11px] font-bold cursor-pointer transition-colors">📞 Call</button>
+    <button onClick={() => { try { (window as any).triggerIncomingCall?.(); } catch {} }} type="button" className="h-6 px-2.5 rounded-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white text-[11px] font-bold cursor-pointer transition-colors">📞 Call</button>
     <button onClick={() => setShowCallHistory(!showCallHistory)} type="button" className="h-6 w-6 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] cursor-pointer flex items-center justify-center">📋</button>
    </div>
    {level <=1 && showCallHistory === false && missedCalls.length === 0 && (
@@ -1061,7 +861,7 @@ export default function VoiceCallCenter({ tickets, onAccept, level = 1 }: { tick
     <div className="mt-2 space-y-1.5">
      {missedCalls.slice(0,3).map((c, i) => (
      <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800">
-      <img src="/icon-512.png" alt="" className="h-6 w-6 rounded-full object-cover flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
+      <div className="h-6 w-6 rounded-full bg-violet-600 flex items-center justify-center text-[10px] text-white flex-shrink-0">{(c.clientName?.[0] || 'C')}</div>
       <div className="flex-1 min-w-0">
        <p className="text-[11px] text-zinc-300 truncate">{c.clientName} • {c.priority}</p>
        <p className="text-[10px] text-zinc-500 truncate">{c.userEmail}</p>

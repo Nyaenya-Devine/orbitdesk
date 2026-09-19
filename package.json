@@ -2,7 +2,7 @@
   "name": "orbitdesk",
   "version": "6.16.3",
   "private": true,
-  "description": "OrbitDesk \u2014 Modern Workplace Operations Lab \u2014 Source-available Noncommercial \u2014 Proprietary flagship by Devine Nyaenya",
+  "description": "OrbitDesk — Modern Workplace Operations Lab — Source-available Noncommercial — Proprietary flagship by Devine Nyaenya",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
@@ -30,7 +30,6 @@
     "electron-updater": "^6.6.2",
     "framer-motion": "^13.2.0",
     "next": "16.3.5",
-    "playwright": "^1.63.0",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
@@ -47,6 +46,7 @@
     "eslint-config-next": "16.3.5",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wait-on": "^7.2.0"
@@ -54,7 +54,7 @@
   "build": {
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
-    "copyright": "\u00a9 2026 OrbitDesk \u2014 Educational Simulator \u2014 MIT \u2014 Devine Nyaenya",
+    "copyright": "© 2026 OrbitDesk — Educational Simulator — MIT — Devine Nyaenya",
     "directories": {
       "output": "dist",
       "buildResources": "public"
