@@ -1,31 +1,107 @@
 {
-  "name": "OrbitDesk — Modern Workplace Operations Lab",
+  "name": "OrbitDesk \u2014 Modern Workplace Operations Lab",
   "short_name": "OrbitDesk",
-  "description": "Modern Workplace Operations Lab — ADUC, Entra ID What-If, Intune, GPO, WebRTC — v6.16.3 real live demo, fixed stuck, AD smooth, PWA update",
-  "version": "6.16.3",
+  "description": "Modern Workplace Operations Lab \u2014 ADUC, Entra ID What-If, Intune, GPO, WebRTC \u2014 v6.18 real functional demo video 90s 1920x1080 with human voiceover, phone fixed, best security nonce CSP",
+  "version": "6.18",
   "start_url": "/lab",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "browser"
+  ],
   "background_color": "#0a0a0a",
   "theme_color": "#7c3aed",
   "orientation": "any",
   "scope": "/",
-  "categories": ["business", "productivity", "education"],
+  "categories": [
+    "business",
+    "productivity",
+    "education"
+  ],
   "lang": "en-US",
   "dir": "ltr",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Open Lab Live — Real Demo", "short_name": "Live Lab", "description": "Open real lab live — actual project, not video", "url": "/lab", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Walkthrough — 7 Steps", "short_name": "Walkthrough", "description": "7-step walkthrough real live", "url": "/walkthrough", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Demo — Screenshots Live", "short_name": "Demo", "description": "Lean demo no corrupt", "url": "/demo", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Open Lab Live \u2014 Real Demo",
+      "short_name": "Live Lab",
+      "description": "Open real lab live \u2014 actual project, not video",
+      "url": "/lab",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Walkthrough \u2014 7 Steps",
+      "short_name": "Walkthrough",
+      "description": "7-step walkthrough real live",
+      "url": "/walkthrough",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Demo \u2014 Screenshots Live",
+      "short_name": "Demo",
+      "description": "Lean demo no corrupt",
+      "url": "/demo",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Video \u2014 Real Demo 90s",
+      "short_name": "Video",
+      "description": "Real functional demo video 90s with voiceover",
+      "url": "/orbitdesk-walkthrough-demo-final.mp4",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ],
   "screenshots": [
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "wide", "label": "OrbitDesk — Modern Workplace Operations Lab — Real Live Demo" }
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "OrbitDesk \u2014 Modern Workplace Operations Lab \u2014 Real Live Demo"
+    }
   ],
-  "edge_side_panel": { "preferred_width": 400 },
-  "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
+  },
   "handle_links": "preferred"
 }

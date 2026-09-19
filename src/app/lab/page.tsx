@@ -606,7 +606,7 @@ export default function HomeV3() {
     <span className="hidden lg:inline">{getLevelInfo(progress.level).title} • {getLevelInfo(progress.level).orbitRings} rings</span>
    </div>
    <div className="flex items-center gap-3 font-mono">
-    <span className="hidden md:inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-900 border border-zinc-800 text-[10px]">v6.16.3 • Real Live Demo • IP Locked • Lean 4M</span>
+    <span className="hidden md:inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-900 border border-zinc-800 text-[10px]">v6.18 • Real Live Demo • IP Locked • Lean 4M</span>
     <span>Lvl {progress.level} • {progress.xp} XP • {progress.ticketsResolved} ✓</span>
     <span className="hidden md:inline">• Grade {progress.ticketsResolved > 0 ? Math.round((progress.avgCSAT*20+progress.avgQA+progress.slaCompliance)/3) : 0}/100</span>
    </div>

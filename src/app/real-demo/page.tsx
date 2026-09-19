@@ -122,7 +122,7 @@ export default function RealDemoPage() {
       ctx.fillRect(20, 16, 36, 24);
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 13px Inter, sans-serif';
-      ctx.fillText('OrbitDesk — Modern Workplace Operations Lab • Real Live • v6.16.3', 70, 32);
+      ctx.fillText('OrbitDesk — Modern Workplace Operations Lab • Real Live • v6.18', 70, 32);
       
       // Step indicator
       ctx.fillStyle = '#27272a';
@@ -222,7 +222,7 @@ export default function RealDemoPage() {
       ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
       ctx.fillStyle = '#71717a';
       ctx.font = '10px monospace';
-      ctx.fillText('© 2026 OrbitDesk • Educational simulator • Not affiliated with Microsoft • Local-only • v6.16.3 • Real live demo • Not image concatenation • Actual React components', 20, canvas.height - 20);
+      ctx.fillText('© 2026 OrbitDesk • Educational simulator • Not affiliated with Microsoft • Local-only • v6.18 • Real live demo • Not image concatenation • Actual React components', 20, canvas.height - 20);
       
       if (isRecording) {
         ctx.fillStyle = '#ef4444';
@@ -248,7 +248,7 @@ export default function RealDemoPage() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-bold text-[12px]">O</div>
             <div>
               <p className="text-[13px] font-semibold tracking-[-0.02em]">OrbitDesk — Real Live Demo • Chokepoint-Style • Actual Project Running</p>
-              <p className="text-[10px] tracking-[0.14em] text-zinc-500 uppercase">Real screen record • Not image concatenation • Live login click • OU tree expand • What-If • GPO fix • WebRTC • v6.16.3</p>
+              <p className="text-[10px] tracking-[0.14em] text-zinc-500 uppercase">Real screen record • Not image concatenation • Live login click • OU tree expand • What-If • GPO fix • WebRTC • v6.18</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ export default function RealDemoPage() {
               </div>
               <canvas ref={canvasRef} width={1280} height={720} className="w-full aspect-video bg-[#0a0a0a]" />
               <div className="h-10 px-4 flex items-center justify-between bg-zinc-900/50 border-t border-zinc-800">
-                <span className="text-[10px] text-zinc-500">Real React components • Not images • {step.id} • {step.action} • v6.16.3 • chokepoint-style real screen record</span>
+                <span className="text-[10px] text-zinc-500">Real React components • Not images • {step.id} • {step.action} • v6.18 • chokepoint-style real screen record</span>
                 <div className="flex gap-2">
                   {!isRecording ? <button onClick={startRecording} className="h-6 px-3 rounded-full bg-red-600 text-white text-[10px] font-bold">● Record</button> : <button onClick={stopRecording} className="h-6 px-3 rounded-full bg-zinc-800 border border-zinc-700 text-white text-[10px]">■ Stop</button>}
                   <button onClick={() => setShowLive(true)} className="h-6 px-3 rounded-full bg-violet-600 text-white text-[10px]">Open real lab →</button>

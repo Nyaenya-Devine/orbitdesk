@@ -46,7 +46,7 @@ export default function WalkthroughPage() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-bold text-[12px]">O</div>
             <div>
               <p className="text-[13px] font-semibold tracking-[-0.02em]">OrbitDesk — Modern Workplace Operations Lab • Walkthrough</p>
-              <p className="text-[10px] tracking-[0.14em] text-zinc-500 uppercase">7 steps • Real live • No MP4 • Lean • v6.16.3 • Fixed stuck • AD smooth</p>
+              <p className="text-[10px] tracking-[0.14em] text-zinc-500 uppercase">7 steps • Real live • No MP4 • Lean • v6.18 • Fixed stuck • AD smooth</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -99,12 +99,12 @@ export default function WalkthroughPage() {
             </div>
 
             <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-emerald-300 uppercase">✅ v6.16.3 fixes — verified</p>
+              <p className="text-[11px] font-semibold tracking-[0.14em] text-emerald-300 uppercase">✅ v6.18 fixes — verified</p>
               <ul className="mt-2 space-y-1 text-[11px] text-zinc-400 leading-[1.4]">
                 <li>• AuthGate premium — Modern Workplace Operations Lab</li>
                 <li>• Skip → Enter Lab Now obvious — fixes stuck</li>
                 <li>• Guide only new users — hasSeenGuide</li>
-                <li>• PWA sw.js v6.16.3 — desktop reflects update</li>
+                <li>• PWA sw.js v6.18 — desktop reflects update</li>
                 <li>• Demo lean 91M→4M — no corrupt</li>
                 <li>• AD smooth spring 300 damping 25 — fully functional</li>
               </ul>
@@ -150,7 +150,7 @@ export default function WalkthroughPage() {
                       <div className="flex gap-1.5"><div className="h-3 w-3 rounded-full bg-zinc-700" /><div className="h-3 w-3 rounded-full bg-zinc-700" /><div className="h-3 w-3 rounded-full bg-zinc-700" /></div>
                       <span className="text-[11px] text-zinc-500 ml-3">orbitdesk.vercel.app/lab • {step.id}</span>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">● Live • v6.16.3</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">● Live • v6.18</span>
                   </div>
                   <div className="aspect-[16/10] bg-[#0a0a0a] p-4 relative overflow-hidden">
                     {/* Professional mock of real UI — not screenshot image, but live React structure */}
