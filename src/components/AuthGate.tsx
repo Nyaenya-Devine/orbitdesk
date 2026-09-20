@@ -124,7 +124,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
             </div>
             <div className="hidden lg:flex items-center gap-2 text-[10px] text-zinc-500">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Local-only • v6.16.3</span>
+              <span>Local-only • v7.0 Genius • Da Vinci • Newton • Einstein • von Neumann • Turing</span>
             </div>
           </div>
 

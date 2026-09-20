@@ -1,8 +1,8 @@
 {
   "name": "orbitdesk",
-  "version": "6.16.3",
+  "version": "7.0.0",
   "private": true,
-  "description": "OrbitDesk — Modern Workplace Operations Lab — Source-available Noncommercial — Proprietary flagship by Devine Nyaenya",
+  "description": "OrbitDesk — Modern Workplace Operations Lab v7.0 Genius Edition — Da Vinci Newton Einstein von Neumann Turing — Open Heart Surgery — Source-available Noncommercial — Proprietary flagship by Devine Nyaenya",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
