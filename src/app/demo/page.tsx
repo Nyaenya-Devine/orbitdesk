@@ -23,7 +23,7 @@ export default function DemoPage() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-bold text-[13px]">O</div>
             <div>
               <p className="text-[13px] font-semibold tracking-[-0.02em]">OrbitDesk — Modern Workplace Operations Lab</p>
-              <p className="text-[10px] tracking-[0.14em] text-zinc-500 uppercase">Live Demo • Real UI • v6.18 • No MP4 • Lean</p>
+              <p className="text-[10px] tracking-[0.14em] text-zinc-500 uppercase">Live Demo • Real UI • v7.0 Genius Edition • No MP4 • Lean</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -67,12 +67,12 @@ export default function DemoPage() {
             </div>
 
             <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-emerald-300 uppercase">✅ Fixed issues v6.18</p>
+              <p className="text-[11px] font-semibold tracking-[0.14em] text-emerald-300 uppercase">✅ Fixed issues v7.0 Genius Edition</p>
               <ul className="mt-3 space-y-1.5 text-[11px] text-zinc-400 leading-[1.4]">
                 <li>• AuthGate professional learning-tool UX — Modern Workplace Operations Lab, not basic 3-step</li>
                 <li>• Skip → Enter Lab Now obvious, one click, fixes stuck at start page</li>
                 <li>• StudentModeGuide only new users — hasSeenGuide localStorage</li>
-                <li>• PWA sw.js v6.18 skipWaiting clients.claim network-first — desktop reflects update</li>
+                <li>• PWA sw.js v7.0 Genius Edition skipWaiting clients.claim network-first — desktop reflects update</li>
                 <li>• Demo page lean — removed 73MB MP4s, no corrupt, 4MB public</li>
                 <li>• AD fully functional + smooth framer-motion spring 300 damping 25</li>
               </ul>
@@ -213,7 +213,7 @@ export default function DemoPage() {
                 )}
               </div>
               <div className="h-10 px-4 flex items-center justify-between bg-zinc-900/50 border-t border-zinc-800/80">
-                <span className="text-[10px] text-zinc-500">Real React components • Not images • Try live at /lab • v6.18</span>
+                <span className="text-[10px] text-zinc-500">Real React components • Not images • Try live at /lab • v7.0 Genius Edition</span>
                 <button onClick={() => setShowLive(true)} className="h-6 px-3 rounded-full bg-violet-600 text-white text-[10px] font-medium">Open real lab →</button>
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function DemoPage() {
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
                 <p className="text-[11px] font-medium tracking-[0.14em] text-zinc-500 uppercase">Lean repo • No corrupt</p>
-                <p className="text-[12px] text-zinc-300 mt-2 leading-[1.5]">Public 91M → 4M. Removed 73MB MP4s causing Vercel corrupt. sw.js v6.18 network-first + skipWaiting + clients.claim — desktop reflects update immediately.</p>
+                <p className="text-[12px] text-zinc-300 mt-2 leading-[1.5]">Public 91M → 4M. Removed 73MB MP4s causing Vercel corrupt. sw.js v7.0 Genius Edition network-first + skipWaiting + clients.claim — desktop reflects update immediately.</p>
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
                 <p className="text-[11px] font-medium tracking-[0.14em] text-zinc-500 uppercase">Chokepoint-style real demo</p>

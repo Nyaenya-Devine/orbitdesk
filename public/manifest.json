@@ -1,8 +1,8 @@
 {
-  "name": "OrbitDesk \u2014 Modern Workplace Operations Lab",
+  "name": "OrbitDesk — Modern Workplace Operations Lab",
   "short_name": "OrbitDesk",
-  "description": "Modern Workplace Operations Lab \u2014 ADUC, Entra ID What-If, Intune, GPO, WebRTC \u2014 v6.18 real functional demo video 90s 1920x1080 with human voiceover, phone fixed, best security nonce CSP",
-  "version": "6.18",
+  "description": "Modern Workplace Operations Lab — v7.0 Genius Edition — Da Vinci visual anatomy, Newton F=P×1/t gravity triage, Einstein thought experiments relativity, von Neumann game theory minimax self-replicating, Turing test 95% Enigma — ADUC OU tree, Entra ID What-If, Intune, GPO, WebRTC",
+  "version": "7.0.0",
   "start_url": "/lab",
   "display": "standalone",
   "display_override": [
@@ -37,9 +37,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Open Lab Live \u2014 Real Demo",
-      "short_name": "Live Lab",
-      "description": "Open real lab live \u2014 actual project, not video",
+      "name": "Open Lab — Genius Edition",
+      "short_name": "Genius Lab",
+      "description": "Open v7.0 Genius Lab — Da Vinci Newton Einstein von Neumann Turing",
       "url": "/lab",
       "icons": [
         {
@@ -49,10 +49,10 @@
       ]
     },
     {
-      "name": "Walkthrough \u2014 7 Steps",
-      "short_name": "Walkthrough",
-      "description": "7-step walkthrough real live",
-      "url": "/walkthrough",
+      "name": "Genius Lab — 5 Engines",
+      "short_name": "Genius",
+      "description": "Genius Lab — 5 engines, 5 perspectives, open heart surgery",
+      "url": "/lab",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -61,22 +61,10 @@
       ]
     },
     {
-      "name": "Demo \u2014 Screenshots Live",
+      "name": "Demo — Lean",
       "short_name": "Demo",
-      "description": "Lean demo no corrupt",
+      "description": "Lean demo — no corrupt MP4",
       "url": "/demo",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Video \u2014 Real Demo 90s",
-      "short_name": "Video",
-      "description": "Real functional demo video 90s with voiceover",
-      "url": "/orbitdesk-walkthrough-demo-final.mp4",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -91,7 +79,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "OrbitDesk \u2014 Modern Workplace Operations Lab \u2014 Real Live Demo"
+      "label": "OrbitDesk v7.0 Genius Edition — Open Heart Surgery — Da Vinci Newton Einstein von Neumann Turing"
     }
   ],
   "edge_side_panel": {

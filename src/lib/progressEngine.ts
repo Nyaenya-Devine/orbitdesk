@@ -511,28 +511,28 @@ export function calculateLevel(xp: number): number {
  return Math.floor(xp / 100) + 1;
 }
 
-export function getLevelInfo(level: number): { title: string; description: string; unlocks: string[]; color: string; orbitRings: number } {
+export function getLevelInfo(level: number): { title: string; description: string; unlocks: string[]; color: string; orbitRings: number; cert: string; certPath: string; genius: string } {
  switch (level) {
   case 1:
-   return { title: 'Orbit Initiate', description: 'Welcome to OrbitDesk — learning the basics', unlocks: ['Beginner tickets', 'MFA, DeviceCap, Teams presence'], color: 'emerald', orbitRings: 1 };
+   return { title: 'Orbit Initiate', description: 'Welcome to OrbitDesk — learning M365 fundamentals', unlocks: ['Beginner tickets', 'MFA, DeviceCap, Teams presence'], color: 'emerald', orbitRings: 1, cert: 'MS-900', certPath: 'Microsoft 365 Fundamentals — Understand M365 services, Teams, Entra ID basics', genius: 'Da Vinci: Observe — draw OU tree skeleton, see structure' };
   case 2:
-   return { title: 'Desk Cadet', description: 'Getting comfortable with M365 basics', unlocks: ['Mixed beginner', 'License, shared mailbox'], color: 'blue', orbitRings: 1 };
+   return { title: 'Desk Cadet', description: 'M365 basics + support fundamentals', unlocks: ['Mixed beginner', 'License, shared mailbox'], color: 'blue', orbitRings: 1, cert: 'MS-900', certPath: 'MS-900 Fundamentals — Licensing, Exchange Online, SharePoint basics', genius: 'Newton 1st Law: Ticket at rest stays at rest unless acted upon — check logs first' };
   case 3:
-   return { title: 'Support Specialist', description: 'Ready for intermediate challenges', unlocks: ['Intermediate unlock', 'CA DeviceNotCompliant, Enrollment 0x80180024'], color: 'violet', orbitRings: 2 };
+   return { title: 'Support Specialist', description: 'Ready for intermediate — hybrid identity', unlocks: ['Intermediate unlock', 'CA DeviceNotCompliant 53000, Enrollment 0x80180024'], color: 'violet', orbitRings: 2, cert: 'AZ-800', certPath: 'AZ-800 Hybrid Core — ADUC, OU tree, GPO, AD DS, ADUC Recycle Bin, PowerShell History', genius: 'Einstein Thought: What if you ARE the CA policy? You see Device Compliance NO, you block 53000 — not evil, just rule' };
   case 4:
-   return { title: 'Compliance Operator', description: 'Handling compliance & quarantine', unlocks: ['BitLocker, Quarantine release', 'Higher P1 rate 10%'], color: 'amber', orbitRings: 2 };
+   return { title: 'Compliance Operator', description: 'Handling compliance & quarantine — Intune', unlocks: ['BitLocker, Quarantine release', 'Higher P1 rate 10%'], color: 'amber', orbitRings: 2, cert: 'AZ-800 + MD-102', certPath: 'AZ-800 + MD-102 Endpoint — Intune compliance, BitLocker, Company Portal sync, encryption', genius: 'Da Vinci Anatomy: Intune is circulatory — enrollment heart, BitLocker oxygen, compliance health, Company Portal pulse' };
   case 5:
-   return { title: 'Intune Navigator', description: 'Mastering device management', unlocks: ['Advanced prep', 'Location CA, Account lock'], color: 'indigo', orbitRings: 3 };
+   return { title: 'Intune Navigator', description: 'Mastering device management — endpoint', unlocks: ['Advanced prep', 'Location CA, Account lock'], color: 'indigo', orbitRings: 3, cert: 'MD-102', certPath: 'MD-102 Endpoint Administrator — Device enrollment, compliance policies, BitLocker escrow, Remote Help', genius: 'Newton 2nd Law: F=P×(1/t) Force = Priority × 1/time — P1 5m left has massive force 20, triage by force not gut' };
   case 6:
-   return { title: 'Entra Guardian', description: 'Securing identity & access', unlocks: ['Advanced tickets', 'MDM authority, Defender SmartScreen'], color: 'purple', orbitRings: 3 };
+   return { title: 'Entra Guardian', description: 'Securing identity & access — zero trust', unlocks: ['Advanced tickets', 'MDM authority, Defender SmartScreen'], color: 'purple', orbitRings: 3, cert: 'SC-300', certPath: 'SC-300 Identity & Access — Entra ID CA, What-If 53000, Identity Protection, PIM, Access Reviews', genius: 'Einstein E=mc²: Access = Identity × Device × Policy — if any 0, blocked. Simple like E=mc². What-If is bombe testing Enigma' };
   case 7:
-   return { title: 'Exchange Commander', description: 'Expert mail flow & security', unlocks: ['Expert unlock', 'SSO, Mail flow down'], color: 'red', orbitRings: 4 };
+   return { title: 'Exchange Commander', description: 'Expert mail flow & security — messaging', unlocks: ['Expert unlock', 'SSO, Mail flow down'], color: 'red', orbitRings: 4, cert: 'MS-700 + SC-300', certPath: 'MS-700 Teams + SC-300 — Exchange Online, Teams presence, mail flow, DLP, CA for Teams', genius: 'von Neumann Game Theory: Ticket queue is zero-sum game vs time — minimax minimize max loss, Nash equilibrium optimal allocation' };
   case 8:
-   return { title: 'Autopilot Architect', description: 'Deploying at scale', unlocks: ['Autopilot TPM', 'Recurring incidents 35%'], color: 'orange', orbitRings: 4 };
+   return { title: 'Autopilot Architect', description: 'Deploying at scale — modern workplace', unlocks: ['Autopilot TPM', 'Recurring incidents 35%'], color: 'orange', orbitRings: 4, cert: 'MD-102 + AZ-800', certPath: 'MD-102 + AZ-800 Expert — Autopilot, GPO linking WMI Enforce, OU flat is better, bulk edit', genius: 'Turing Test: Can your ticket pass Turing test? Correlation ID a7f3c9e2, error 53000, enterprise talks real — 95% indistinguishable' };
   case 9:
-   return { title: 'Team Lead', description: 'Leading the orbit', unlocks: ['All ticket types', 'Shorter SLAs, real pressure'], color: 'pink', orbitRings: 5 };
+   return { title: 'Team Lead', description: 'Leading the orbit — strategy & people', unlocks: ['All ticket types', 'Shorter SLAs, real pressure'], color: 'pink', orbitRings: 5, cert: 'SC-300 + AZ-800 + MD-102', certPath: 'All Certs — Identity, Endpoint, Hybrid, Teams — Interview ready for MSP L1/L2, Team Lead SBI coaching', genius: 'von Neumann Self-Replicating: Lab evolves like cellular automata — generates more tickets of types you fail, weakness-based, team as cells' };
   default:
-   return { title: `Orbit Master Lvl ${level}`, description: 'Elite operations — all challenges, max pressure', unlocks: ['Expert heavy 60%', 'P1 15% + business-hours pressure', 'Interview ready'], color: 'violet', orbitRings: 5 };
+   return { title: `Orbit Master Lvl ${level}`, description: 'Elite operations — all challenges, max pressure, genius edition', unlocks: ['Expert heavy 60%', 'P1 15% + business-hours pressure', 'Interview ready + Genius Lab mastery'], color: 'violet', orbitRings: 5, cert: 'SC-300 + AZ-800 + MD-102 + MS-700', certPath: 'Elite — All Microsoft certs + Da Vinci anatomy + Newton laws + Einstein thought experiments + von Neumann game theory + Turing Enigma', genius: 'Genius Edition: Da Vinci visual anatomy + Newton F=P×1/t gravity + Einstein you are policy/device/user 3 clocks E=mc² + von Neumann minimax Nash self-replication + Turing test Enigma learning AI' };
  }
 }
 
