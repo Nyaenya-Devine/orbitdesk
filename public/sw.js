@@ -1,5 +1,5 @@
-// OrbitDesk Service Worker v7.0 Genius Edition — Open Heart Surgery — 5 Genius Engines
-const CACHE_NAME = 'orbitdesk-v7.0-genius-edition';
+// OrbitDesk service worker — local-first application shell
+const CACHE_NAME = 'orbitdesk-v7.1';
 const urlsToCache = [
   '/',
   '/lab',
@@ -11,7 +11,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[OrbitDesk SW] Install v7.0 Genius — Da Vinci Newton Einstein von Neumann Turing — open heart surgery');
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache).catch(() => {
@@ -23,7 +23,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[OrbitDesk SW] Activate v7.0 Genius — cleaning old caches v6.18, forcing update, skipWaiting, clients.claim');
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -35,7 +35,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[OrbitDesk SW] Claiming clients — forces reload with v7.0 genius');
+
       return self.clients.claim();
     }).then(() => {
       return self.clients.matchAll().then(clients => {
@@ -49,13 +49,13 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
-  
+
   // Never cache MP4 — lean repo, no corrupt screenshot page
   if (url.includes('.mp4') || url.includes('.webm')) {
     event.respondWith(fetch(event.request));
     return;
   }
-  
+
   if (url.includes('/icon-') || url.includes('/orbitdesk-logo-') || url.includes('/audio/') || url.includes('.png') || url.includes('.jpg')) {
     event.respondWith(
       caches.match(event.request).then((response) => {
@@ -86,14 +86,14 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[OrbitDesk SW] Skip waiting — v7.0 genius force update');
+
     self.skipWaiting();
   }
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: CACHE_NAME });
   }
   if (event.data && event.data.type === 'FORCE_UPDATE') {
-    console.log('[OrbitDesk SW] Force update — deleting all caches — v7.0 genius');
+
     caches.keys().then(names => Promise.all(names.map(n => caches.delete(n)))).then(() => self.skipWaiting());
   }
 });

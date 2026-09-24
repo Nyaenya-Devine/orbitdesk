@@ -41,7 +41,6 @@ import PowerShellHistory from '@/components/PowerShellHistory';
 import EntraIDCenter from '@/components/EntraIDCenter';
 import GPOManagement from '@/components/GPOManagement';
 import IntuneDeviceCenter from '@/components/IntuneDeviceCenter';
-import GeniusLab from '@/components/GeniusLab';
 import DesktopDownloadV2 from '@/components/DesktopDownloadV2';
 
 export default function OrbitDeskV7() {
@@ -95,7 +94,7 @@ export default function OrbitDeskV7() {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
       if (e.key >= '1' && e.key <= '8') {
-        const tabs = ['overview', 'queue', 'directory', 'comms', 'clients', 'class', 'assessment', 'genius'] as const;
+        const tabs = ['overview', 'queue', 'directory', 'comms', 'clients', 'class', 'assessment'] as const;
         const idx = parseInt(e.key) - 1;
         if (tabs[idx]) dispatch({ type: 'SET_ACTIVE_TAB', tab: tabs[idx] });
       }
@@ -154,7 +153,7 @@ export default function OrbitDeskV7() {
           dispatch({ type: 'UPDATE_TICKET_TIMERS', updater: (prev) => prev.map(t => ({ ...t, slaDeadline: new Date(t.slaDeadline.getTime() + diffMs), timeLeftMs: t.timeLeftMs + diffMs })) });
           dispatch({ type: 'SET_AWAY', minutes: diffMin, welcome: { minutes: diffMin, added: Math.min(3, Math.floor(diffMin/10)) } });
         }
-        if (!state.isManualPaused) { dispatch({ type: 'SET_PAUSED', paused: false, manual: false }); document.title = 'OrbitDesk — Modern Workplace Operations Lab v7.0 Genius'; }
+        if (!state.isManualPaused) { dispatch({ type: 'SET_PAUSED', paused: false, manual: false }); document.title = 'OrbitDesk — Modern Workplace Operations Lab'; }
         saveActive();
       }
     };
@@ -191,12 +190,12 @@ export default function OrbitDeskV7() {
     const actions = { checkedLogsFirst: state.checklist.logs, usedCorrectTool: state.checklist.tool, usedClientLanguage: state.checklist.lang, confirmedResolution: state.checklist.confirm, documentedKB: false };
     const csat = calculateCSAT(state.selectedTicket, actions);
     const clientPersona = state.selectedTicket.clientId === 'client-b' ? 'smb' as const : state.selectedTicket.clientId === 'client-c' ? 'regulated' as const : 'enterprise' as const;
-    
+
     let syntheticMessage = '';
     if (clientPersona === 'smb') syntheticMessage = state.checklist.lang ? `Hi! I understand this is frustrating 😅 — sorry! Simple steps: 1. Company Portal 2. Check Status 3. Wait 2 mins sync. Happy to help!` : `Checked logs. Fixed. Try Company Portal.`;
     else if (clientPersona === 'regulated') syntheticMessage = state.checklist.lang ? `Per SEC-2024-07, checked Sign-in logs CA tab DeviceNotCompliant 53000, audit verified. RCA: policy without Report-Only. Remediation: reverted Report-Only What-If safe 15min expiry. Confirm escrow. Thank you.` : `Checked logs. Fixed policy.`;
     else syntheticMessage = state.checklist.lang ? `I understand payroll blocking — sorry. Checked Sign-in logs CA tab correlation ID ${state.selectedTicket.code} DeviceNotCompliant 53000. RCA: CA policy Require compliant without Report-Only. What-If safe revert. Fixed Intune sync. Confirm — appreciate patience!` : `Checked Sign-in logs. Fixed.`;
-    
+
     if (state.portalActionLog.length > 0) syntheticMessage += ` Actions: ${state.portalActionLog.slice(0,3).join('; ')}`;
 
     const advancedScores = calculateCommunicationScore(syntheticMessage, clientPersona, { usedClientLanguage: state.checklist.lang, checkedLogs: state.checklist.logs, usedCorrectTool: state.checklist.tool });
@@ -251,7 +250,7 @@ export default function OrbitDeskV7() {
   const togglePause = () => {
     if (state.isPaused && state.isManualPaused) {
       dispatch({ type: 'SET_PAUSED', paused: false, manual: false });
-      document.title = 'OrbitDesk — Modern Workplace Operations Lab v7.0 Genius';
+      document.title = 'OrbitDesk — Modern Workplace Operations Lab';
       addToast('▶️ Resumed', 'success', 2000);
     } else {
       dispatch({ type: 'SET_PAUSED', paused: true, manual: true });
@@ -276,7 +275,6 @@ export default function OrbitDeskV7() {
     { id: 'clients', label: t('header.clients'), icon: '◒' },
     { id: 'class', label: t('header.class'), icon: '👥' },
     { id: 'assessment', label: t('header.report'), icon: '📊', badge: state.progress.ticketsResolved },
-    { id: 'genius', label: 'Genius Lab', icon: '🧠', badge: 'v7.0' },
   ];
 
   return (
@@ -307,7 +305,7 @@ export default function OrbitDeskV7() {
                 <span className="text-[10px] text-zinc-500">• {state.progress.xp} XP</span>
               </div>
               <div className={`h-8 px-3 rounded-full border flex items-center gap-1.5 text-[11px] ${state.isPaused ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${state.isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />{state.isPaused ? 'Paused' : `${pendingCount} • ${p1Count} P1 • v7.0 Genius`}
+                <span className={`h-1.5 w-1.5 rounded-full ${state.isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />{state.isPaused ? 'Paused' : `${pendingCount} • ${p1Count} P1`}
               </div>
             </div>
             <button onClick={togglePause} className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${state.isPaused ? 'bg-amber-500 text-zinc-900 border-amber-500' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}>{state.isPaused ? '▶️' : '⏸️'}</button>
@@ -336,10 +334,10 @@ export default function OrbitDeskV7() {
                 <div className="col-span-12 lg:col-span-4 space-y-4">
                   <DesktopDownloadV2 />
                   <div className="p-4 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur border border-zinc-800/60">
-                    <h4 className="text-[13px] font-semibold text-zinc-100">Progress — v7.0 Genius Edition</h4>
+                    <h4 className="text-[13px] font-semibold text-zinc-100">Learning progress</h4>
                     <div className="mt-3 grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Resolved</p><p className="text-[20px] font-bold text-white">{state.progress.ticketsResolved}</p><p className="text-[10px] text-zinc-500">CSAT {state.progress.avgCSAT.toFixed(1)} • QA {state.progress.avgQA}%</p></div>
-                      <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Genius Score</p><p className="text-[20px] font-bold text-white">{Math.round((state.progress.communicationScores.empathy + state.progress.communicationScores.clarity + state.progress.communicationScores.technicalAccuracy)/3)}</p><p className="text-[10px] text-zinc-500">φ Golden Ratio • v7.0</p></div>
+                      <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Quality score</p><p className="text-[20px] font-bold text-white">{Math.round((state.progress.communicationScores.empathy + state.progress.communicationScores.clarity + state.progress.communicationScores.technicalAccuracy)/3)}</p><p className="text-[10px] text-zinc-500">Communication and accuracy</p></div>
                     </div>
                   </div>
                 </div>
@@ -419,10 +417,10 @@ export default function OrbitDeskV7() {
             <motion.div key="clients" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1 p-1 rounded-full bg-zinc-900 border border-zinc-800">
-                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'ca' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'ca' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>🛡️ CA — Muscle</button>
-                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'gpo' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'gpo' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>📜 GPO — Nerve</button>
-                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'intune' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'intune' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>💻 Intune — Blood</button>
-                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'agents' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'agents' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>👥 Agents — Cells</button>
+                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'ca' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'ca' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>Conditional access</button>
+                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'gpo' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'gpo' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>Group Policy</button>
+                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'intune' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'intune' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>Endpoint management</button>
+                  <button onClick={() => dispatch({ type: 'SET_POLICIES_VIEW', view: 'agents' })} className={`h-8 px-4 rounded-full text-[12px] font-medium transition ${state.policiesView === 'agents' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>Team workload</button>
                 </div>
               </div>
               {state.policiesView === 'ca' && <div className="flex-1 min-h-0 grid lg:grid-cols-2 gap-4"><PolicyCenter selectedClientId={state.selectedClientForPolicies} onSelectClient={(id) => dispatch({ type: 'SET_SELECTED_CLIENT', clientId: id })} /><AgentRoster agents={agents} onResolveConflict={(id) => { setAgents(prev => prev.map(a => a.id === id ? { ...a, mood: 'neutral' as const, conflictWith: undefined } : a)); addToast('Conflict resolved via SBI coaching', 'success', 4000); }} onAssign={handleAssign} tickets={state.tickets} /></div>}
@@ -433,22 +431,17 @@ export default function OrbitDeskV7() {
           )}
           {state.activeTab === 'class' && <motion.div key="class" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-[600px]"><ClassCommandCenter myProgress={state.progress} userProfile={state.userProfile} /></motion.div>}
           {state.activeTab === 'assessment' && <motion.div key="assessment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-h-0 overflow-y-auto"><AssessmentReport progress={state.progress} onReset={() => { if (confirm('Reset?')) { const np = { ...initialProgress, sessionId: `sess_${Math.random().toString(36).substring(7)}_${Date.now()}`, startTime: Date.now() }; dispatch({ type: 'SET_PROGRESS', progress: np }); saveProgress(np); } }} /></motion.div>}
-          {state.activeTab === 'genius' && (
-            <motion.div key="genius" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex-1 min-h-0">
-              <GeniusLab ticket={state.selectedTicket} tickets={state.tickets} agents={agents} portalLog={state.portalActionLog} scores={state.progress.communicationScores} history={state.progress.history} weaknesses={weaknesses} timeSpent={timeSpent} />
-            </motion.div>
-          )}
         </AnimatePresence>
       </main>
 
       <footer className="mt-auto border-t border-zinc-800/50 bg-[#0a0a0a]/80 backdrop-blur-xl">
         <div className="max-w-[1600px] mx-auto px-5 h-11 flex items-center justify-between text-[11px] text-zinc-500">
           <div className="flex items-center gap-3">
-            <span className="font-medium text-zinc-300">© 2026 Devine Nyaenya • OrbitDesk v7.0 Genius Edition</span>
-            <span className="hidden md:inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300">Da Vinci • Newton • Einstein • von Neumann • Turing</span>
+            <span className="font-medium text-zinc-300">© 2026 Devine Nyaenya • OrbitDesk</span>
+            <span className="hidden md:inline text-zinc-500">Simulation only • Local learning data</span>
           </div>
           <div className="flex items-center gap-3 font-mono">
-            <span className="hidden md:inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-900 border border-zinc-800 text-[10px]">v7.0 • Genius • Reducer • 5 Engines • φ Golden Ratio • Minimax • Turing Test 95%</span>
+
             <span>Lvl {state.progress.level} • {state.progress.xp} XP • {state.progress.ticketsResolved} ✓</span>
           </div>
         </div>

@@ -12,7 +12,7 @@ export default function TermsPage() {
 
   <div className="prose prose-zinc prose-sm max-w-none space-y-6 text-[13px] leading-relaxed">
   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900">
-  <strong>⚠️ Important:</strong> OrbitDesk is an independent educational training simulator. It is NOT affiliated with, endorsed by, or connected to Influx, Microsoft, Entra ID, Intune, or any other company. All trademarks belong to their respective owners. This tool is for learning Modern Workplace Support concepts only.
+  <strong>⚠️ Important:</strong> OrbitDesk is an independent educational training simulator. It is NOT affiliated with, endorsed by, or connected to Microsoft, Entra ID, Intune, or any other company. All trademarks belong to their respective owners. This tool is for learning Modern Workplace Support concepts only.
   </div>
 
   <section>
@@ -24,7 +24,7 @@ export default function TermsPage() {
   <h2 className="font-semibold text-[15px]">2. No Affiliation Disclaimer</h2>
   <p>OrbitDesk is NOT affiliated with:</p>
   <ul className="list-disc ml-5 space-y-1">
-   <li>Influx / Support as a Service companies</li>
+   <li>service providers or software vendors</li>
    <li>Microsoft Corporation (Microsoft 365, Entra ID, Intune, Exchange Online, Teams, Windows, Defender)</li>
    <li>Any client companies simulated (NovaTech, Bloom & Co, Apex Financial are fictional)</li>
   </ul>
@@ -52,7 +52,7 @@ export default function TermsPage() {
   <p>You may NOT:</p>
   <ul className="list-disc ml-5 space-y-1">
    <li>Use it to provide real support to real clients without proper training</li>
-   <li>Claim affiliation with Influx, Microsoft, or any simulated client</li>
+   <li>Claim affiliation with Microsoft, or any simulated client</li>
    <li>Use it to access real systems or bypass security</li>
   </ul>
   </section>

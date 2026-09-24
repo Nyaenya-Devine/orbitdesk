@@ -2,7 +2,7 @@
   "name": "orbitdesk",
   "version": "7.0.0",
   "private": true,
-  "description": "OrbitDesk — Modern Workplace Operations Lab v7.0 Genius Edition — Da Vinci Newton Einstein von Neumann Turing — Open Heart Surgery — Source-available Noncommercial — Proprietary flagship by Devine Nyaenya",
+  "description": "OrbitDesk — Modern Workplace Operations Lab",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
@@ -54,7 +54,7 @@
   "build": {
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
-    "copyright": "© 2026 OrbitDesk — Educational Simulator — MIT — Devine Nyaenya",
+    "copyright": "© 2026 Devine Nyaenya — OrbitDesk",
     "directories": {
       "output": "dist",
       "buildResources": "public"

@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        OrbitDesk aims for 100% real feel — not basic AI. Propose features that teach beginner MSP workflow like real helpdesk, with modern appearance.
+        OrbitDesk aims for a credible operational learning experience. Propose features that teach beginner MSP workflow like real helpdesk, with modern appearance.
 
   - type: textarea
     id: problem

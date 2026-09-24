@@ -532,7 +532,7 @@ export function getLevelInfo(level: number): { title: string; description: strin
   case 9:
    return { title: 'Team Lead', description: 'Leading the orbit — strategy & people', unlocks: ['All ticket types', 'Shorter SLAs, real pressure'], color: 'pink', orbitRings: 5, cert: 'SC-300 + AZ-800 + MD-102', certPath: 'All Certs — Identity, Endpoint, Hybrid, Teams — Interview ready for MSP L1/L2, Team Lead SBI coaching', genius: 'von Neumann Self-Replicating: Lab evolves like cellular automata — generates more tickets of types you fail, weakness-based, team as cells' };
   default:
-   return { title: `Orbit Master Lvl ${level}`, description: 'Elite operations — all challenges, max pressure, genius edition', unlocks: ['Expert heavy 60%', 'P1 15% + business-hours pressure', 'Interview ready + Genius Lab mastery'], color: 'violet', orbitRings: 5, cert: 'SC-300 + AZ-800 + MD-102 + MS-700', certPath: 'Elite — All Microsoft certs + Da Vinci anatomy + Newton laws + Einstein thought experiments + von Neumann game theory + Turing Enigma', genius: 'Genius Edition: Da Vinci visual anatomy + Newton F=P×1/t gravity + Einstein you are policy/device/user 3 clocks E=mc² + von Neumann minimax Nash self-replication + Turing test Enigma learning AI' };
+   return { title: `Orbit Master Lvl ${level}`, description: 'Advanced operations under sustained service pressure', unlocks: ['Advanced case mix', 'Critical-incident pressure', 'Full assessment'], color: 'violet', orbitRings: 5, cert: 'SC-300 + AZ-800 + MD-102 + MS-700', certPath: 'Advanced identity, endpoint, collaboration and hybrid operations', genius: 'Advanced track: prioritize impact, verify identity and device context, choose bounded remediation, and document evidence' };
  }
 }
 

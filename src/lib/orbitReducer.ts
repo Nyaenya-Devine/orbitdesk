@@ -26,7 +26,7 @@ export interface OrbitState {
   levelUp: { oldLevel: number; newLevel: number } | null;
   
   // UI — the control unit
-  activeTab: 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment' | 'genius';
+  activeTab: 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment';
   directoryView: 'ou' | 'entra';
   policiesView: 'ca' | 'gpo' | 'intune' | 'agents';
   showGuide: boolean;
