@@ -1,5 +1,5 @@
 'use client';
-// von Neumann Architecture — Stored-Program OrbitDesk
+// Central reducer for predictable lab state.
 // Single reducer, single source of truth, not 20+ useState spaghetti
 // Tickets are instructions, fixes are opcodes, state is memory
 
@@ -26,7 +26,7 @@ export interface OrbitState {
   levelUp: { oldLevel: number; newLevel: number } | null;
   
   // UI — the control unit
-  activeTab: 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment' | 'genius';
+  activeTab: 'overview' | 'queue' | 'directory' | 'comms' | 'clients' | 'class' | 'assessment';
   directoryView: 'ou' | 'entra';
   policiesView: 'ca' | 'gpo' | 'intune' | 'agents';
   showGuide: boolean;
@@ -44,8 +44,6 @@ export interface OrbitState {
   showAwayWelcome: { minutes: number; added: number } | null;
   lastActive: number;
   
-  // Genius — new in v7.0
-  geniusView: 'newton' | 'einstein' | 'davinci' | 'vonneumann' | 'turing' | 'all';
   thoughtExperiment: 'policy' | 'device' | 'user' | null;
 }
 
@@ -78,7 +76,6 @@ export type OrbitAction =
   | { type: 'SET_AWAY'; minutes: number; welcome: { minutes: number; added: number } | null }
   | { type: 'SET_LAST_ACTIVE'; timestamp: number }
   | { type: 'SET_LEVEL_UP'; levelUp: { oldLevel: number; newLevel: number } | null }
-  | { type: 'SET_GENIUS_VIEW'; view: OrbitState['geniusView'] }
   | { type: 'SET_THOUGHT_EXPERIMENT'; experiment: OrbitState['thoughtExperiment'] };
 
 export function orbitReducer(state: OrbitState, action: OrbitAction): OrbitState {
@@ -168,8 +165,6 @@ export function orbitReducer(state: OrbitState, action: OrbitAction): OrbitState
       return { ...state, lastActive: action.timestamp };
     case 'SET_LEVEL_UP':
       return { ...state, levelUp: action.levelUp };
-    case 'SET_GENIUS_VIEW':
-      return { ...state, geniusView: action.view };
     case 'SET_THOUGHT_EXPERIMENT':
       return { ...state, thoughtExperiment: action.experiment };
     default:
@@ -201,6 +196,5 @@ export const initialOrbitState: OrbitState = {
   awayMinutes: 0,
   showAwayWelcome: null,
   lastActive: Date.now(),
-  geniusView: 'all',
   thoughtExperiment: null,
 };

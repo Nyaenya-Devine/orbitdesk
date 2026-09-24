@@ -96,7 +96,7 @@ export default function VoiceCallDemo() {
  <div className="p-4 border-b border-zinc-100 bg-gradient-to-r from-violet-50 to-indigo-50">
   <div className="flex items-center justify-between">
   <div>
-  <h3 className="font-bold text-sm flex items-center gap-2">🎙️ Real Voice Calls — Flowing Human Conversations</h3>
+  <h3 className="font-bold text-sm flex items-center gap-2">Practice calls</h3>
   <p className="text-xs text-zinc-600 mt-1">Different people, different issues, balanced voices (men & women), client does actions on other side, asks questions, tech experts join conference</p>
   </div>
   <div className="hidden md:flex items-center gap-2 text-[11px]">
@@ -164,7 +164,7 @@ export default function VoiceCallDemo() {
   </div>
 
   <div className="mt-4 p-3 bg-zinc-900 text-white rounded-xl text-xs">
-  <div className="font-bold mb-2 flex items-center gap-2">💡 What Makes This Real & Human:</div>
+  <div className="font-bold mb-2 flex items-center gap-2">What this exercise assesses</div>
   <div className="grid md:grid-cols-2 gap-2 text-zinc-300 leading-relaxed">
   <div>✓ <strong>Different people:</strong> Michael (Finance, P1 payroll), Jessica (Design, SMB casual), David (Compliance, SEC-2024-07)</div>
   <div>✓ <strong>Balanced voices:</strong> Men & women, different accents, formal vs casual, expert vs beginner</div>

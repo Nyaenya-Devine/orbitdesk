@@ -133,7 +133,7 @@ OrbitDesk simulates Modern Workplace Support Team Lead scenarios. Even as a simu
   - Toast bottom-left z-45 w-340 max 2 visible, blur-2xl, progress bar, swipe dismiss
   - Guide z-100 > dock 65 > toast 45 — hierarchy prevents covering
   - Grouped toasts ×count, Clear all, drag x to dismiss
-  - Modern spring animation 400/30 — not basic slide x 80 scale 0.9
+  - Modern spring animation 400/30 — a restrained spring transition
 
 ## Security Controls Implemented — v6.6 Hardened
 - Encrypted sessions (simulated) + Session ID + Recording indicator + Audit log

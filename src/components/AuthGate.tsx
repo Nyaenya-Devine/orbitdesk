@@ -45,7 +45,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Auto-authenticate returning users — fixes stuck at start page
+        // Resume a returning local session.
         onAuthenticated(parsed);
         return;
       } catch {}
@@ -124,7 +124,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
             </div>
             <div className="hidden lg:flex items-center gap-2 text-[10px] text-zinc-500">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Local-only • v7.0 Genius • Da Vinci • Newton • Einstein • von Neumann • Turing</span>
+              <span>Local-only • No tenant credentials • Progress stays on this device</span>
             </div>
           </div>
 
@@ -290,11 +290,11 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
                   onClick={() => handleEnterLab(true)}
                   className="w-full h-[48px] rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold text-[13px] tracking-wide shadow-[0_0_24px_rgba(124,58,237,0.35)] transition flex items-center justify-center gap-2"
                 >
-                  🚀 Enter Lab Now — Demo Mode (no setup)
+                  Enter the lab in guest mode
                 </button>
                 <div className="flex gap-2">
-                  <a href="/walkthrough" className="flex-1 h-10 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-[12px] font-medium flex items-center justify-center gap-1.5 transition">📹 Watch real lab demo</a>
-                  <a href="/demo" className="flex-1 h-10 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 text-[12px] font-medium flex items-center justify-center gap-1.5 transition">🖼 Screenshots</a>
+                  <a href="/walkthrough" className="flex-1 h-10 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-[12px] font-medium flex items-center justify-center gap-1.5 transition">Watch the product recording</a>
+                  <a href="/demo" className="flex-1 h-10 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 text-[12px] font-medium flex items-center justify-center gap-1.5 transition">View demo</a>
                 </div>
               </>
             ) : (

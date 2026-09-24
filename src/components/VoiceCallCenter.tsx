@@ -822,7 +822,7 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
     <div className="p-3 bg-[#0a0a0a]">
      <div className="bg-zinc-900 rounded-xl p-3 text-[12px] mb-3 border border-zinc-800">
       <p className="text-zinc-200 leading-[1.4] line-clamp-3">"{incoming.userMessage}"</p>
-      <p className="text-[10px] text-zinc-500 mt-2">{incoming.code} • Real human flow: you greet first</p>
+      <p className="text-[10px] text-zinc-500 mt-2">{incoming.code} • Waiting for your greeting</p>
      </div>
      <div className="flex gap-2">
       <button onClick={declineCall} type="button" className="flex-1 h-10 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 border border-zinc-700 text-zinc-300 rounded-full font-medium text-[13px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors">✕ Decline</button>

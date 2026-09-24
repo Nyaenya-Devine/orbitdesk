@@ -6,7 +6,7 @@ For MSP Team Lead + Modern Workplace + Cybersecurity titles, signed commits prov
 - **Authenticity:** Commit really from Devine Nyaenya, not spoofed
 - **Integrity:** Commit not tampered in transit — supply chain security
 - **Non-repudiation:** Audit trail — who pushed what, when — required for zero-trust
-- **GitHub Verified Badge:** Green Verified badge on commits — shows world-class expert, not amateur
+- **GitHub Verified Badge:** Green Verified badge on commits — shows production-quality expert, not amateur
 
 OrbitDesk enforces signed commits via branch protection + CODEOWNERS — essential for SLSA L3 provenance.
 

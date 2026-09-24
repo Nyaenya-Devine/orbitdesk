@@ -1,6 +1,6 @@
 Contact: mailto:devinenyaenya@gmail.com
 Expires: 2026-12-31T23:59:59.000Z
-Acknowledgments: https://github.com/Nyaenya-Devine/influx-lab/security/advisories
+Acknowledgments: https://github.com/Nyaenya-Devine/orbitdesk/security/advisories
 Preferred-Languages: en
-Canonical: https://influx-lab.vercel.app/.well-known/security.txt
-Policy: https://github.com/Nyaenya-Devine/influx-lab/blob/main/SECURITY.md
+Canonical: https://orbitdesk-gamma.vercel.app/.well-known/security.txt
+Policy: https://github.com/Nyaenya-Devine/orbitdesk/blob/main/SECURITY.md

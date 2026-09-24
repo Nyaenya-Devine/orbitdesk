@@ -32,7 +32,7 @@ const mockStudents: StudentProgress[] = [
  {
  id: 's1',
  name: 'Aisha Kamau',
- email: 'aisha@influx-class.test',
+ email: 'aisha@orbitdesk.training',
  avatar: 'A',
  role: 'junior',
  joinedAt: Date.now() - 1000*60*60*24*5,
@@ -54,7 +54,7 @@ const mockStudents: StudentProgress[] = [
  {
  id: 's2',
  name: 'Brian Otieno',
- email: 'brian@influx-class.test',
+ email: 'brian@orbitdesk.training',
  avatar: 'B',
  role: 'student',
  joinedAt: Date.now() - 1000*60*60*24*3,
@@ -76,7 +76,7 @@ const mockStudents: StudentProgress[] = [
  {
  id: 's3',
  name: 'Cynthia Mwangi',
- email: 'cynthia@influx-class.test',
+ email: 'cynthia@orbitdesk.training',
  avatar: 'C',
  role: 'senior',
  joinedAt: Date.now() - 1000*60*60*24*7,
@@ -90,14 +90,14 @@ const mockStudents: StudentProgress[] = [
  streak: 12,
  status: 'online',
  lastActive: Date.now() - 1000*60*5,
- badges: ['Influx Ready', 'Streak 10', 'P1 Hero', 'Mentor'],
+ badges: ['Operations Ready', 'Streak 10', 'P1 Hero', 'Mentor'],
  strengths: ['All-around', 'Can mentor others'],
  needsHelp: [],
  },
  {
  id: 's4',
  name: 'David Kimani',
- email: 'david@influx-class.test',
+ email: 'david@orbitdesk.training',
  avatar: 'D',
  role: 'student',
  joinedAt: Date.now() - 1000*60*60*24*1,
@@ -128,7 +128,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  const [showCreateModal, setShowCreateModal] = useState(false);
  const [showJoinModal, setShowJoinModal] = useState(false);
  const [activeView, setActiveView] = useState<'overview' | 'live' | 'leaderboard' | 'insights' | 'export' | 'calls'>('overview');
- const [newClassName, setNewClassName] = useState('Influx Support Training — Batch A');
+ const [newClassName, setNewClassName] = useState('Modern Workplace Cohort — A');
  const [joinCode, setJoinCode] = useState('');
 
  // Include current user in class
@@ -239,7 +239,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   <div className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800">
   <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Avg CSAT</p>
   <p className="text-[20px] font-bold text-white mt-1">{avgCSAT} ⭐</p>
-  <p className="text-[10px] text-zinc-500">Target 4.5+ Influx Ready</p>
+  <p className="text-[10px] text-zinc-500">Target 4.5+ Operations Ready</p>
   </div>
   <div className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800">
   <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Avg QA</p>
@@ -336,7 +336,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
     <div className="mt-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden"><div className="h-full bg-violet-500 rounded-full" style={{ width: `${Math.min(100, (totalResolved / allStudents.length / 30) * 100)}%` }} /></div>
    </div>
    <div>
-    <div className="flex justify-between text-[11px]"><span className="text-zinc-500">Influx Ready (CSAT 4.5+ QA 85+)</span><span className="text-emerald-400 font-medium">{allStudents.filter(s => s.avgCSAT >= 4.5 && s.avgQA >= 85).length}/{allStudents.length}</span></div>
+    <div className="flex justify-between text-[11px]"><span className="text-zinc-500">Operations Ready (CSAT 4.5+ QA 85+)</span><span className="text-emerald-400 font-medium">{allStudents.filter(s => s.avgCSAT >= 4.5 && s.avgQA >= 85).length}/{allStudents.length}</span></div>
     <div className="mt-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(allStudents.filter(s => s.avgCSAT >= 4.5 && s.avgQA >= 85).length / allStudents.length) * 100}%` }} /></div>
    </div>
    <div>
@@ -354,7 +354,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    <li>• <strong>Live Feed:</strong> See who resolved what, who is on call, who needs help — instant</li>
    <li>• <strong>AI Insights:</strong> Who needs coaching on empathy, who can mentor, who is stuck</li>
    <li>• <strong>External:</strong> Export CSV/JSON/Google Sheets, Discord webhook, LMS LTI</li>
-   <li>• <strong>Growth:</strong> Leaderboard, streaks, badges, shareable class report for Influx</li>
+   <li>• <strong>Growth:</strong> Leaderboard, streaks, badges, shareable class report for review</li>
    </ul>
    </div>
 
@@ -463,7 +463,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    <div className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/20">
    <p className="text-[12px] font-bold text-violet-300">💡 AI Insights — For Lead</p>
    <ul className="mt-3 space-y-2 text-[11px] text-violet-200/70">
-   <li>• Class avg CSAT {avgCSAT} — target 4.5+ for Influx Ready. Need coaching on empathy for 2 students.</li>
+   <li>• Class avg CSAT {avgCSAT} — target 4.5+ for Operations Ready. Need coaching on empathy for 2 students.</li>
    <li>• Most common mistake: Not checking Sign-in Logs CA tab before fix — 40% of low QA. Do workshop.</li>
    <li>• {allStudents.filter(s => s.callsHandled === 0).length} students never took call — schedule call practice session.</li>
    <li>• Streak leader: Cynthia 12 days — share her workflow as example.</li>
@@ -476,7 +476,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    <button className="w-full h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] text-left px-3">📚 Run workshop: Sign-in Logs CA tab + Correlation ID</button>
    <button className="w-full h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] text-left px-3">🎙️ Schedule call practice — YOU greet first flow</button>
    <button className="w-full h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-[11px] text-left px-3">👥 Pair struggling with top performers for shadowing</button>
-   <button className="w-full h-8 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold">📊 Generate Class Report for Influx →</button>
+   <button className="w-full h-8 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold">📊 Generate Class Report for review →</button>
    </div>
    </div>
   </div>
@@ -513,7 +513,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    <div className="mt-3 space-y-3 text-[11px]">
    <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
    <p className="font-bold text-zinc-200">Discord Webhook — Live Feed</p>
-   <p className="text-zinc-500 mt-1">Post live activity to Discord channel #influx-training — students see real-time progress, like ServiceDesk Simulator Discord with 20k+ users</p>
+   <p className="text-zinc-500 mt-1">Post live activity to Discord channel #operations-training — students see real-time progress, like ServiceDesk Simulator Discord with 20k+ users</p>
    <code className="mt-2 block p-2 rounded bg-black/50 text-[10px] text-violet-300">POST https://discord.com/api/webhooks/... {"{content: 'Aisha resolved ENTRA-53000 CSAT 5⭐'}"}</code>
    </div>
    <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
@@ -540,13 +540,13 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    <Logo variant="icon" size={36} />
    <div>
    <h3 className="font-bold text-[16px] text-white">Create New Class</h3>
-   <p className="text-[11px] text-zinc-500">For Influx trainers — group students, monitor live, export</p>
+   <p className="text-[11px] text-zinc-500">For training leads — group students, monitor live, export</p>
    </div>
    </div>
    <div className="mt-5 space-y-4">
    <div>
    <label className="text-[11px] font-bold tracking-widest text-zinc-500 uppercase">Class Name</label>
-   <input value={newClassName} onChange={e => setNewClassName(e.target.value)} className="mt-1.5 w-full h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-[13px]" placeholder="Influx Support Training — Batch A" />
+   <input value={newClassName} onChange={e => setNewClassName(e.target.value)} className="mt-1.5 w-full h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-[13px]" placeholder="Modern Workplace Cohort — A" />
    </div>
    <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
    <p className="text-[11px] font-bold text-violet-300">What you get:</p>

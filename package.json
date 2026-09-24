@@ -2,7 +2,7 @@
   "name": "orbitdesk",
   "version": "7.0.0",
   "private": true,
-  "description": "OrbitDesk — Modern Workplace Operations Lab v7.0 Genius Edition — Da Vinci Newton Einstein von Neumann Turing — Open Heart Surgery — Source-available Noncommercial — Proprietary flagship by Devine Nyaenya",
+  "description": "OrbitDesk — Modern Workplace Operations Lab",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
@@ -10,7 +10,7 @@
     "dev": "next dev --port 3000 --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "desktop": "electron .",
     "desktop:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "desktop:build": "next build",
@@ -28,33 +28,33 @@
   "dependencies": {
     "electron-log": "^5.2.1",
     "electron-updater": "^6.6.2",
-    "framer-motion": "^13.2.0",
+    "framer-motion": "^13.4.0",
     "next": "16.3.5",
-    "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@cyclonedx/cyclonedx-npm": "^3.0.5",
+    "@cyclonedx/cyclonedx-npm": "^6.0.1",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "concurrently": "^8.2.2",
-    "electron": "^44.3.0",
+    "concurrently": "^10.0.5",
+    "electron": "^44.4.2",
     "electron-builder": "^26.0.12",
-    "eslint": "^9",
+    "eslint": "9.39.5",
     "eslint-config-next": "16.3.5",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
+    "lint-staged": "^17.5.1",
     "playwright": "^1.63.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "wait-on": "^7.2.0"
+    "typescript": "6.0.3",
+    "wait-on": "^9.1.0"
   },
   "build": {
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
-    "copyright": "© 2026 OrbitDesk — Educational Simulator — MIT — Devine Nyaenya",
+    "copyright": "© 2026 Devine Nyaenya — OrbitDesk",
     "directories": {
       "output": "dist",
       "buildResources": "public"
