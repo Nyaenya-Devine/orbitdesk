@@ -25,7 +25,7 @@ export default function DemoPage() {
 
         <section className="mt-10 overflow-hidden rounded-2xl border border-zinc-800 bg-black shadow-2xl shadow-violet-950/20">
           <video className="aspect-video w-full" controls preload="metadata" playsInline aria-label="OrbitDesk product walkthrough">
-            <source src="/orbitdesk-demo.webm" type="video/webm" />
+            <source src="/orbitdesk-demo.mp4" type="video/mp4" />
             Your browser does not support the embedded recording. Open the live lab instead.
           </video>
         </section>

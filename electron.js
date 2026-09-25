@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell, dialog, ipcMain, Notification, session } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, ipcMain, Notification } = require('electron');
 const path = require('path');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
@@ -28,40 +28,26 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      sandbox: true, // Security: sandbox renderer — OWASP hardening
+      sandbox: true,
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: true,
       allowRunningInsecureContent: false,
       experimentalFeatures: false,
+      // A versioned partition prevents an obsolete service worker or app shell
+      // from surviving a desktop upgrade.
+      partition: `persist:orbitdesk-v${app.getVersion().split('.')[0]}`,
     },
     show: false,
     vibrancy: 'under-window',
     visualEffectState: 'active',
   });
 
-  // Security: CSP + Permissions hardening via session
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' https://orbitdesk-gamma.vercel.app https://orbitdesk.vercel.app; " +
-          "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; " +
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-          "font-src https://fonts.gstatic.com; " +
-          "img-src 'self' data: https: blob:; " +
-          "connect-src 'self' https://orbitdesk-gamma.vercel.app https://*.vercel.app wss://*.vercel.app; " +
-          "media-src 'self' blob:; " +
-          "frame-ancestors 'none';"
-        ],
-        'X-Content-Type-Options': ['nosniff'],
-        'X-Frame-Options': ['DENY'],
-      }
-    });
-  });
+  // The web app supplies its own nonce-aware CSP. Replacing it here can block
+  // Next.js hydration and leave only the decorative server-rendered layer.
+  const appSession = mainWindow.webContents.session;
 
   // Permission hardening — only microphone for voice calls (STT), deny camera/geolocation
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+  appSession.setPermissionRequestHandler((webContents, permission, callback) => {
     if (permission === 'media' || permission === 'microphone') {
       // Allow microphone for voice call center — required feature, logged
       log.info(`Permission requested: ${permission} — allowed for voice calls`);
@@ -93,8 +79,8 @@ function createWindow() {
     
     if (Notification.isSupported()) {
       new Notification({
-        title: 'OrbitDesk — MSP Operations Lab v6.6',
-        body: 'Desktop app ready — Auto-update enabled • Secure • Real-time tickets',
+        title: 'OrbitDesk — Modern Workplace Operations Lab',
+        body: 'Workspace ready • Local progress preserved • Updates enabled',
         icon: path.join(__dirname, 'public/icon-512.png'),
         silent: false,
       }).show();
