@@ -1,14 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import LandingPage from '@/components/LandingPage';
-import LabPage from './lab/page';
 
 export default function Home() {
- const [showLab, setShowLab] = useState(false);
-
- if (showLab) {
- return <LabPage />;
- }
-
- return <LandingPage onEnterLab={() => setShowLab(true)} />;
+ const router = useRouter();
+ return <LandingPage onEnterLab={() => router.push('/lab')} />;
 }
