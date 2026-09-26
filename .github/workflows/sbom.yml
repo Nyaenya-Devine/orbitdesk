@@ -31,8 +31,8 @@ jobs:
 
       - name: Generate SBOM — JSON + XML
         run: |
-          cyclonedx-npm --output-file sbom.json --output-format json --spec-version 1.6
-          cyclonedx-npm --output-file sbom.xml --output-format xml --spec-version 1.6
+          cyclonedx-npm --package-lock-only --output-file sbom.json --output-format json --spec-version 1.6
+          cyclonedx-npm --package-lock-only --output-file sbom.xml --output-format xml --spec-version 1.6
           ls -lh sbom.*
           cat sbom.json | head -n 100
 
