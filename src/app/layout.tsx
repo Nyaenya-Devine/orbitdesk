@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Watermark from "@/components/Watermark";
+import ServiceWorkerBootstrap from "@/components/ServiceWorkerBootstrap";
 
 const geistSans = Geist({
  variable: "--font-geist-sans",
@@ -90,18 +91,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
  </head>
  <body className="min-h-full flex flex-col bg-[#050507] text-zinc-100">
   <Watermark />
+  <ServiceWorkerBootstrap />
   {children}
-  <script
-  dangerouslySetInnerHTML={{
-  __html: `
-   if ('serviceWorker' in navigator) {
-   window.addEventListener('load', () => {
-   navigator.serviceWorker.register('/sw.js').catch(()=>{});
-   });
-   }
-  `,
-  }}
-  />
  </body>
  </html>
  );

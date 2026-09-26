@@ -8,13 +8,13 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 // Configure logging for updater — essential for cybersecurity audit trail
 log.transports.file.level = 'info';
 autoUpdater.logger = log;
-autoUpdater.autoDownload = false; // User consent before download — zero-trust principle
+autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
 let mainWindow;
 let updateAvailable = false;
 
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -60,15 +60,23 @@ function createWindow() {
     }
   });
 
-  const startUrl = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, 'out/index.html')}`;
-
   if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
+    await mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    mainWindow.loadURL('https://orbitdesk-gamma.vercel.app').catch(() => {
-      mainWindow.loadFile(path.join(__dirname, 'out/index.html')).catch(() => {
-        mainWindow.loadURL('https://orbitdesk.vercel.app');
+    // The desktop shell is remote-first. Clear only HTTP cache—not local
+    // progress—so every launch receives the current signed web deployment.
+    await appSession.clearCache();
+    const productionUrl = `https://orbitdesk-gamma.vercel.app/?desktop=${encodeURIComponent(app.getVersion())}&launch=${Date.now()}`;
+    await mainWindow.loadURL(productionUrl, {
+      extraHeaders: 'Cache-Control: no-cache, no-store, must-revalidate\nPragma: no-cache',
+    }).catch(async (error) => {
+      log.error('Production workspace failed to load', error);
+      const offlineShell = path.join(__dirname, 'out/index.html');
+      await mainWindow.loadFile(offlineShell).catch(() => {
+        mainWindow.loadURL('https://orbitdesk.vercel.app', {
+          extraHeaders: 'Cache-Control: no-cache, no-store, must-revalidate',
+        });
       });
     });
   }
@@ -140,23 +148,11 @@ autoUpdater.on('checking-for-update', () => {
 });
 
 autoUpdater.on('update-available', (info) => {
-  log.info(`Update available: ${info.version}`);
+  log.info(`Update available: ${info.version}; download started`);
   updateAvailable = true;
   if (mainWindow) {
     mainWindow.webContents.send('update-available', info);
-    dialog.showMessageBox(mainWindow, {
-      type: 'info',
-      title: 'Update Available — OrbitDesk v' + info.version,
-      message: `OrbitDesk ${info.version} is available. Current: ${app.getVersion()}. Download now?`,
-      detail: `Release notes: ${info.releaseNotes || 'Bug fixes, security hardening, LinkedIn chat dock + orbit animation + pause system'}\n\nZero-trust: Download verified via GitHub Releases signature.`,
-      buttons: ['Download Now', 'Later'],
-      defaultId: 0,
-    }).then(result => {
-      if (result.response === 0) {
-        autoUpdater.downloadUpdate();
-        mainWindow.webContents.send('update-downloading');
-      }
-    });
+    mainWindow.webContents.send('update-downloading');
   }
 });
 
