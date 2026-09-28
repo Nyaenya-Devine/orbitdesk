@@ -48,7 +48,7 @@
     "lint-staged": "^17.5.1",
     "playwright": "^1.63.0",
     "tailwindcss": "^4",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "wait-on": "^9.1.0"
   },
   "build": {
