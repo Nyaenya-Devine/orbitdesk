@@ -1,8 +1,8 @@
 {
   "name": "orbitdesk",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "private": true,
-  "description": "OrbitDesk — Modern Workplace Operations Lab",
+  "description": "OrbitDesk \u2014 Modern Workplace Operations Lab",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
@@ -54,7 +54,7 @@
   "build": {
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
-    "copyright": "© 2026 Devine Nyaenya — OrbitDesk",
+    "copyright": "\u00a9 2026 Devine Nyaenya \u2014 OrbitDesk",
     "directories": {
       "output": "dist",
       "buildResources": "public"
@@ -121,7 +121,6 @@
         }
       ],
       "icon": "public/icon-512.png",
-      "publisherName": "Devine Nyaenya",
       "verifyUpdateCodeSignature": true
     },
     "linux": {
