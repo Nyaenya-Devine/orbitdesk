@@ -14,7 +14,7 @@ jobs:
     name: Build, Lint & TypeCheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
@@ -55,7 +55,7 @@ jobs:
     name: SBOM — CycloneDX
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
