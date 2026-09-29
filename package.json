@@ -1,6 +1,6 @@
 {
   "name": "orbitdesk",
-  "version": "7.1.1",
+  "version": "7.1.2",
   "private": true,
   "description": "OrbitDesk \u2014 Modern Workplace Operations Lab",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
@@ -109,8 +109,7 @@
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32"
+            "x64"
           ]
         },
         {
