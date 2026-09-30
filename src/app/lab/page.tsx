@@ -1,5 +1,5 @@
 'use client';
-import { useReducer, useEffect, useState } from 'react';
+import { useReducer, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateInitialTickets, generateTicket, updateTicketTimers, calculateCSAT } from '@/lib/ticketEngine';
 import { loadProgress, saveProgress, calculateLevel, getBadges, initialProgress, getLevelInfo, calculateCommunicationScore } from '@/lib/progressEngine';
@@ -52,6 +52,7 @@ export default function OrbitDeskV7() {
   const [studentMode, setStudentMode] = useState(true);
   const [timeSpent, setTimeSpent] = useState(2);
   const [weaknesses, setWeaknesses] = useState<Record<string, number>>({ BitLocker: 2, Entra: 1, GPO: 0 });
+  const hydratedProgressSession = useRef<string | null>(null);
 
   const t = (key: string) => getTranslation(lang, key);
 
@@ -72,6 +73,7 @@ export default function OrbitDeskV7() {
   useEffect(() => {
     if (!state.isAuthenticated) return;
     const saved = loadProgress();
+    hydratedProgressSession.current = saved.sessionId;
     dispatch({ type: 'SET_PROGRESS', progress: saved });
     dispatch({ type: 'SET_TICKETS', tickets: generateInitialTickets(5, studentMode, saved.ticketsResolved, saved.level) });
     const hasProgress = saved.ticketsResolved > 0 || saved.xp > 20;
@@ -79,7 +81,15 @@ export default function OrbitDeskV7() {
     if (!hasProgress && !hasSeenGuide) dispatch({ type: 'SET_SHOW_GUIDE', show: true });
   }, [state.isAuthenticated, studentMode]);
 
-  useEffect(() => { if (state.progress) saveProgress(state.progress); }, [state.progress]);
+  useEffect(() => {
+    if (
+      state.isAuthenticated &&
+      state.progress &&
+      state.progress.sessionId === hydratedProgressSession.current
+    ) {
+      saveProgress(state.progress);
+    }
+  }, [state.isAuthenticated, state.progress]);
 
   // Record simulated PowerShell activity.
   useEffect(() => {
