@@ -51,6 +51,10 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
  ];
 
  const current = steps[step];
+ const closeGuide = () => {
+  try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}
+  onClose();
+ };
 
  return (
  <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -64,7 +68,7 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
    <p className="text-[11px] text-zinc-500">Step {step + 1} of {steps.length} • Structured learning path</p>
    </div>
   </div>
-  <button aria-label="Close training guide" onClick={() => { try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}; onClose(); }} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400">✕</button>
+  <button aria-label="Close training guide" onClick={closeGuide} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-300">✕</button>
   </div>
   
   <div className="mt-4 flex gap-1">
@@ -90,7 +94,7 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
   <button
    onClick={() => {
    if (step < steps.length - 1) setStep(s => s + 1);
-   else { try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}; onClose(); }
+   else closeGuide();
    }}
    className="flex-1 h-10 rounded-full bg-zinc-100 hover:bg-white text-zinc-900 text-[13px] font-semibold transition"
   >
@@ -98,7 +102,10 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
   </button>
   </div>
 
-  <p className="text-[10px] text-zinc-500 mt-4 text-center">Student Mode: guided learning • Expert Mode: advanced scenarios • Progress saved automatically</p>
+  <button onClick={closeGuide} className="mt-3 h-9 w-full rounded-full border border-zinc-700 text-[12px] font-medium text-zinc-300 transition hover:border-zinc-500 hover:bg-zinc-900 hover:text-white">
+   Skip guide and open workspace
+  </button>
+  <p className="text-[10px] text-zinc-500 mt-3 text-center">Student Mode: guided learning • Expert Mode: advanced scenarios • Progress saved automatically</p>
   </div>
  </motion.div>
  </div>
