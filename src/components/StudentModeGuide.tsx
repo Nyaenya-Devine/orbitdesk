@@ -64,7 +64,7 @@ export default function StudentModeGuide({ onClose, currentStep = 0 }: Props) {
    <p className="text-[11px] text-zinc-500">Step {step + 1} of {steps.length} • Structured learning path</p>
    </div>
   </div>
-  <button onClick={() => { try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}; onClose(); }} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400">✕</button>
+  <button aria-label="Close training guide" onClick={() => { try { localStorage.setItem('orbitdesk_guide_seen', 'true'); } catch {}; onClose(); }} className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400">✕</button>
   </div>
   
   <div className="mt-4 flex gap-1">

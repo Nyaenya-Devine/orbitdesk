@@ -23,7 +23,8 @@
     "sbom": "cyclonedx-npm --output-file sbom.json --output-format json",
     "audit:fix": "npm audit fix",
     "postinstall": "electron-builder install-app-deps || true",
-    "prepare": "husky install || true"
+    "prepare": "husky install || true",
+    "test:ui": "node scripts/smoke-ui.js"
   },
   "dependencies": {
     "electron-log": "^5.2.1",

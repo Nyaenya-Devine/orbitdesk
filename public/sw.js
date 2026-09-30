@@ -1,5 +1,5 @@
 // OrbitDesk service worker — local-first application shell
-const CACHE_NAME = 'orbitdesk-v7.2';
+const CACHE_NAME = 'orbitdesk-v7.3';
 const urlsToCache = [
   '/',
   '/lab',

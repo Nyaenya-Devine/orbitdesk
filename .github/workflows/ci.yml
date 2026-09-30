@@ -32,6 +32,10 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+      - name: Install browser for interaction test
+        run: npx playwright install --with-deps chromium
+      - name: Exercise the production UI
+        run: npm run test:ui
       - name: Check for leaked secrets
         run: |
           set -eu
