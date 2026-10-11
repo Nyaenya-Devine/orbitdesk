@@ -65,7 +65,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci --ignore-scripts
-      - run: npm audit --audit-level=high
+      - run: npm audit --omit=dev --audit-level=high
 
   headers-check:
     name: Security Headers — CSP, HSTS

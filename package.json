@@ -2,7 +2,7 @@
   "name": "orbitdesk",
   "version": "7.1.2",
   "private": true,
-  "description": "OrbitDesk \u2014 Modern Workplace Operations Lab",
+  "description": "OrbitDesk — Modern Workplace Operations Lab",
   "author": "Devine Nyaenya <devinenyaenya@gmail.com>",
   "homepage": "https://github.com/Nyaenya-Devine/orbitdesk",
   "main": "electron.js",
@@ -30,9 +30,11 @@
     "electron-log": "^5.2.1",
     "electron-updater": "^6.6.2",
     "framer-motion": "^14.0.0",
-    "next": "16.3.8",
+    "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "0.35.5",
+    "source-map-js": "1.2.2"
   },
   "devDependencies": {
     "@cyclonedx/cyclonedx-npm": "^6.0.1",
@@ -40,11 +42,11 @@
     "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "concurrently": "^10.0.5",
+    "concurrently": "10.0.6",
     "electron": "^44.5.1",
-    "electron-builder": "^26.0.12",
+    "electron-builder": "26.15.3",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "playwright": "^1.63.0",
@@ -55,7 +57,7 @@
   "build": {
     "appId": "com.orbitdesk.lab",
     "productName": "OrbitDesk",
-    "copyright": "\u00a9 2026 Devine Nyaenya \u2014 OrbitDesk",
+    "copyright": "© 2026 Devine Nyaenya — OrbitDesk",
     "directories": {
       "output": "dist",
       "buildResources": "public"
@@ -186,5 +188,9 @@
     "conditional-access",
     "security-hardening"
   ],
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "overrides": {
+    "braces": "3.0.3",
+    "sprintf-js": "1.1.3"
+  }
 }
