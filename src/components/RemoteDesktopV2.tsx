@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ticket } from '@/lib/ticketEngine';
 import Logo from './Logo';
@@ -23,18 +23,41 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
  const [localBitLockerFixed, setLocalBitLockerFixed] = useState(bitLockerFixed);
  const [localSyncDone, setLocalSyncDone] = useState(syncDone);
  const [showConsent, setShowConsent] = useState(false);
-
+ // One session id for the lifetime of this session — the previous version
+ // regenerated it on every render, so the id visibly flickered.
+ const [sessionId] = useState(() => Math.random().toString(36).substring(2, 8).toUpperCase());
+ // Read through refs inside the connection-flow effect: including `onAction`
+ // or `localBitLockerFixed` in that effect's dependency list would restart the
+ // whole RDP demo on every parent render
+ // (react-hooks/exhaustive-deps).
+ const onActionRef = useRef(onAction);
+ const localBitLockerFixedRef = useRef(localBitLockerFixed);
  useEffect(() => {
- setLocalBitLockerFixed(bitLockerFixed);
- setLocalSyncDone(syncDone);
- }, [bitLockerFixed, syncDone]);
+  onActionRef.current = onAction;
+  localBitLockerFixedRef.current = localBitLockerFixed;
+ });
+
+ // Sync the incoming props into local state using React's "adjust state
+ // during render" pattern — no effect, so no extra render pass
+ // (react-hooks/set-state-in-effect).
+ if (bitLockerFixed !== localBitLockerFixed) setLocalBitLockerFixed(bitLockerFixed);
+ if (syncDone !== localSyncDone) setLocalSyncDone(syncDone);
+
+ // Reset the remote-session view when the session opens, using React's
+ // "adjust state during render" pattern (react-hooks/set-state-in-effect).
+ const [wasOpen, setWasOpen] = useState(isOpen);
+ if (wasOpen !== isOpen) {
+ setWasOpen(isOpen);
+ if (isOpen) {
+  setStage('connecting');
+  setTerminalOutput([]);
+  setActiveApp('desktop');
+  setShowConsent(false);
+ }
+ }
 
  useEffect(() => {
  if (isOpen) {
- setStage('connecting');
- setTerminalOutput([]);
- setActiveApp('desktop');
- setShowConsent(false);
 
  // Realistic connection flow — like real RDP / Quick Assist
  const stages: { stage: ConnectionStage; delay: number; message?: string }[] = [
@@ -51,7 +74,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
   const s = stages[current];
   setStage(s.stage);
   if (s.message) {
-  onAction?.(`RDP ${s.stage}: ${s.message}`);
+  onActionRef.current?.(`RDP ${s.stage}: ${s.message}`);
   }
   if (s.stage === 'consent') {
   setShowConsent(true);
@@ -64,7 +87,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
    `✓ Secure connection established to ${ticket?.userEmail.split('@')[0]}-LAPTOP`,
    `✓ Session: ${Math.random().toString(36).substring(2, 8).toUpperCase()}-RDP • Encrypted TLS 1.3 • Recording ON`,
    `✓ User: ${ticket?.userEmail} • Client: ${ticket?.clientName} • ${ticket?.clientId === 'client-c' ? 'SEC-2024-07 Strict' : 'Standard'}`,
-   `✓ Compliance: ${localBitLockerFixed ? 'Compliant ✓' : 'Not Compliant — BitLocker Off (DeviceNotCompliant 53000)'} • Entra Joined • Intune Managed`,
+   `✓ Compliance: ${localBitLockerFixedRef.current ? 'Compliant ✓' : 'Not Compliant — BitLocker Off (DeviceNotCompliant 53000)'} • Entra Joined • Intune Managed`,
    `✓ Consent: User approved remote session at ${new Date().toLocaleTimeString()} • Audit logged`,
    ``,
    `Real IT Support Workflow:`,
@@ -237,7 +260,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
  authenticating: { icon: '🔐', text: 'Authenticating as Team Lead...', sub: `Entra ID • ${ticket.clientName} • Conditional Access check • Device compliance` },
  mfa: { icon: '📱', text: 'MFA Verification...', sub: 'Authenticator app • Approved at 09:12:34 • Location Nairobi Trusted • Compliant device' },
  consent: { icon: '👤', text: 'Waiting for user consent...', sub: `${ticket.userEmail} must approve remote session — like Quick Assist — audit logged` },
- connected: { icon: '✅', text: 'Connected • Encrypted • Recording', sub: `Session ${Math.random().toString(36).substring(2,8).toUpperCase()}-RDP • Audit HMAC-signed • Client consent granted` },
+ connected: { icon: '✅', text: 'Connected • Encrypted • Recording', sub: `Session ${sessionId}-RDP • Audit HMAC-signed • Client consent granted` },
  };
 
  return (
@@ -294,7 +317,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
     <p className="text-[13px] font-bold text-amber-300">👤 User Consent Required — Real Workflow</p>
     <p className="text-[11px] text-amber-200/70 mt-2 leading-[1.4]">
-    In real IT support (Quick Assist / Remote Help), user must approve remote session. {ticket.userEmail} sees prompt: "Team Lead wants to connect to your PC — Allow? Session will be encrypted, recorded, audit logged per {ticket.clientId === 'client-c' ? 'SEC-2024-07' : 'company policy'}."
+    In real IT support (Quick Assist / Remote Help), user must approve remote session. {ticket.userEmail} sees prompt: &quot;Team Lead wants to connect to your PC — Allow? Session will be encrypted, recorded, audit logged per {ticket.clientId === 'client-c' ? 'SEC-2024-07' : 'company policy'}.&quot;
     </p>
     <div className="mt-4 flex gap-3">
     <button onClick={() => handleConsent(false)} className="flex-1 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-medium text-[13px]">Deny — Per Policy</button>
@@ -306,7 +329,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
    <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
    <p className="text-[11px] font-bold text-zinc-400">🔒 Security — Real RDP security for beginners:</p>
    <ul className="mt-2 space-y-1 text-[10px] text-zinc-500 list-disc list-inside">
-    <li>TLS 1.3 encrypted, Session ID {Math.random().toString(36).substring(2,8).toUpperCase()}-RDP, recording ON, audit HMAC-signed</li>
+    <li>TLS 1.3 encrypted, Session ID {sessionId}-RDP, recording ON, audit HMAC-signed</li>
     <li>Conditional Access checked: Require compliant device + MFA + Trusted location Nairobi</li>
     <li>User consent required per {ticket.clientId === 'client-c' ? 'SEC-2024-07' : 'company policy'} — prevents unauthorized access</li>
     <li>All actions logged: dsregcmd, Get-BitLockerVolume, Company Portal Sync — for audit and RCA</li>
@@ -346,7 +369,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
    <div className="flex justify-between gap-2"><span className="text-zinc-600">PC:</span><span className="text-zinc-200 truncate">{ticket.userEmail.split('@')[0]}-LAPTOP</span></div>
    <div className="flex justify-between gap-2"><span className="text-zinc-600">Compliance:</span><span className={`${localBitLockerFixed ? 'text-emerald-400' : 'text-red-400'} truncate font-bold`}>{localBitLockerFixed ? 'Compliant ✓' : 'Not Compliant • 53000'}</span></div>
    <div className="flex justify-between gap-2"><span className="text-zinc-600">BitLocker:</span><span className={`${localBitLockerFixed ? 'text-emerald-400' : 'text-red-400'} truncate`}>{localBitLockerFixed ? 'On ✓ Escrowed' : 'Off • Fix needed'}</span></div>
-   <div className="flex justify-between gap-2"><span className="text-zinc-600">Session:</span><span className="text-zinc-400 font-mono text-[10px] truncate">{Math.random().toString(36).substring(2,8).toUpperCase()}-RDP</span></div>
+   <div className="flex justify-between gap-2"><span className="text-zinc-600">Session:</span><span className="text-zinc-400 font-mono text-[10px] truncate">{sessionId}-RDP</span></div>
    </div>
    </div>
 
@@ -414,7 +437,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
 
    <div className="mt-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
     <p className="text-[11px] font-bold text-zinc-400">💻 Real Windows 11 Desktop — For Beginners:</p>
-    <p className="text-[11px] text-zinc-500 mt-1.5 leading-[1.4]">This is simulation of user's actual PC. In real Quick Assist, you see user's desktop, can open File Explorer to check files, open Company Portal to fix compliance, open Terminal to run dsregcmd. You are controlling their PC with permission — like you are sitting at their desk. All actions are logged for audit per {ticket.clientId === 'client-c' ? 'SEC-2024-07' : 'company policy'}.</p>
+    <p className="text-[11px] text-zinc-500 mt-1.5 leading-[1.4]">This is simulation of user&apos;s actual PC. In real Quick Assist, you see user&apos;s desktop, can open File Explorer to check files, open Company Portal to fix compliance, open Terminal to run dsregcmd. You are controlling their PC with permission — like you are sitting at their desk. All actions are logged for audit per {ticket.clientId === 'client-c' ? 'SEC-2024-07' : 'company policy'}.</p>
    </div>
    </div>
    )}
@@ -424,7 +447,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
    <div className="h-10 bg-[#2d2d2d] border-b border-zinc-800 flex items-center px-4 gap-2">
     <span className="text-[12px]">📁</span>
     <span className="text-[12px] text-zinc-300">File Explorer — C:\Users\{ticket.userEmail.split('@')[0]}\Documents</span>
-    <span className="ml-auto text-[10px] text-zinc-600">Real: Check user's files — like real RDP</span>
+    <span className="ml-auto text-[10px] text-zinc-600">Real: Check user&apos;s files — like real RDP</span>
    </div>
    <div className="flex-1 p-4">
     <div className="bg-[#252525] rounded-xl border border-zinc-800 overflow-hidden">
@@ -445,7 +468,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
     ))}
     </div>
     <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-    <p className="text-[11px] font-bold text-blue-300">💡 Real: In RDP, you can open File Explorer to verify user's files, check if BitLocker recovery key file exists, etc.</p>
+    <p className="text-[11px] font-bold text-blue-300">💡 Real: In RDP, you can open File Explorer to verify user&apos;s files, check if BitLocker recovery key file exists, etc.</p>
     </div>
    </div>
    </div>
@@ -545,7 +568,7 @@ export default function RemoteDesktopV2({ ticket, isOpen, onClose, onAction, bit
 
   <div className="h-11 bg-[#202020] border-t border-zinc-800 flex items-center justify-between px-4 text-[11px] text-zinc-500 gap-3">
   <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-  <span className="flex items-center gap-2 truncate"><span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />🔒 Encrypted RDP • Session {Math.random().toString(36).substring(2, 8).toUpperCase()} • {localBitLockerFixed ? 'Compliant ✓' : 'Not Compliant • 53000'} • Recording ON • Audit HMAC-signed</span>
+  <span className="flex items-center gap-2 truncate"><span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />🔒 Encrypted RDP • Session {sessionId} • {localBitLockerFixed ? 'Compliant ✓' : 'Not Compliant • 53000'} • Recording ON • Audit HMAC-signed</span>
   </div>
   <div className="flex items-center gap-3 flex-shrink-0">
   <span className="hidden md:inline">Real: Actions logged • User consent • {ticket.clientId === 'client-c' ? 'SEC-2024-07' : 'Standard'} • Quick Assist style</span>

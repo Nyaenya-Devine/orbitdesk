@@ -1,3 +1,4 @@
+import Link from 'next/link';
 export default function PrivacyPage() {
  return (
  <div className="min-h-screen bg-[#fafafa] py-12 px-6">
@@ -28,7 +29,7 @@ export default function PrivacyPage() {
 
   <section>
   <h2 className="font-semibold text-[15px]">2. Local Storage Only</h2>
-  <p>All simulator state (tickets, resolved count, agent notes, chat messages) is stored in your browser's LocalStorage / IndexedDB. This data:</p>
+  <p>All simulator state (tickets, resolved count, agent notes, chat messages) is stored in your browser&apos;s LocalStorage / IndexedDB. This data:</p>
   <ul className="list-disc ml-5 space-y-1">
    <li>Never leaves your device</li>
    <li>Is not sent to any server or third party</li>
@@ -49,17 +50,17 @@ export default function PrivacyPage() {
 
   <section>
   <h2 className="font-semibold text-[15px]">5. Simulated Communications</h2>
-  <p>All client calls, chats, and remote desktop sessions are simulated. No real calls are made, no real remote access occurs. The "client" is an AI simulation with fictional personas. No real person is on the other end. Do NOT share real personal data in the simulator chat - it's for training only.</p>
+  <p>All client calls, chats, and remote desktop sessions are simulated. No real calls are made, no real remote access occurs. The &quot;client&quot; is an AI simulation with fictional personas. No real person is on the other end. Do NOT share real personal data in the simulator chat - it&apos;s for training only.</p>
   </section>
 
   <section>
-  <h2 className="font-semibold text-[15px]">6. Children's Privacy</h2>
+  <h2 className="font-semibold text-[15px]">6. Children&apos;s Privacy</h2>
   <p>OrbitDesk is for IT professionals and not intended for children under 13. We do not knowingly collect data from children.</p>
   </section>
 
   <section>
   <h2 className="font-semibold text-[15px]">7. Your Rights</h2>
-  <p>Since we collect no real data, there is no data to access, correct, or delete on our servers. To delete local simulator data, clear your browser's LocalStorage for this site (DevTools → Application → Local Storage → Clear).</p>
+  <p>Since we collect no real data, there is no data to access, correct, or delete on our servers. To delete local simulator data, clear your browser&apos;s LocalStorage for this site (DevTools → Application → Local Storage → Clear).</p>
   </section>
 
   <section>
@@ -69,12 +70,12 @@ export default function PrivacyPage() {
 
   <div className="bg-[#0a0a0a] text-white rounded-xl p-4 mt-8">
   <div className="font-semibold text-sm">🔒 Our Promise</div>
-  <div className="text-xs text-zinc-400 mt-1">OrbitDesk was built to help you get hired without risking anyone's privacy. No real data, no tracking, no affiliation. Just pure training for Modern Workplace Support Team Lead roles.</div>
+  <div className="text-xs text-zinc-400 mt-1">OrbitDesk was built to help you get hired without risking anyone&apos;s privacy. No real data, no tracking, no affiliation. Just pure training for Modern Workplace Support Team Lead roles.</div>
   </div>
   </div>
 
   <div className="mt-8 pt-6 border-t border-zinc-100 flex gap-3 text-xs">
-  <a href="/" className="px-4 py-2 bg-[#0a0a0a] text-white rounded-full">← Back to Lab</a>
+  <Link href="/" className="px-4 py-2 bg-[#0a0a0a] text-white rounded-full">← Back to Lab</Link>
   <a href="/terms" className="px-4 py-2 bg-zinc-100 rounded-full">Terms</a>
   <a href="/disclaimer" className="px-4 py-2 bg-zinc-100 rounded-full">Disclaimer</a>
   </div>

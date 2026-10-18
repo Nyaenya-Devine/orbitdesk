@@ -1,3 +1,4 @@
+import Link from 'next/link';
 export default function TermsPage() {
  return (
  <div className="min-h-screen bg-[#fafafa] py-12 px-6">
@@ -38,7 +39,7 @@ export default function TermsPage() {
 
   <section>
   <h2 className="font-semibold text-[15px]">4. No Warranty</h2>
-  <p>This simulator is provided "as is" without warranty. While we strive for accuracy in Modern Workplace concepts (Entra ID sign-in logs, Intune compliance, Message Trace, What If tool, Report-Only mode, dsregcmd), procedures may change as Microsoft updates its platforms. Always refer to official Microsoft Learn documentation for production work.</p>
+  <p>This simulator is provided &quot;as is&quot; without warranty. While we strive for accuracy in Modern Workplace concepts (Entra ID sign-in logs, Intune compliance, Message Trace, What If tool, Report-Only mode, dsregcmd), procedures may change as Microsoft updates its platforms. Always refer to official Microsoft Learn documentation for production work.</p>
   </section>
 
   <section>
@@ -69,7 +70,7 @@ export default function TermsPage() {
 
   <section>
   <h2 className="font-semibold text-[15px]">8. Limitation of Liability</h2>
-  <p>OrbitDesk is a training tool, not production software. The creator is not liable for any decisions made based on simulator training. Always follow your employer's official procedures and Microsoft's official documentation in real work.</p>
+  <p>OrbitDesk is a training tool, not production software. The creator is not liable for any decisions made based on simulator training. Always follow your employer&apos;s official procedures and Microsoft&apos;s official documentation in real work.</p>
   </section>
 
   <section>
@@ -84,7 +85,7 @@ export default function TermsPage() {
   </div>
 
   <div className="mt-8 pt-6 border-t border-zinc-100 flex gap-3 text-xs">
-  <a href="/" className="px-4 py-2 bg-[#0a0a0a] text-white rounded-full">← Back to Lab</a>
+  <Link href="/" className="px-4 py-2 bg-[#0a0a0a] text-white rounded-full">← Back to Lab</Link>
   <a href="/privacy" className="px-4 py-2 bg-zinc-100 rounded-full">Privacy Policy</a>
   <a href="/disclaimer" className="px-4 py-2 bg-zinc-100 rounded-full">Disclaimer</a>
   </div>

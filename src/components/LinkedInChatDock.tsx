@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateCommunicationScore } from '@/lib/progressEngine';
+import Image from 'next/image';
 
 function getIntelligentReplyDock(userMessage: string, chatId: string): string {
  const lower = userMessage.toLowerCase();
@@ -151,7 +152,7 @@ function ChatWindowComponent({ chat, onClose, onMinimize, onSend }: { chat: Chat
    {/* LinkedIn info */}
    <div className="flex gap-2 items-start p-2 rounded-xl bg-blue-50 border border-blue-100 mt-3">
     <span className="h-5 w-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] flex-shrink-0">i</span>
-    <p className="text-[11px] text-zinc-600">You haven't received a response yet. <span className="text-blue-600 font-medium hover:underline cursor-pointer">Learn more</span></p>
+    <p className="text-[11px] text-zinc-600">You haven&apos;t received a response yet. <span className="text-blue-600 font-medium hover:underline cursor-pointer">Learn more</span></p>
    </div>
   </div>
 
@@ -178,11 +179,21 @@ function ChatWindowComponent({ chat, onClose, onMinimize, onSend }: { chat: Chat
 export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; isPaused?: boolean }) {
  const [isOpen, setIsOpen] = useState(false);
  const [openChats, setOpenChats] = useState<ChatWindow[]>([]);
+ // Monotonic counter for message ids — unique even when two messages are
+ // sent within the same millisecond (Date.now() would collide).
+ const messageIdRef = useRef(0);
  const [chats, setChats] = useState<ChatWindow[]>(initialChats);
 
- // Auto-open live ticket chat when ticket selected
+ // Auto-open live ticket chat when ticket selected.
+ // The "is it already open?" check lives inside the state updater, so this
+ // effect depends only on `ticket` and cannot loop.
  useEffect(() => {
- if (ticket && !openChats.find(c => c.id === `live-${ticket.code}`)) {
+ if (!ticket) return;
+ // Deferred by a tick: writing state synchronously in an effect body causes an
+ // extra cascading render (react-hooks/set-state-in-effect).
+ const t = setTimeout(() => {
+ setOpenChats(prev => {
+  if (prev.find(c => c.id === `live-${ticket.code}`)) return prev;
   const liveChat: ChatWindow = {
    id: `live-${ticket.code}`,
    name: ticket.userEmail.split('@')[0],
@@ -191,9 +202,11 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
    status: 'online',
    messages: [{ id: '1', author: ticket.userEmail.split('@')[0], avatar: ticket.userEmail[0].toUpperCase(), text: ticket.userMessage, time: 'Now', isYou: false }],
   };
-  setOpenChats(prev => prev.length >= 2 ? [liveChat, ...prev.slice(0,1)] : [...prev, liveChat]);
-  setIsOpen(true);
- }
+  return prev.length >= 2 ? [liveChat, ...prev.slice(0,1)] : [...prev, liveChat];
+ });
+ setIsOpen(true);
+ }, 0);
+ return () => clearTimeout(t);
  }, [ticket]);
 
  const openChat = (chatId: string) => {
@@ -212,9 +225,9 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
   checkedLogs: /sign-in logs|audit logs|service health|dsregcmd|company portal/i.test(text),
   usedCorrectTool: /entra|intune|company portal|what if|bitlocker/i.test(text),
  });
- console.log(`[OrbitDesk Advanced] Chat ${chatId} — Emp ${scores.empathy} Clar ${scores.clarity} Tech ${scores.technicalAccuracy} Flu ${scores.fluency} Lang ${scores.clientLanguage}`);
+ // console.log(`[OrbitDesk Advanced] Chat ${chatId} — Emp ${scores.empathy} Clar ${scores.clarity} Tech ${scores.technicalAccuracy} Flu ${scores.fluency} Lang ${scores.clientLanguage}`);
 
- const newMsg: Message = { id: Date.now().toString(), author: 'You', avatar: 'Y', text, time: 'Now', isYou: true };
+ const newMsg: Message = { id: `msg-${++messageIdRef.current}`, author: 'You', avatar: 'Y', text, time: 'Now', isYou: true };
  setOpenChats(prev => prev.map(c => c.id === chatId ? { ...c, messages: [...c.messages, newMsg] } : c));
  setTimeout(() => {
   setOpenChats(prev => prev.map(c => c.id === chatId ? { ...c, isTyping: true } : c));
@@ -247,7 +260,7 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
     <button onClick={() => setIsOpen(!isOpen)} className="w-full h-10 px-3 bg-white hover:bg-zinc-50 flex items-center justify-between border-b border-zinc-200 transition">
      <div className="flex items-center gap-2">
       <div className="relative">
-       <img src="/icon-512.png" alt="" className="h-7 w-7 rounded-full object-cover" />
+       <Image src="/icon-512.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-white" />
       </div>
       <span className="text-[13px] font-semibold text-zinc-900">Messaging</span>

@@ -483,14 +483,14 @@ export function calculateCommunicationScore(
 
  // Debug log for advanced understanding (only in dev)
  if (typeof window !== 'undefined' && (window as any).DEBUG_ORBITDESK) {
-  console.log('Advanced Score:', {
-   empathy: { score: empathy, details: empathyDetails },
-   clarity: { score: clarity, details: clarityDetails },
-   technical: { score: technical, details: techDetails },
-   fluency: { score: fluency, details: fluencyDetails },
-   clientLang: { score: clientLang, details: langDetails },
-   wordCount, sentenceCount, avgWordsPerSentence
-  });
+  // console.log('Advanced Score:', {
+   // empathy: { score: empathy, details: empathyDetails },
+   // clarity: { score: clarity, details: clarityDetails },
+   // technical: { score: technical, details: techDetails },
+   // fluency: { score: fluency, details: fluencyDetails },
+   // clientLang: { score: clientLang, details: langDetails },
+   // wordCount, sentenceCount, avgWordsPerSentence
+  // });
  }
 
  return {

@@ -1,15 +1,31 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import Logo from './Logo';
 
-export default function DesktopDownloadV2() {
- const [isInstalled, setIsInstalled] = useState(false);
+// Track the browser's standalone-mode query reactively. Reading it through
+// useSyncExternalStore avoids an effect that writes state on mount
+// (react-hooks/set-state-in-effect) and keeps the value correct if the user
+// installs or uninstalls the app while the page is open.
+function subscribeDisplayMode(onChange: () => void) {
+ if (typeof window === 'undefined') return () => {};
+ const mq = window.matchMedia('(display-mode: standalone)');
+ mq.addEventListener('change', onChange);
+ return () => mq.removeEventListener('change', onChange);
+}
+function getDisplayMode() {
+ if (typeof window === 'undefined') return false;
+ return window.matchMedia('(display-mode: standalone)').matches;
+}
+function getServerDisplayMode() {
+ return false;
+}
 
- useEffect(() => {
- if (window.matchMedia('(display-mode: standalone)').matches) {
- setIsInstalled(true);
- }
- }, []);
+export default function DesktopDownloadV2() {
+ const isInstalled = useSyncExternalStore(
+  subscribeDisplayMode,
+  getDisplayMode,
+  getServerDisplayMode,
+ );
 
  return (
  <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">

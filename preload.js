@@ -42,4 +42,4 @@ contextBridge.exposeInMainWorld('orbitdesk', {
   sandbox: true,
 });
 
-console.log('OrbitDesk Desktop Bridge v6.6 loaded — Secure IPC, Auto-Update, Voice calls, Remote PC, Audit Log');
+// console.log('OrbitDesk Desktop Bridge v6.6 loaded — Secure IPC, Auto-Update, Voice calls, Remote PC, Audit Log');

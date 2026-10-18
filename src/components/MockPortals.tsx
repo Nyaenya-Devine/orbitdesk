@@ -22,9 +22,9 @@ export default function MockPortals({ ticket, onAction }: Props) {
  <div className="bg-[#0a0a0a] rounded-2xl border border-zinc-800/60 p-8 text-center text-zinc-500 h-full flex flex-col items-center justify-center">
   <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-2xl border border-zinc-700">🔍</div>
   <p className="font-medium text-zinc-300">Select a ticket to open admin portals — learn real IT support</p>
-  <p className="text-[12px] mt-2 max-w-[400px]">In real IT helpdesk, you don't just click a button. You go to entra.microsoft.com, filter sign-in logs, check Conditional Access tab, identify DeviceNotCompliant 53000, then fix in Intune. This teaches that reality.</p>
+  <p className="text-[12px] mt-2 max-w-[400px]">In real IT helpdesk, you don&apos;t just click a button. You go to entra.microsoft.com, filter sign-in logs, check Conditional Access tab, identify DeviceNotCompliant 53000, then fix in Intune. This teaches that reality.</p>
   <div className="mt-4 p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-300">
-  💡 <strong>Never worked in IT before?</strong> Start with Student Mode — guided steps, max 1 P1, 5 tickets. Each portal has "How this works in real life" explanation.
+  💡 <strong>Never worked in IT before?</strong> Start with Student Mode — guided steps, max 1 P1, 5 tickets. Each portal has &quot;How this works in real life&quot; explanation.
   </div>
  </div>
  );
@@ -41,10 +41,10 @@ export default function MockPortals({ ticket, onAction }: Props) {
 
  // Realistic sign-in logs data
  const signInLogs = [
- { time: '09:12:34', user: ticket.userEmail, app: 'Exchange Online', status: 'Failure', reason: ticket.errorCodes[0] || 'DeviceNotCompliant', ip: '196.201.12.45', location: 'Nairobi, KE', caPolicy: 'Require compliant device for M365', result: 'Blocked', correlationId: 'a7f3c9e2-' + Math.random().toString(36).substring(2,6) },
- { time: '09:10:12', user: ticket.userEmail, app: 'Teams', status: 'Failure', reason: '53000', ip: '196.201.12.45', location: 'Nairobi, KE', caPolicy: 'Require compliant device for M365', result: 'Blocked', correlationId: 'b3e9d1a4-' + Math.random().toString(36).substring(2,6) },
- { time: '09:08:45', user: ticket.userEmail, app: 'SharePoint Online', status: 'Success', reason: '-', ip: '196.201.12.45', location: 'Nairobi, KE', caPolicy: '-', result: 'Granted', correlationId: 'c4f2a9b1-' + Math.random().toString(36).substring(2,6) },
- { time: '08:55:22', user: 'john.admin@novatech.com', app: 'Azure Portal', status: 'Success', reason: '-', ip: '196.201.12.10', location: 'Nairobi, KE', caPolicy: '-', result: 'Granted', correlationId: 'd2a8c3e1-' + Math.random().toString(36).substring(2,6) },
+ { time: '09:12:34', user: ticket.userEmail, app: 'Exchange Online', status: 'Failure', reason: ticket.errorCodes[0] || 'DeviceNotCompliant', ip: '196.201.12.45', location: 'Nairobi, KE', caPolicy: 'Require compliant device for M365', result: 'Blocked', correlationId: 'a7f3c9e2-4b1d' },
+ { time: '09:10:12', user: ticket.userEmail, app: 'Teams', status: 'Failure', reason: '53000', ip: '196.201.12.45', location: 'Nairobi, KE', caPolicy: 'Require compliant device for M365', result: 'Blocked', correlationId: 'b3e9d1a4-7c3e' },
+ { time: '09:08:45', user: ticket.userEmail, app: 'SharePoint Online', status: 'Success', reason: '-', ip: '196.201.12.45', location: 'Nairobi, KE', caPolicy: '-', result: 'Granted', correlationId: 'c4f2a9b1-2e5f' },
+ { time: '08:55:22', user: 'john.admin@novatech.com', app: 'Azure Portal', status: 'Success', reason: '-', ip: '196.201.12.10', location: 'Nairobi, KE', caPolicy: '-', result: 'Granted', correlationId: 'd2a8c3e1-9a0b' },
  ];
 
  const filteredLogs = signInLogs.filter(log => 
@@ -75,7 +75,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
    <p className="text-[12px] font-bold text-blue-300">📚 How this works in real IT helpdesk (for beginners)</p>
    <p className="text-[11px] text-blue-200/70 mt-1.5 leading-[1.4]">
-   In real life, when user says "Can't access Outlook, error DeviceNotCompliant", you don't guess. You go to <strong>entra.microsoft.com → Monitoring → Sign-in logs</strong>, filter by user email <code className="bg-black/30 px-1 rounded">{ticket.userEmail}</code>, look for <strong>Failure</strong> status, click into it, go to <strong>Conditional Access tab</strong> to see which policy blocked and why (DeviceNotCompliant 53000). Then you know to check Intune compliance. This portal simulates that exact flow.
+   In real life, when user says &quot;Can&apos;t access Outlook, error DeviceNotCompliant&quot;, you don&apos;t guess. You go to <strong>entra.microsoft.com → Monitoring → Sign-in logs</strong>, filter by user email <code className="bg-black/30 px-1 rounded">{ticket.userEmail}</code>, look for <strong>Failure</strong> status, click into it, go to <strong>Conditional Access tab</strong> to see which policy blocked and why (DeviceNotCompliant 53000). Then you know to check Intune compliance. This portal simulates that exact flow.
    </p>
   </div>
 
@@ -136,7 +136,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
     <div><span className="text-zinc-500">Time:</span> <span className="text-white">{filteredLogs[selectedLog]?.time} Today</span></div>
    </div>
    <div className="space-y-2">
-    <div><span className="text-zinc-500">Policy:</span> <span className="text-amber-300">"{filteredLogs[selectedLog]?.caPolicy}"</span></div>
+    <div><span className="text-zinc-500">Policy:</span> <span className="text-amber-300">&quot;{filteredLogs[selectedLog]?.caPolicy}&quot;</span></div>
     <div><span className="text-zinc-500">Result:</span> <span className={`${filteredLogs[selectedLog]?.result === 'Blocked' ? 'text-red-400 font-bold' : 'text-emerald-400'}`}>{filteredLogs[selectedLog]?.result}</span></div>
     <div><span className="text-zinc-500">Failure:</span> <span className="text-red-400 font-bold">{filteredLogs[selectedLog]?.reason}</span></div>
     <div><span className="text-zinc-500">Correlation ID:</span> <span className="text-white font-mono text-[10px]">{filteredLogs[selectedLog]?.correlationId}</span> <span className="text-zinc-500">(give to Microsoft support)</span></div>
@@ -166,7 +166,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
    <p className="text-[12px] font-bold text-blue-300">📚 How Intune Compliance works in real life</p>
    <p className="text-[11px] text-blue-200/70 mt-1.5 leading-[1.4]">
-   After you find DeviceNotCompliant in Entra, you go to <strong>intune.microsoft.com → Devices → Compliance → Device compliance</strong>, search user device, see <strong>Not Compliant</strong> with failing settings (BitLocker, Defender, OS). You fix by enabling BitLocker, syncing Company Portal. Device checks in every 8 hours, but manual Sync forces immediate check. This is real workflow — not just clicking "Fix".
+   After you find DeviceNotCompliant in Entra, you go to <strong>intune.microsoft.com → Devices → Compliance → Device compliance</strong>, search user device, see <strong>Not Compliant</strong> with failing settings (BitLocker, Defender, OS). You fix by enabling BitLocker, syncing Company Portal. Device checks in every 8 hours, but manual Sync forces immediate check. This is real workflow — not just clicking &quot;Fix&quot;.
    </p>
   </div>
 
@@ -256,7 +256,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
    <p className="text-[12px] font-bold text-blue-300">📚 How Exchange Message Trace works in real life</p>
    <p className="text-[11px] text-blue-200/70 mt-1.5 leading-[1.4]">
-   When user says "Invoice not received" or "Email in quarantine", you go to <strong>admin.exchange.microsoft.com → Mail flow → Message trace</strong>, search by sender/recipient, see status <strong>Quarantined</strong> with reason (Bulk, Spam, Phish). You then go to <strong>Quarantine portal</strong> (security.microsoft.com/quarantine) to Release + Allow Sender + Report as Not Junk to train filter. Real workflow, not just "Release".
+   When user says &quot;Invoice not received&quot; or &quot;Email in quarantine&quot;, you go to <strong>admin.exchange.microsoft.com → Mail flow → Message trace</strong>, search by sender/recipient, see status <strong>Quarantined</strong> with reason (Bulk, Spam, Phish). You then go to <strong>Quarantine portal</strong> (security.microsoft.com/quarantine) to Release + Allow Sender + Report as Not Junk to train filter. Real workflow, not just &quot;Release&quot;.
    </p>
   </div>
 
@@ -292,7 +292,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
     <ol className="mt-2 space-y-1 text-[11px] text-emerald-200/70 list-decimal list-inside">
     <li>Went to <strong>security.microsoft.com/quarantine</strong> → Found email from vendor@supplier.com</li>
     <li>Clicked <strong>Release</strong> → Checked <strong>Allow sender</strong> (adds to allowed senders list) + <strong>Report as Not Junk</strong> (trains filter)</li>
-    <li>Email delivered to user's inbox in 2-5 mins, future emails from vendor won't be quarantined as Bulk</li>
+    <li>Email delivered to user&apos;s inbox in 2-5 mins, future emails from vendor won&apos;t be quarantined as Bulk</li>
     <li>Also tuned Anti-spam policy: Increased Bulk threshold for finance mailbox per client request</li>
     </ol>
    </div>
@@ -312,7 +312,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
    <p className="text-[12px] font-bold text-blue-300">📚 How Service Health check works — ALWAYS check first in real IT</p>
    <p className="text-[11px] text-blue-200/70 mt-1.5 leading-[1.4]">
-   In real IT support, <strong>first thing you check is Service Health</strong> — is Microsoft having an outage? Go to <strong>admin.microsoft.com → Health → Service health</strong>. If Exchange Online shows incident, it's not your fault, it's Microsoft. You inform users, no need to troubleshoot. If all green, then you know issue is on your side (CA policy, compliance, etc.). This is ITIL best practice — check Service Health first.
+   In real IT support, <strong>first thing you check is Service Health</strong> — is Microsoft having an outage? Go to <strong>admin.microsoft.com → Health → Service health</strong>. If Exchange Online shows incident, it&apos;s not your fault, it&apos;s Microsoft. You inform users, no need to troubleshoot. If all green, then you know issue is on your side (CA policy, compliance, etc.). This is ITIL best practice — check Service Health first.
    </p>
   </div>
 
@@ -346,8 +346,8 @@ export default function MockPortals({ ticket, onAction }: Props) {
    <ol className="mt-2 space-y-1 text-[11px] text-zinc-400 list-decimal list-inside">
    <li>ALWAYS check Service Health first — if Microsoft incident, inform users, no troubleshooting needed</li>
    <li>If all green (like now), issue is on your side — check Sign-in logs, Intune compliance, etc.</li>
-   <li>This saves time and prevents blaming your CA policy when it's actually Microsoft outage</li>
-   <li>In ticket, document: "Checked Service Health at 09:15 — all green, no Microsoft incident — issue is client-side"</li>
+   <li>This saves time and prevents blaming your CA policy when it&apos;s actually Microsoft outage</li>
+   <li>In ticket, document: &quot;Checked Service Health at 09:15 — all green, no Microsoft incident — issue is client-side&quot;</li>
    </ol>
    </div>
   </div>
@@ -359,7 +359,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
    <p className="text-[12px] font-bold text-blue-300">📚 What If Tool — Safe testing without breaking production (real IT best practice)</p>
    <p className="text-[11px] text-blue-200/70 mt-1.5 leading-[1.4]">
-   In real IT, you NEVER push CA policy directly to production without testing — you could block 50 users (P1). Instead, you use <strong>What If tool</strong>: Entra → Conditional Access → What If → select user, app, device state, location → see if policy would block or allow. Also use <strong>Report-Only mode</strong> — policy logs what would happen but doesn't block, watch 24h, then turn ON. This is how you prevent P1 outages.
+   In real IT, you NEVER push CA policy directly to production without testing — you could block 50 users (P1). Instead, you use <strong>What If tool</strong>: Entra → Conditional Access → What If → select user, app, device state, location → see if policy would block or allow. Also use <strong>Report-Only mode</strong> — policy logs what would happen but doesn&apos;t block, watch 24h, then turn ON. This is how you prevent P1 outages.
    </p>
   </div>
 
@@ -378,7 +378,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
     <div><span className="text-zinc-500">Location:</span> <span className="text-white">Nairobi Trusted</span> <span className="text-zinc-600">(real: select location)</span></div>
    </div>
    <div className="space-y-2">
-    <div><span className="text-zinc-500">Policy:</span> <span className="text-amber-300">"Require compliant device for M365"</span></div>
+    <div><span className="text-zinc-500">Policy:</span> <span className="text-amber-300">&quot;Require compliant device for M365&quot;</span></div>
     <div><span className="text-zinc-500">Mode:</span> <span className="text-white">Report-Only OFF → ON (real: test in Report-Only first)</span></div>
    </div>
    </div>
@@ -390,11 +390,11 @@ export default function MockPortals({ ticket, onAction }: Props) {
    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
    <p className="text-[11px] font-bold text-amber-300">🎯 Real IT workflow to prevent P1:</p>
    <ol className="mt-2 space-y-1 text-[11px] text-amber-200/70 list-decimal list-inside">
-    <li>Before pushing CA policy "Require compliant", use What If: User={ticket.userEmail.split('@')[0]}, App=Exchange, Compliant=NO → shows BLOCKED</li>
-    <li>Check how many users would be blocked — if 50, don't push directly</li>
-    <li>Instead, set policy to <strong>Report-Only</strong> — it logs what WOULD happen but doesn't block</li>
+    <li>Before pushing CA policy &quot;Require compliant&quot;, use What If: User={ticket.userEmail.split('@')[0]}, App=Exchange, Compliant=NO → shows BLOCKED</li>
+    <li>Check how many users would be blocked — if 50, don&apos;t push directly</li>
+    <li>Instead, set policy to <strong>Report-Only</strong> — it logs what WOULD happen but doesn&apos;t block</li>
     <li>Watch Report-Only logs for 24h — see 50 users would be blocked → inform, fix compliance first, then turn ON</li>
-    <li>This is how you prevent "P1 50 users blocked at 08:02 by john.admin without Report-Only" — real RCA from Audit Logs</li>
+    <li>This is how you prevent &quot;P1 50 users blocked at 08:02 by john.admin without Report-Only&quot; — real RCA from Audit Logs</li>
    </ol>
    </div>
 
@@ -409,7 +409,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
    <p className="text-[12px] font-bold text-blue-300">📚 Audit Logs — Who changed what, when, why — Root Cause Analysis (RCA)</p>
    <p className="text-[11px] text-blue-200/70 mt-1.5 leading-[1.4]">
-   In real IT, when P1 happens "50 users blocked", you need RCA: Who pushed CA policy, when, without Report-Only? Go to <strong>entra.microsoft.com → Audit logs</strong>, filter by Activity "Update conditional access policy", see actor john.admin@novatech.com at 08:02, target "Require compliant device for M365", changed from Report-Only OFF to ON. That's RCA — not guessing. You then revert to Report-Only, fix compliance, post-incident review.
+   In real IT, when P1 happens &quot;50 users blocked&quot;, you need RCA: Who pushed CA policy, when, without Report-Only? Go to <strong>entra.microsoft.com → Audit logs</strong>, filter by Activity &quot;Update conditional access policy&quot;, see actor john.admin@novatech.com at 08:02, target &quot;Require compliant device for M365&quot;, changed from Report-Only OFF to ON. That&apos;s RCA — not guessing. You then revert to Report-Only, fix compliance, post-incident review.
    </p>
   </div>
 
@@ -440,7 +440,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
    <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
    <p className="text-[12px] font-bold text-red-300">🚨 Root Cause Analysis — Real P1 from Audit Logs:</p>
    <div className="mt-3 space-y-2 text-[11px] text-red-200/70">
-   <div><span className="text-zinc-500">What happened:</span> At 08:02, john.admin pushed CA policy "Require compliant device for M365" from OFF to ON without Report-Only mode — blocked 50 users immediately</div>
+   <div><span className="text-zinc-500">What happened:</span> At 08:02, john.admin pushed CA policy &quot;Require compliant device for M365&quot; from OFF to ON without Report-Only mode — blocked 50 users immediately</div>
    <div><span className="text-zinc-500">Impact:</span> P1, 50 users cannot access Outlook/Teams, payroll blocked, SLA 60min breach, CSAT drop</div>
    <div><span className="text-zinc-500">Why:</span> No What If testing, no Report-Only 24h watch, no peer review — pushed directly to production</div>
    <div><span className="text-zinc-500">Fix:</span> Revert to Report-Only → fix compliance for 50 users (BitLocker) → What If test → turn ON with approval</div>
@@ -451,10 +451,10 @@ export default function MockPortals({ ticket, onAction }: Props) {
    <div className="mt-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
    <p className="text-[11px] font-bold text-zinc-300">💡 Real IT workflow for beginners — How to do RCA:</p>
    <ol className="mt-2 space-y-1 text-[11px] text-zinc-400 list-decimal list-inside">
-   <li>Go to <strong>entra.microsoft.com → Audit logs</strong> → Filter Activity="Update conditional access policy" → Last 24h</li>
+   <li>Go to <strong>entra.microsoft.com → Audit logs</strong> → Filter Activity=&quot;Update conditional access policy&quot; → Last 24h</li>
    <li>Find who changed policy, when, what changed (OFF → ON, Report-Only, etc.)</li>
-   <li>That's RCA — you now know root cause, not guessing</li>
-   <li>Document in ticket: "RCA: Policy pushed at 08:02 by john.admin without Report-Only — 50 users blocked — revert to Report-Only per ITIL"</li>
+   <li>That&apos;s RCA — you now know root cause, not guessing</li>
+   <li>Document in ticket: &quot;RCA: Policy pushed at 08:02 by john.admin without Report-Only — 50 users blocked — revert to Report-Only per ITIL&quot;</li>
    <li>Post-incident review + KB update to prevent recurrence</li>
    </ol>
    </div>

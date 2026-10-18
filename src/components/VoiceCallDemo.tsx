@@ -84,7 +84,7 @@ export default function VoiceCallDemo() {
   audioRef.current.src = audioPath;
   audioRef.current.play().catch(() => {
   // Fallback to Web Speech API if audio fails
-  console.log('Audio play failed, using TTS fallback');
+  // console.log('Audio play failed, using TTS fallback');
   });
   setPlayingAudio(audioPath);
  }
@@ -170,7 +170,7 @@ export default function VoiceCallDemo() {
   <div>✓ <strong>Balanced voices:</strong> Men & women, different accents, formal vs casual, expert vs beginner</div>
   <div>✓ <strong>Flowing conversation:</strong> Client talks, you respond, client does action, asks question, expert joins, resolves</div>
   <div>✓ <strong>Client does actions:</strong> Runs dsregcmd, syncs Company Portal, checks BitLocker, reports output</div>
-  <div>✓ <strong>Asks questions:</strong> "Will I lose files?", "What does 53000 mean?", "ETA?", "Provide audit trail?"</div>
+  <div>✓ <strong>Asks questions:</strong> &quot;Will I lose files?&quot;, &quot;What does 53000 mean?&quot;, &quot;ETA?&quot;, &quot;Provide audit trail?&quot;</div>
   <div>✓ <strong>Tech experts:</strong> Alex (Entra CA), Priya (Intune), conference call with different voices</div>
   </div>
   </div>

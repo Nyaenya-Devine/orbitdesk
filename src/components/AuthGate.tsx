@@ -34,24 +34,32 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
     role: 'student',
     experience: 'never',
     goal: 'Interview preparation — show real work',
-    joinedAt: Date.now(),
+    joinedAt: 0,
     track: 'operations',
   });
 
   useEffect(() => {
-    const detected = detectLanguage();
-    setLang(detected);
+    // Language detection and the join timestamp are deferred by a tick so the
+    // effect body never calls setState synchronously
+    // (react-hooks/set-state-in-effect).
+    const langTimer = setTimeout(() => {
+      setLang(detectLanguage());
+      setProfile(prev => ({ ...prev, joinedAt: Date.now() }));
+    }, 0);
     const saved = localStorage.getItem('orbitdesk_user_profile');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         // Resume a returning local session.
         onAuthenticated(parsed);
-        return;
+        return () => clearTimeout(langTimer);
       } catch {}
     }
     const t = setTimeout(() => setShow(true), 300);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(langTimer);
+      clearTimeout(t);
+    };
   }, [onAuthenticated]);
 
   useEffect(() => {
@@ -130,7 +138,7 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
 
           {/* Curriculum */}
           <div className="mt-8 grid gap-3">
-            <div className="text-[10px] font-medium tracking-[0.14em] text-zinc-500 uppercase">What you'll practice</div>
+            <div className="text-[10px] font-medium tracking-[0.14em] text-zinc-500 uppercase">What you&apos;ll practice</div>
             <div className="grid grid-cols-2 gap-2.5">
               {[
                 { k: 'Queue Triage', v: '16 tickets • P1→P4 • SLA', icon: '◧' },

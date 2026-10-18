@@ -51,7 +51,7 @@ export default function OrbitPauseOverlay({ isPaused, isManual, awayMinutes, pen
     <div className="mt-4 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10 text-left">
      <p className="text-[11px] font-bold text-violet-300">Real MSP Feel</p>
      <p className="text-[11px] text-zinc-400 mt-1 leading-[1.4]">
-      In real helpdesk, when you go on break / close laptop, your queue is put on hold. Other agents cover, but your tickets don't breach unfairly. When you return, you get handover.
+      In real helpdesk, when you go on break / close laptop, your queue is put on hold. Other agents cover, but your tickets don&apos;t breach unfairly. When you return, you get handover.
      </p>
     </div>
 

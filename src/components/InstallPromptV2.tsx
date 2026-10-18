@@ -1,16 +1,35 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+
+// Track the browser's standalone-mode query reactively instead of writing
+// state from an effect on mount (react-hooks/set-state-in-effect).
+function subscribeDisplayMode(onChange: () => void) {
+ if (typeof window === 'undefined') return () => {};
+ const mq = window.matchMedia('(display-mode: standalone)');
+ mq.addEventListener('change', onChange);
+ return () => mq.removeEventListener('change', onChange);
+}
+function getDisplayMode() {
+ if (typeof window === 'undefined') return false;
+ return window.matchMedia('(display-mode: standalone)').matches;
+}
+function getServerDisplayMode() {
+ return false;
+}
 
 export default function InstallPromptV2() {
  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
  const [showPrompt, setShowPrompt] = useState(false);
- const [isInstalled, setIsInstalled] = useState(false);
+ const standalone = useSyncExternalStore(
+  subscribeDisplayMode,
+  getDisplayMode,
+  getServerDisplayMode,
+ );
+ const [isInstalled, setIsInstalled] = useState(standalone);
 
  useEffect(() => {
- if (window.matchMedia('(display-mode: standalone)').matches) {
- setIsInstalled(true);
- }
  const handleBeforeInstall = (e: any) => {
  e.preventDefault();
  setDeferredPrompt(e);
@@ -61,7 +80,7 @@ export default function InstallPromptV2() {
   exit={{ opacity: 0, y: -10 }}
   className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 shadow-xl flex items-center gap-3 max-w-[320px]"
   >
-  <img src="/icon-512.png" alt="" className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
+  <Image src="/icon-512.png" alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
   <div className="flex-1 min-w-0">
    <p className="font-medium text-[12px] text-white">Install OrbitDesk</p>
    <p className="text-[11px] text-zinc-500">Works offline, native notifications</p>

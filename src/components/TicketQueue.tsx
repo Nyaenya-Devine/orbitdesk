@@ -152,7 +152,7 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
     {ticket.title}
     </h3>
     
-    <p className="text-[11px] text-zinc-500 line-clamp-1 mt-1">"{ticket.userMessage.substring(0, 60)}..."</p>
+    <p className="text-[11px] text-zinc-500 line-clamp-1 mt-1">&quot;{ticket.userMessage.substring(0, 60)}...&quot;</p>
     
     <div className="flex items-center gap-2 mt-2">
     <div className="h-5 w-5 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-400">

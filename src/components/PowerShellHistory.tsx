@@ -30,9 +30,14 @@ export default function PowerShellHistory({ commands, onClear }: { commands?: Po
   const [history, setHistory] = useState<PowerShellCommand[]>(mockHistory);
   const [filter, setFilter] = useState('');
 
-  useEffect(() => {
+  // Sync the incoming prop into local state using React's "adjust state
+  // during render" pattern, so no effect (and no extra render pass) is
+  // needed (react-hooks/set-state-in-effect).
+  const [lastCommands, setLastCommands] = useState(commands);
+  if (commands !== lastCommands) {
+    setLastCommands(commands);
     if (commands) setHistory(commands);
-  }, [commands]);
+  }
 
   const filtered = history.filter(c => 
     !filter || c.cmdlet.toLowerCase().includes(filter.toLowerCase()) || c.object.toLowerCase().includes(filter.toLowerCase()) || c.user.toLowerCase().includes(filter.toLowerCase())

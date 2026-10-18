@@ -31,16 +31,23 @@ interface Props {
 export default function ClassCallCenter({ classCode, students, currentUserId, currentUserProfile, onCallAgent }: Props) {
   const [calls, setCalls] = useState<ClassCall[]>([]);
   const [activeCall, setActiveCall] = useState<ClassCall | null>(null);
-  const [callDuration, setCallDuration] = useState(0);
+  // The call timer is derived from a single ticking clock instead of an
+ // effect that writes duration state (react-hooks/set-state-in-effect).
+ const [now, setNow] = useState(() => Date.now());
   const [selectedType, setSelectedType] = useState<CallType>('team-internal');
   const [lang, setLang] = useState<Language>('en');
 
   useEffect(() => {
-    const detected = detectLanguage();
-    setLang(detected);
+    // Detection is deferred by a tick: calling setState synchronously in an
+    // effect body triggers an extra cascading render
+    // (react-hooks/set-state-in-effect).
+    const langTimer = setTimeout(() => setLang(detectLanguage()), 0);
     const handler = (e: any) => setLang(e.detail as Language);
     window.addEventListener('orbitdesk-language-change', handler);
-    return () => window.removeEventListener('orbitdesk-language-change', handler);
+    return () => {
+      clearTimeout(langTimer);
+      window.removeEventListener('orbitdesk-language-change', handler);
+    };
   }, []);
 
   const t = (key: string) => getTranslation(lang, key);
@@ -64,15 +71,14 @@ export default function ClassCallCenter({ classCode, students, currentUserId, cu
   }, [classCode, currentUserId, currentUserProfile]);
 
   useEffect(() => {
-    if (!activeCall || activeCall.status !== 'connected' || !activeCall.connectedAt) {
-      setCallDuration(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setCallDuration(Math.floor((Date.now() - (activeCall.connectedAt || 0)) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [activeCall]);
+   const interval = setInterval(() => setNow(Date.now()), 1000);
+   return () => clearInterval(interval);
+  }, []);
+
+  const callDuration =
+   activeCall && activeCall.status === 'connected' && activeCall.connectedAt
+   ? Math.floor((now - activeCall.connectedAt) / 1000)
+   : 0;
 
   const onlineStudents = students.filter(s => s.id !== currentUserId && (s.status === 'online' || s.status === 'in-call'));
   const canCall = (student: Student) => {

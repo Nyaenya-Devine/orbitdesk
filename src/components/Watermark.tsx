@@ -6,11 +6,11 @@ export default function Watermark() {
     // Console attribution — deters silent cloning
     const style = 'color: #7c3aed; font-size: 12px; font-weight: bold;';
     const style2 = 'color: #71717a; font-size: 11px;';
-    console.log('%c◍ OrbitDesk — Modern Workplace Operations Lab', style);
-    console.log('%c© 2026 Devine Nyaenya Ngorwe — Proprietary flagship — All rights reserved', style2);
-    console.log('%cSource-available Noncommercial — No competing use — See LICENSE file', style2);
-    console.log('%cLive: https://orbitdesk-gamma.vercel.app • Portfolio: https://devine-nyaenya-portfolio.vercel.app', style2);
-    console.log('%cCommercial licensing: devinenyaenya@gmail.com', style2);
+    // console.log('%c◍ OrbitDesk — Modern Workplace Operations Lab', style);
+    // console.log('%c© 2026 Devine Nyaenya Ngorwe — Proprietary flagship — All rights reserved', style2);
+    // console.log('%cSource-available Noncommercial — No competing use — See LICENSE file', style2);
+    // console.log('%cLive: https://orbitdesk-gamma.vercel.app • Portfolio: https://devine-nyaenya-portfolio.vercel.app', style2);
+    // console.log('%cCommercial licensing: devinenyaenya@gmail.com', style2);
 
     // Watermark in DOM for screenshot protection
     const el = document.createElement('div');

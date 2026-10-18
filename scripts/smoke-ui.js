@@ -58,7 +58,7 @@ const waitForServer = async () => {
     }
 
     if (failures.length) throw new Error(`Browser failures:\n${failures.join('\n')}`);
-    console.log('OrbitDesk production UI smoke test passed: landing → lab → guest → ticket → all primary workspaces.');
+    // console.log('OrbitDesk production UI smoke test passed: landing → lab → guest → ticket → all primary workspaces.');
     await context.close();
   } finally {
     if (browser) await browser.close();

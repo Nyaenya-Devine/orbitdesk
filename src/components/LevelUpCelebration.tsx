@@ -1,6 +1,7 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { getLevelInfo } from '@/lib/progressEngine';
 import Logo from './Logo';
 
@@ -12,14 +13,49 @@ interface Props {
  onClose: () => void;
 }
 
+const CONFETTI_COLORS = ['#7c3aed', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
+
+interface ConfettiPiece {
+ id: number;
+ x: number;
+ targetY: number;
+ rotate: number;
+ duration: number;
+ delay: number;
+ color: string;
+ left: number;
+}
+
 export default function LevelUpCelebration({ oldLevel, newLevel, xp, ticketsResolved, onClose }: Props) {
- const [showConfetti, setShowConfetti] = useState(true);
+ // Confetti is decorative and browser-only. It starts hidden so the server
+ // render and the first client render match (no hydration mismatch), and the
+ // pieces themselves are generated once per mount.
+ const [showConfetti, setShowConfetti] = useState(false);
+ const [confetti] = useState<ConfettiPiece[]>(() => {
+  if (typeof window === 'undefined') return [];
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return Array.from({ length: 30 }, (_, i) => ({
+   id: i,
+   x: Math.random() * vw,
+   targetY: vh + 100,
+   rotate: Math.random() > 0.5 ? 1 : -1,
+   duration: 2 + Math.random() * 2,
+   delay: Math.random() * 0.5,
+   color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+   left: Math.random() * 100,
+  }));
+ });
  const oldInfo = getLevelInfo(oldLevel);
  const newInfo = getLevelInfo(newLevel);
 
  useEffect(() => {
+  const start = setTimeout(() => setShowConfetti(true), 0);
   const timer = setTimeout(() => setShowConfetti(false), 4000);
-  return () => clearTimeout(timer);
+  return () => {
+   clearTimeout(start);
+   clearTimeout(timer);
+  };
  }, []);
 
  // Play level up sound via Web Audio
@@ -63,18 +99,18 @@ export default function LevelUpCelebration({ oldLevel, newLevel, xp, ticketsReso
     onClick={onClose}
    >
     {/* Confetti */}
-    {showConfetti && (
+    {showConfetti && confetti.length > 0 && (
      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {Array.from({ length: 30 }).map((_, i) => (
+      {confetti.map((p) => (
        <motion.div
-        key={i}
-        initial={{ y: -20, x: Math.random() * window.innerWidth, rotate: 0, opacity: 1 }}
-        animate={{ y: window.innerHeight + 100, rotate: 360 * (Math.random() > 0.5 ? 1 : -1), opacity: 0 }}
-        transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5, ease: "easeOut" }}
+        key={p.id}
+        initial={{ y: -20, x: p.x, rotate: 0, opacity: 1 }}
+        animate={{ y: p.targetY, rotate: 360 * p.rotate, opacity: 0 }}
+        transition={{ duration: p.duration, delay: p.delay, ease: "easeOut" }}
         className="absolute w-3 h-3 rounded-full"
         style={{
-         background: ['#7c3aed', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'][Math.floor(Math.random() * 6)],
-         left: `${Math.random() * 100}%`,
+         background: p.color,
+         left: `${p.left}%`,
         }}
        />
       ))}
@@ -174,7 +210,7 @@ export default function LevelUpCelebration({ oldLevel, newLevel, xp, ticketsReso
          className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2"
         >
          <div className="w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-white/20">
-          <img src="/icon-512.png" alt="" className="w-8 h-8 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          <Image src="/icon-512.png" alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
           <span className="absolute text-[10px]">◍</span>
          </div>
         </motion.div>

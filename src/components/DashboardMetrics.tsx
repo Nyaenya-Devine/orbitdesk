@@ -325,7 +325,7 @@ export default function DashboardMetrics({ tickets }: Props) {
    <div className="font-semibold text-sm text-violet-900">Team Lead Action — Drive Quality & Improvement (From JD)</div>
    <div className="text-xs text-violet-800 mt-1 leading-relaxed">
    <strong>INTUNE-001 (0x80180024)</strong> — 22 tickets, +12% trend, High impact, NovaTech client. Root cause: Stale device records from old laptops blocking new enrollment, MDM URL still present.<br/>
-   <strong className="text-violet-900">Propose as Problem Management per ITIL:</strong> PowerShell script to auto-clean stale Entra devices older than 90 days + KB article "How to fix 0x80180024" + raise device cap from 5 to 10 for NovaTech + pair Jamal with Priya for shadowing 2 tickets/day. This is not just Incident — it's Problem.
+   <strong className="text-violet-900">Propose as Problem Management per ITIL:</strong> PowerShell script to auto-clean stale Entra devices older than 90 days + KB article &quot;How to fix 0x80180024&quot; + raise device cap from 5 to 10 for NovaTech + pair Jamal with Priya for shadowing 2 tickets/day. This is not just Incident — it&apos;s Problem.
    </div>
    <div className="mt-3 flex gap-2">
    <button className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-full font-medium hover:bg-violet-700">Create Problem Ticket</button>

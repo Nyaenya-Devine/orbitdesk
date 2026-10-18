@@ -130,6 +130,13 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  const [activeView, setActiveView] = useState<'overview' | 'live' | 'leaderboard' | 'insights' | 'export' | 'calls'>('overview');
  const [newClassName, setNewClassName] = useState('Modern Workplace Cohort — A');
  const [joinCode, setJoinCode] = useState('');
+ // Single ticking clock for relative timestamps. Reading Date.now() during
+ // render is impure and produced a different value on server vs client.
+ const [now, setNow] = useState(() => Date.now());
+ useEffect(() => {
+  const interval = setInterval(() => setNow(Date.now()), 30000);
+  return () => clearInterval(interval);
+ }, []);
 
  // Include current user in class
  const allStudents = [
@@ -139,7 +146,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  email: userProfile?.email || 'you@orbitdesk.local',
  avatar: (userProfile?.name?.[0] || 'Y').toUpperCase(),
  role: (userProfile?.role || 'team-lead') as any,
- joinedAt: Date.now(),
+ joinedAt: now,
  ticketsResolved: myProgress?.ticketsResolved || 0,
  callsHandled: myProgress?.callsHandled || 0,
  xp: myProgress?.xp || 0,
@@ -149,7 +156,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
  slaCompliance: myProgress?.slaCompliance || 100,
  streak: 3,
  status: 'online' as const,
- lastActive: Date.now(),
+ lastActive: now,
  badges: myProgress?.badges || [],
  strengths: ['Active now'],
  needsHelp: [],
@@ -320,7 +327,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
     )}
     </div>
     <div className="flex flex-col items-end gap-1">
-    <span className="text-[10px] text-zinc-500">{Math.floor((Date.now() - student.lastActive)/60000)}m ago</span>
+    <span className="text-[10px] text-zinc-500">{Math.floor((now - student.lastActive)/60000)}m ago</span>
     <button className="h-6 px-2.5 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-[10px] text-zinc-300">View →</button>
     </div>
    </div>

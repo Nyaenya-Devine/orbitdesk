@@ -19,7 +19,9 @@ export default function ClassCallDock({ classCode, currentUserId, currentUserPro
   const [calls, setCalls] = useState<ClassCall[]>([]);
   const [incomingCall, setIncomingCall] = useState<ClassCall | null>(null);
   const [activeCall, setActiveCall] = useState<ClassCall | null>(null);
-  const [duration, setDuration] = useState(0);
+  // The call timer is derived from a single ticking clock instead of an
+  // effect that writes duration state (react-hooks/set-state-in-effect).
+  const [now, setNow] = useState(() => Date.now());
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
@@ -42,15 +44,14 @@ export default function ClassCallDock({ classCode, currentUserId, currentUserPro
   }, [classCode, currentUserId, currentUserProfile]);
 
   useEffect(() => {
-    if (!activeCall || activeCall.status !== 'connected' || !activeCall.connectedAt) {
-      setDuration(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setDuration(Math.floor((Date.now() - (activeCall.connectedAt || 0)) / 1000));
-    }, 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [activeCall]);
+  }, []);
+
+  const duration =
+    activeCall && activeCall.status === 'connected' && activeCall.connectedAt
+      ? Math.floor((now - activeCall.connectedAt) / 1000)
+      : 0;
 
   const formatDuration = (sec: number) => {
     const m = Math.floor(sec / 60);

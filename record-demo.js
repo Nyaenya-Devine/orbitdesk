@@ -93,7 +93,7 @@ const pause = (page, ms) => page.waitForTimeout(ms);
   const video = page.video();
   await context.close();
   await browser.close();
-  console.log(await video.path());
+  // console.log(await video.path());
 })().catch((error) => {
   console.error(error);
   process.exit(1);

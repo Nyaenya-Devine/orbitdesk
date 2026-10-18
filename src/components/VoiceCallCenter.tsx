@@ -183,6 +183,13 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
   };
  }, []);
 
+ // handleUserVoice is declared further down the component, so the
+ // speech-recognition effect calls it through a ref. The ref is populated by
+ // an effect declared after the function, so it is never "used before
+ // declared" (react-hooks/immutability) and the setup effect does not need
+ // handleUserVoice in its dependency list.
+ const handleUserVoiceRef = useRef<((text: string) => void) | null>(null);
+
  useEffect(() => {
   try {
    if (typeof window === 'undefined') return;
@@ -211,7 +218,7 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
         if (event.results[i].isFinal) final += t + ' ';
         else interim += t;
        }
-       if (final) { handleUserVoice(final.trim()); setLiveTranscript(''); }
+       if (final) { handleUserVoiceRef.current?.(final.trim()); setLiveTranscript(''); }
        else setLiveTranscript(interim);
       } catch {}
      };
@@ -224,7 +231,11 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
    }
    try {
     const savedMute = localStorage.getItem('orbitdesk_ring_muted');
-    if (savedMute === 'true') setIsRingMuted(true);
+    if (savedMute === 'true') {
+     // Deferred by a tick so the effect body does not call setState
+     // synchronously (react-hooks/set-state-in-effect).
+     setTimeout(() => setIsRingMuted(true), 0);
+    }
    } catch {}
    const handleVisibility = () => {
     try {
@@ -260,7 +271,7 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
      window.removeEventListener('focus', handleFocus);
     } catch {}
    };
-  } catch { setHasError(true); }
+  } catch { setTimeout(() => setHasError(true), 0); }
  }, []);
 
  useEffect(() => {
@@ -532,6 +543,11 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
   } catch {}
  };
 
+ // Publish handleUserVoice to the ref for the speech-recognition effect.
+ useEffect(() => {
+  handleUserVoiceRef.current = handleUserVoice;
+ });
+
  const acceptCall = useCallback((e?: any) => {
   try {
    if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -739,16 +755,19 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
     };
    }
    return () => { try { clearTimeout(initialTimer); clearInterval(countdown); clearInterval(interval); isRingingRef.current = false; } catch {} };
-  } catch { setHasError(true); }
+  } catch { setTimeout(() => setHasError(true), 0); }
  }, [triggerCall, level, createRandomTicket]);
 
  useEffect(() => {
   try { if (!activeCall || activeCall.status !== 'active') return; const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, duration: prev.duration + 1 } : null), 1000); return () => clearInterval(timer); } catch {}
  }, [activeCall]);
 
+ // Only the status gates this effect; the interval itself uses a functional
+ // update, so it never closes over a stale `activeCall`.
+ const activeCallStatus = activeCall?.status;
  useEffect(() => {
-  try { if (!activeCall || activeCall.status !== 'on-hold') return; const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, holdDuration: prev.holdDuration + 1 } : null), 1000); return () => clearInterval(timer); } catch {}
- }, [activeCall?.status]);
+  try { if (activeCallStatus !== 'on-hold') return; const timer = setInterval(() => setActiveCall(prev => prev ? { ...prev, holdDuration: prev.holdDuration + 1 } : null), 1000); return () => clearInterval(timer); } catch {}
+ }, [activeCallStatus]);
 
  useEffect(() => {
   try {
@@ -821,7 +840,7 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
     </div>
     <div className="p-3 bg-[#0a0a0a]">
      <div className="bg-zinc-900 rounded-xl p-3 text-[12px] mb-3 border border-zinc-800">
-      <p className="text-zinc-200 leading-[1.4] line-clamp-3">"{incoming.userMessage}"</p>
+      <p className="text-zinc-200 leading-[1.4] line-clamp-3">&quot;{incoming.userMessage}&quot;</p>
       <p className="text-[10px] text-zinc-500 mt-2">{incoming.code} • Waiting for your greeting</p>
      </div>
      <div className="flex gap-2">
@@ -932,8 +951,8 @@ export default function VoiceCallCenter({ tickets = [], onAccept, level = 1 }: {
 
    <div className="flex flex-1 flex-col overflow-hidden">
      <div ref={transcriptRef} className="flex-1 overflow-y-auto p-3 space-y-2 bg-[#050507] max-h-[320px]">
-      {(activeCall.transcript || []).slice(-6).map(m => (
-      <div key={m.id || Math.random()} className={`flex ${m.speaker === 'you' ? 'justify-end' : 'justify-start'}`}>
+      {(activeCall.transcript || []).slice(-6).map((m, transcriptIdx) => (
+      <div key={m.id || `transcript-${transcriptIdx}`} className={`flex ${m.speaker === 'you' ? 'justify-end' : 'justify-start'}`}>
        <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-[12px] leading-[1.4] border ${m.speaker === 'you' ? 'bg-violet-600 border-violet-500 text-white rounded-br-sm' : m.speaker === 'client' ? 'bg-zinc-800 border-zinc-700 text-zinc-100 rounded-bl-sm' : 'bg-zinc-900 border-zinc-800 text-zinc-500 text-[10px]'}`}>
         <p>{m.text || ''}</p>
        </div>

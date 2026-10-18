@@ -12,9 +12,14 @@ export default function LanguageSelector({ onLanguageChange }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const detected = detectLanguage();
-    setCurrentLang(detected);
-    setLanguage(detected);
+    // Deferred by a tick: calling setState synchronously in an effect body
+    // triggers an extra cascading render (react-hooks/set-state-in-effect).
+    const t = setTimeout(() => {
+      const detected = detectLanguage();
+      setCurrentLang(detected);
+      setLanguage(detected);
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
 
   const handleSelect = (lang: Language) => {
@@ -93,14 +98,18 @@ export function useTranslation() {
   const [lang, setLangState] = useState<Language>('en');
 
   useEffect(() => {
-    const detected = detectLanguage();
-    setLangState(detected);
+    // Deferred by a tick: calling setState synchronously in an effect body
+    // triggers an extra cascading render (react-hooks/set-state-in-effect).
+    const langTimer = setTimeout(() => setLangState(detectLanguage()), 0);
 
     const handler = (e: any) => {
       setLangState(e.detail as Language);
     };
     window.addEventListener('orbitdesk-language-change', handler);
-    return () => window.removeEventListener('orbitdesk-language-change', handler);
+    return () => {
+      clearTimeout(langTimer);
+      window.removeEventListener('orbitdesk-language-change', handler);
+    };
   }, []);
 
   const t = (key: string) => {

@@ -76,7 +76,7 @@ export default function ShiftStatus({ isPaused, isManual, ticketsResolved, level
 
    {isPaused && (
     <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="mt-3 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
-     <p className="text-[11px] text-amber-200/80 leading-[1.4]">🔒 <strong>Realistic:</strong> When you step away, Orbit pauses. In real MSP, your lead would say "Take a break, we got coverage". Your SLAs don't breach while you're away — that's fair for learning. When you return, you get handover of what arrived.</p>
+     <p className="text-[11px] text-amber-200/80 leading-[1.4]">🔒 <strong>Realistic:</strong> When you step away, Orbit pauses. In real MSP, your lead would say &quot;Take a break, we got coverage&quot;. Your SLAs don&apos;t breach while you&apos;re away — that&apos;s fair for learning. When you return, you get handover of what arrived.</p>
     </motion.div>
    )}
   </div>

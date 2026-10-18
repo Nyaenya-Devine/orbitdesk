@@ -1,5 +1,5 @@
 'use client';
-import { useReducer, useEffect, useRef, useState } from 'react';
+import { useReducer, useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateInitialTickets, generateTicket, updateTicketTimers, calculateCSAT } from '@/lib/ticketEngine';
 import { loadProgress, saveProgress, calculateLevel, getBadges, initialProgress, getLevelInfo, calculateCommunicationScore } from '@/lib/progressEngine';
@@ -58,10 +58,16 @@ export default function OrbitDeskV7() {
 
   // Language
   useEffect(() => {
-    setLang(detectLanguage());
+    // Detection is deferred by a tick: calling setState synchronously in an
+    // effect body triggers an extra cascading render
+    // (react-hooks/set-state-in-effect).
+    const langTimer = setTimeout(() => setLang(detectLanguage()), 0);
     const h = (e: any) => setLang(e.detail);
     window.addEventListener('orbitdesk-language-change', h);
-    return () => window.removeEventListener('orbitdesk-language-change', h);
+    return () => {
+      clearTimeout(langTimer);
+      window.removeEventListener('orbitdesk-language-change', h);
+    };
   }, []);
 
   // Auth — load profile + progress
@@ -98,6 +104,27 @@ export default function OrbitDeskV7() {
     return () => window.removeEventListener('orbitdesk-powershell', h as any);
   }, []);
 
+  // Toasts. Declared above the effects that use it so the reference is never
+  // "used before declared" (react-hooks/immutability), and memoised so it can
+  // safely sit in an effect dependency list.
+  const addToast = useCallback((message: string, type: Toast['type'] = 'success', duration = 4000) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(7);
+    setToasts(prev => [...prev, { id, message, type, duration, groupKey: message.substring(0,30) }].slice(-10));
+  }, []);
+
+  const togglePause = useCallback(() => {
+    if (state.isPaused && state.isManualPaused) {
+      dispatch({ type: 'SET_PAUSED', paused: false, manual: false });
+      document.title = 'OrbitDesk — Modern Workplace Operations Lab';
+      addToast('▶️ Resumed', 'success', 2000);
+    } else {
+      dispatch({ type: 'SET_PAUSED', paused: true, manual: true });
+      localStorage.setItem('orbitdesk_last_active', Date.now().toString());
+      document.title = '⏸️ On Hold — OrbitDesk';
+      addToast('⏸️ On hold — break', 'info', 3000);
+    }
+  }, [state.isPaused, state.isManualPaused, addToast]);
+
   // Keyboard shortcuts — accessibility
   useEffect(() => {
     const handleKeys = (e: KeyboardEvent) => {
@@ -114,7 +141,7 @@ export default function OrbitDeskV7() {
     };
     window.addEventListener('keydown', handleKeys);
     return () => window.removeEventListener('keydown', handleKeys);
-  }, [state.isPaused]);
+  }, [state.isPaused, togglePause]);
 
   // Update SLA timers and generate the next training case.
   useEffect(() => {
@@ -122,13 +149,13 @@ export default function OrbitDeskV7() {
     const timer = setInterval(() => dispatch({ type: 'UPDATE_TICKET_TIMERS', updater: updateTicketTimers }), 1000);
     const generator = setInterval(() => {
       if (Math.random() < 0.2 && state.tickets.length < 25) {
-        const newTicket = generateTicket(studentMode, state.progress.ticketsResolved, state.progress.level);
+        const newTicket = generateTicket(studentMode, state.progress?.ticketsResolved ?? 0, state.progress?.level ?? 1);
         addToast(`New ${newTicket.priority}: ${newTicket.code} — ${newTicket.title.substring(0,40)}... [${newTicket.difficulty}]`, 'info', newTicket.priority === 'P1' ? 5000 : 4000);
         dispatch({ type: 'ADD_TICKETS', tickets: [newTicket] });
       }
     }, 6000);
     return () => { clearInterval(timer); clearInterval(generator); };
-  }, [state.tickets.length, state.progress?.ticketsResolved, state.progress?.level, studentMode, state.isPaused, state.isAuthenticated]);
+  }, [state.tickets.length, state.progress?.ticketsResolved, state.progress?.level, studentMode, state.isPaused, state.isAuthenticated, addToast]);
 
   // Away handling — relativity clocks
   useEffect(() => {
@@ -141,11 +168,13 @@ export default function OrbitDeskV7() {
         dispatch({ type: 'UPDATE_TICKET_TIMERS', updater: (prev) => prev.map(t => ({ ...t, slaDeadline: new Date(t.slaDeadline.getTime() + diffMs), timeLeftMs: t.timeLeftMs + diffMs })) });
         const added = diffMin >= 5 ? Math.min(3, Math.floor(diffMin / 10)) : 0;
         if (added > 0) {
-          const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, state.progress.ticketsResolved, state.progress.level));
+          const newOnes = Array.from({ length: added }).map(() => generateTicket(studentMode, state.progress?.ticketsResolved ?? 0, state.progress?.level ?? 1));
           dispatch({ type: 'ADD_TICKETS', tickets: newOnes });
         }
         dispatch({ type: 'SET_AWAY', minutes: diffMin, welcome: { minutes: diffMin, added } });
-        addToast(`👋 Welcome back! Away ${diffMin}m — SLAs protected, ${added} new tickets`, 'info', 6000);
+        // Deferred by a tick: writing state synchronously in an effect body
+        // triggers an extra cascading render (react-hooks/set-state-in-effect).
+        setTimeout(() => addToast(`👋 Welcome back! Away ${diffMin}m — SLAs protected, ${added} new tickets`, 'info', 6000), 0);
       }
     }
     const saveActive = () => { localStorage.setItem('orbitdesk_last_active', Date.now().toString()); dispatch({ type: 'SET_LAST_ACTIVE', timestamp: Date.now() }); };
@@ -169,13 +198,8 @@ export default function OrbitDeskV7() {
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => { clearInterval(activeInterval); document.removeEventListener('visibilitychange', handleVisibility); };
-  }, [state.isAuthenticated, state.isPaused, state.isManualPaused, state.lastActive]);
+  }, [state.isAuthenticated, state.isPaused, state.isManualPaused, state.lastActive, addToast, state.progress?.ticketsResolved, state.progress?.level, studentMode]);
 
-  // Toasts
-  const addToast = (message: string, type: Toast['type'] = 'success', duration = 4000) => {
-    const id = Date.now().toString() + Math.random().toString(36).substring(7);
-    setToasts(prev => [...prev, { id, message, type, duration, groupKey: message.substring(0,30) }].slice(-10));
-  };
   const removeToast = (id: string) => setToasts(prev => prev.filter(t => t.id !== id));
 
   // Bounded state transitions for ticket actions.
@@ -257,18 +281,6 @@ export default function OrbitDeskV7() {
     setTimeout(() => dispatch({ type: 'REMOVE_TICKET', ticketId: state.selectedTicket!.id }), 1200);
   };
 
-  const togglePause = () => {
-    if (state.isPaused && state.isManualPaused) {
-      dispatch({ type: 'SET_PAUSED', paused: false, manual: false });
-      document.title = 'OrbitDesk — Modern Workplace Operations Lab';
-      addToast('▶️ Resumed', 'success', 2000);
-    } else {
-      dispatch({ type: 'SET_PAUSED', paused: true, manual: true });
-      localStorage.setItem('orbitdesk_last_active', Date.now().toString());
-      document.title = '⏸️ On Hold — OrbitDesk';
-      addToast('⏸️ On hold — break', 'info', 3000);
-    }
-  };
 
   if (!state.isAuthenticated) {
     return <div className="min-h-screen relative"><LiveryBackground /><AuthGate onAuthenticated={(p) => { dispatch({ type: 'AUTHENTICATE', profile: p }); localStorage.setItem('orbitdesk_user_profile', JSON.stringify(p)); }} existingProgress={state.progress} /></div>;
@@ -375,7 +387,7 @@ export default function OrbitDeskV7() {
                         <span className="text-[10px] px-2 py-1 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/20">F={(() => { const m = {P1:100,P2:50,P3:20,P4:5}[state.selectedTicket.priority]||20; return (m / Math.max(1, state.selectedTicket.timeLeftMs/60000)).toFixed(1); })()}</span>
                       </div>
                       <h2 className="text-[15px] font-semibold text-zinc-100 leading-tight">{state.selectedTicket.title}</h2>
-                      <p className="text-[13px] text-zinc-400 mt-2 leading-relaxed">"{state.selectedTicket.userMessage}"</p>
+                      <p className="text-[13px] text-zinc-400 mt-2 leading-relaxed">&quot;{state.selectedTicket.userMessage}&quot;</p>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
                       <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
