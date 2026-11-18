@@ -86,7 +86,7 @@ export default function MockPortals({ ticket, onAction }: Props) {
    <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-1 rounded-full border border-zinc-700">entra.microsoft.com</span>
    </h4>
    <div className="flex items-center gap-2">
-   <input
+   <input aria-label="Filter by user or error..."
     value={searchQuery}
     onChange={e => setSearchQuery(e.target.value)}
     placeholder="Filter by user or error..."

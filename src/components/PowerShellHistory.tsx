@@ -58,7 +58,7 @@ export default function PowerShellHistory({ commands, onClear }: { commands?: Po
       </div>
 
       <div className="p-2 border-b border-zinc-800/30">
-        <input
+        <input aria-label="Filter cmdlets, users, objects..."
           value={filter}
           onChange={e => setFilter(e.target.value)}
           placeholder="Filter cmdlets, users, objects..."

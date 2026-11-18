@@ -552,8 +552,8 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
    </div>
    <div className="mt-5 space-y-4">
    <div>
-   <label className="text-[11px] font-bold tracking-widest text-zinc-500 uppercase">Class Name</label>
-   <input value={newClassName} onChange={e => setNewClassName(e.target.value)} className="mt-1.5 w-full h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-[13px]" placeholder="Modern Workplace Cohort — A" />
+   <label htmlFor="f-class-name" className="text-[11px] font-bold tracking-widest text-zinc-500 uppercase">Class Name</label>
+   <input id="f-class-name" value={newClassName} onChange={e => setNewClassName(e.target.value)} className="mt-1.5 w-full h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-[13px]" placeholder="Modern Workplace Cohort — A" />
    </div>
    <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
    <p className="text-[11px] font-bold text-violet-300">What you get:</p>
@@ -580,7 +580,7 @@ export default function ClassCommandCenter({ myProgress, userProfile }: Props) {
   <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-[#0a0a0a] rounded-[20px] border border-zinc-800 max-w-[400px] w-full p-6">
    <h3 className="font-bold text-[16px] text-white">Join Class — Student</h3>
    <p className="text-[11px] text-zinc-500 mt-1">Enter class code from your instructor — like Google Classroom, but for IT support</p>
-   <input value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="ORBIT-2026-A" className="mt-4 w-full h-11 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-mono text-[14px] tracking-widest" />
+   <input aria-label="ORBIT-2026-A" value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="ORBIT-2026-A" className="mt-4 w-full h-11 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-mono text-[14px] tracking-widest" />
    <div className="mt-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
    <p className="text-[11px] text-zinc-400">Your progress will be visible to instructor in real-time — tickets, calls, XP, CSAT, QA. 100% local now, exportable.</p>
    </div>

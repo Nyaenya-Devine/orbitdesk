@@ -144,7 +144,7 @@ export default function CommunicationChannel({ compact = false, ticket }: { comp
      <div ref={messagesEndRef} />
     </div>
     <div className="p-2.5 border-t border-zinc-800 bg-zinc-900/30 flex gap-2">
-     <input value={newMessage} onChange={e=>setNewMessage(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMessage()} placeholder="Type a message... verified works" className="flex-1 h-8 px-3 rounded-full bg-zinc-800 border border-zinc-700 text-[12px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50" />
+     <input aria-label="Type a message... verified works" value={newMessage} onChange={e=>setNewMessage(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMessage()} placeholder="Type a message... verified works" className="flex-1 h-8 px-3 rounded-full bg-zinc-800 border border-zinc-700 text-[12px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50" />
      <button onClick={sendMessage} className="h-8 px-4 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-medium transition">Send</button>
     </div>
    </div>
@@ -248,7 +248,7 @@ export default function CommunicationChannel({ compact = false, ticket }: { comp
 
     <div className="p-3.5 border-t border-zinc-800/60 bg-zinc-900/30">
      <div className="flex gap-2.5">
-      <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message... professional communication — verified works" className="flex-1 h-10 px-4 rounded-full bg-zinc-800 border border-zinc-700/50 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition" />
+      <input aria-label="Type a message... professional communication — verified works" value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message... professional communication — verified works" className="flex-1 h-10 px-4 rounded-full bg-zinc-800 border border-zinc-700/50 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition" />
       <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={sendMessage} className="h-10 px-5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-[13px] font-semibold shadow-[0_0_20px_rgba(124,58,237,0.2)] transition">Send →</motion.button>
      </div>
      <p className="text-[10px] text-zinc-500 mt-2">Professional communication guidance based on client profile and scenario • Fully functional • Smooth spring 300 damping 25 • Verified works</p>

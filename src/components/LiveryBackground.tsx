@@ -125,7 +125,10 @@ export default function LiveryBackground() {
  </div>
 
  {/* Vignette — Focus center */}
- <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-[#050507]/80" style={{
+ {/* The vignette is a multi-stop radial gradient, which the inline style
+     expresses directly; the from-/via-/to- utilities below would be inert
+     without a gradient utility and were removed as dead class names. */}
+ <div className="absolute inset-0" style={{
   background: `radial-gradient(ellipse at center, transparent 40%, rgba(5,5,7,0.4) 80%, rgba(5,5,7,0.9) 100%)`,
  }} />
 

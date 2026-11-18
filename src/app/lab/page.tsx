@@ -346,6 +346,7 @@ export default function OrbitDeskV7() {
       </header>
 
       <main className="flex-1 min-h-0 max-w-[1600px] mx-auto w-full px-4 py-4 flex flex-col pb-[80px]">
+        <h1 className="sr-only">OrbitDesk — Modern Workplace Operations Lab</h1>
         <AnimatePresence mode="wait">
           {state.activeTab === 'overview' && (
             <motion.div key="overview" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="space-y-4 flex-1">
@@ -356,7 +357,7 @@ export default function OrbitDeskV7() {
                 <div className="col-span-12 lg:col-span-4 space-y-4">
                   <DesktopDownloadV2 />
                   <div className="p-4 rounded-2xl bg-[#0a0a0a]/80 backdrop-blur border border-zinc-800/60">
-                    <h4 className="text-[13px] font-semibold text-zinc-100">Learning progress</h4>
+                    <h2 className="text-[13px] font-semibold text-zinc-100">Learning progress</h2>
                     <div className="mt-3 grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Resolved</p><p className="text-[20px] font-bold text-white">{state.progress.ticketsResolved}</p><p className="text-[10px] text-zinc-500">CSAT {state.progress.avgCSAT.toFixed(1)} • QA {state.progress.avgQA}%</p></div>
                       <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><p className="text-[10px] tracking-widest text-zinc-500 uppercase">Quality score</p><p className="text-[20px] font-bold text-white">{Math.round((state.progress.communicationScores.empathy + state.progress.communicationScores.clarity + state.progress.communicationScores.technicalAccuracy)/3)}</p><p className="text-[10px] text-zinc-500">Communication and accuracy</p></div>
@@ -395,7 +396,7 @@ export default function OrbitDeskV7() {
                         <p className="text-[11px] text-zinc-500 mt-1">If any 0, blocked — like E=mc² simple</p>
                       </div>
                       <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-                        <h4 className="text-[11px] font-semibold text-zinc-200 mb-3">Checklist • Fix = Logs × Tool × Language • Lvl {state.progress.level}</h4>
+                        <h3 className="text-[11px] font-semibold text-zinc-200 mb-3">Checklist • Fix = Logs × Tool × Language • Lvl {state.progress.level}</h3>
                         <div className="space-y-2">
                           <label className="flex gap-2.5 p-2.5 rounded-xl bg-[#0a0a0a] border border-zinc-800 cursor-pointer"><input type="checkbox" checked={state.checklist.logs} onChange={e => dispatch({ type: 'SET_CHECKLIST', checklist: { logs: e.target.checked } })} className="mt-0.5" /><div><p className="text-[12px] text-zinc-200">Checked sign-in and audit logs</p><p className="text-[11px] text-zinc-500">Sign-in Logs CA tab, Audit Logs</p></div></label>
                           <label className="flex gap-2.5 p-2.5 rounded-xl bg-[#0a0a0a] border border-zinc-800 cursor-pointer"><input type="checkbox" checked={state.checklist.tool} onChange={e => dispatch({ type: 'SET_CHECKLIST', checklist: { tool: e.target.checked } })} className="mt-0.5" /><div><p className="text-[12px] text-zinc-200">Used correct tool — Turing computable</p><p className="text-[11px] text-zinc-500">Intune/Exchange/What-If bombe</p></div></label>

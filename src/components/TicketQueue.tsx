@@ -85,7 +85,7 @@ export default function TicketQueue({ tickets, onSelectTicket, onAssign, selecte
   </div>
 
   <div className="relative">
-  <input
+  <input aria-label="Search tickets, clients, codes, difficulty..."
   placeholder="Search tickets, clients, codes, difficulty..."
   value={search}
   onChange={e => setSearch(e.target.value)}

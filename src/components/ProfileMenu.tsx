@@ -67,6 +67,7 @@ export default function ProfileMenu({ profile, progress, onLogout, onUpdateProfi
                       <div className="flex gap-2">
                         <input
                           autoFocus
+                            aria-label="Display name"
                           value={editName}
                           onChange={e => setEditName(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && handleSave()}

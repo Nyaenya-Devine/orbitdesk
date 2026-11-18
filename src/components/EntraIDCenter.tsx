@@ -97,7 +97,7 @@ export default function EntraIDCenter({ onAction }: { onAction: (action: string)
             <motion.div key="users" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ type: 'spring', stiffness: 300, damping: 25 }}>
               <div className="p-3 border-b border-zinc-800/30 bg-zinc-900/20 flex items-center gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0} onChange={toggleSelectAll} className="rounded" />
+                  <input type="checkbox" aria-label="Select all users" checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0} onChange={toggleSelectAll} className="rounded" />
                   <span className="text-[11px] text-zinc-400">{selectedUsers.length} selected • {filteredUsers.length} users • Smooth • Works</span>
                 </div>
                 <div className="h-4 w-px bg-zinc-800" />
@@ -108,14 +108,14 @@ export default function EntraIDCenter({ onAction }: { onAction: (action: string)
                   <button onClick={() => bulkAction('Disable')} disabled={selectedUsers.length === 0} className="h-7 px-3 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] hover:bg-zinc-700 disabled:opacity-50">Disable — Works</button>
                 </div>
                 <div className="ml-auto flex gap-2">
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users... works" className="h-8 w-[200px] pl-3 pr-3 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/30" />
+                  <input aria-label="Search users... works" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users... works" className="h-8 w-[200px] pl-3 pr-3 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/30" />
                 </div>
               </div>
 
               <div className="divide-y divide-zinc-800/30">
                 {filteredUsers.map((user, idx) => (
                   <motion.div key={user.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 25, delay: idx*0.04 }} className={`p-3 flex items-center gap-3 hover:bg-zinc-900/50 transition group ${selectedUsers.includes(user.id) ? 'bg-violet-500/5 border-l-2 border-l-violet-500' : ''}`}>
-                    <input type="checkbox" checked={selectedUsers.includes(user.id)} onChange={() => toggleSelect(user.id)} className="rounded" />
+                    <input type="checkbox" aria-label={`Select ${user.displayName}`} checked={selectedUsers.includes(user.id)} onChange={() => toggleSelect(user.id)} className="rounded" />
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white font-bold text-[11px]">{user.displayName.split(' ').map(n => n[0]).join('').substring(0,2)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -156,8 +156,8 @@ export default function EntraIDCenter({ onAction }: { onAction: (action: string)
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 25 }} className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/20 overflow-hidden">
                     <p className="text-[11px] font-bold text-violet-300">What-If Simulation — Like Entra ID — Verified works • Smooth</p>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <div><label className="text-[10px] text-zinc-500 uppercase">User • Works</label><select className="mt-1 w-full h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-200"><option>Sarah Finance • Works</option><option>John Payroll — P1 locked • Works</option></select></div>
-                      <div><label className="text-[10px] text-zinc-500 uppercase">Cloud App • Works</label><select className="mt-1 w-full h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-200"><option>All cloud apps • Works</option></select></div>
+                      <div><label htmlFor="f-user-works" className="text-[10px] text-zinc-500 uppercase">User • Works</label><select id="f-user-works" className="mt-1 w-full h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-200"><option>Sarah Finance • Works</option><option>John Payroll — P1 locked • Works</option></select></div>
+                      <div><label htmlFor="f-cloud-app-works" className="text-[10px] text-zinc-500 uppercase">Cloud App • Works</label><select id="f-cloud-app-works" className="mt-1 w-full h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-200"><option>All cloud apps • Works</option></select></div>
                     </div>
                     <div className="mt-3 flex gap-2">
                       <button onClick={() => { onAction('What-If: Sarah Finance + All cloud apps + Compliant No = Blocked by Require compliant device — verified works — smooth'); logPowerShellCommand('WhatIf-ConditionalAccess', '-User "Sarah Finance" -App "All"', 'You', 'What-If'); }} className="h-8 px-4 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold">Run What-If → Blocked 53000 — Works</button>

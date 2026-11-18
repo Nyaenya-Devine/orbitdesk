@@ -221,7 +221,7 @@ export default function OUTreeView({ onSelectObject, selectedId, onAction }: Pro
         </div>
         <div className="mt-2 flex gap-2">
           <div className="flex-1 relative">
-            <input
+            <input aria-label="Find users, groups, computers..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Find users, groups, computers..."

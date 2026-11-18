@@ -253,8 +253,8 @@ export default function AuthGate({ onAuthenticated, existingProgress }: Props) {
 
                 <div className="mt-6 space-y-5">
                   <div>
-                    <label className="text-[11px] font-medium tracking-[0.12em] text-zinc-500 uppercase">Display name</label>
-                    <input
+                    <label htmlFor="f-display-name" className="text-[11px] font-medium tracking-[0.12em] text-zinc-500 uppercase">Display name</label>
+                    <input id="f-display-name"
                       autoFocus
                       value={profile.name}
                       onChange={e => setProfile({ ...profile, name: e.target.value })}

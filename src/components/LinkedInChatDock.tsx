@@ -159,7 +159,7 @@ function ChatWindowComponent({ chat, onClose, onMinimize, onSend }: { chat: Chat
   {/* Input — LinkedIn style */}
   <div className="p-2.5 bg-white border-t border-zinc-200 flex-shrink-0">
    <div className="flex items-center gap-2 bg-[#f4f2ee] rounded-full px-3 h-9 border border-zinc-200 focus-within:border-violet-300 focus-within:ring-1 focus-within:ring-violet-200 transition">
-    <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder={`Write a message to ${chat.name.split(' ')[0]}...`} className="flex-1 bg-transparent text-[13px] text-zinc-900 placeholder:text-zinc-500 focus:outline-none" />
+    <input aria-label="Message" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder={`Write a message to ${chat.name.split(' ')[0]}...`} className="flex-1 bg-transparent text-[13px] text-zinc-900 placeholder:text-zinc-500 focus:outline-none" />
     <button className="text-zinc-400 hover:text-zinc-600">😊</button>
     <button className="text-zinc-400 hover:text-zinc-600">📎</button>
    </div>
@@ -281,7 +281,7 @@ export default function LinkedInChatDock({ ticket, isPaused }: { ticket?: any; i
         <div className="p-2">
          <div className="h-8 bg-[#edf3f8] rounded-full flex items-center px-3 gap-2 border border-zinc-200">
           <span className="text-zinc-500">🔍</span>
-          <input placeholder="Search messages" className="flex-1 bg-transparent text-[13px] placeholder:text-zinc-500 focus:outline-none" />
+          <input aria-label="Search messages" placeholder="Search messages" className="flex-1 bg-transparent text-[13px] placeholder:text-zinc-500 focus:outline-none" />
           <span className="text-zinc-400">⚙️</span>
          </div>
         </div>
